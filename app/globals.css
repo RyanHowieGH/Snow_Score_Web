@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+
 @plugin "daisyui/theme" {
   name: "mytheme";
   default: true; /* set as default */
@@ -8,7 +9,7 @@
   /* color-scheme: light; color of browser-provided UI */
 
   --color-base-100: oklch(98% 0.02 240);
-  --color-base-200: oklch(98% 0.03 240);
+  --color-base-200: oklch(95% 0.03 240);
   --color-base-300: oklch(92% 0.04 240);
   --color-base-content: oklch(20% 0.05 240);
   --color-primary: oklch(27% 0.1384 306);
