@@ -25,7 +25,7 @@ export default function Login() {
   <br/>At least one uppercase letter
 </p>
     <div className="card-actions justify-start">
-    <Link href="/admin" className="btn btn-white mr-10">Log In</Link>
+    <Link href="/admin" className="btn btn-white mr-10">Submit</Link>
     </div>
   </div>
 </div>
