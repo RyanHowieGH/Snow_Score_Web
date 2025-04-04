@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <main>
 <BlankHeader/>
-<div className="hero bg-base-200 min-h-screen">
+<div className="hero bg-white min-h-screen">
   <div className="hero-content text-center">
     <div className="max-w-md">
       <h1 className="text-5xl font-bold">Welcome to SnowScore</h1>
@@ -16,8 +16,7 @@ export default function Home() {
         The new way to track snowboarding and skiing events.
       </p>
       <Link href="/login" className="btn btn-primary mr-10">Log In</Link>
-      <Link href="https://example.com" className="btn btn-primary">Click Me</Link>
-
+      <Link href="https://example.com" className="btn btn-primary">Browse Events</Link>
     </div>
   </div>
 </div>

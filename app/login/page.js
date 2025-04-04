@@ -1,5 +1,5 @@
 import BlankHeader from "../components/blankHeader";
-
+import Link from 'next/link';
 import React from 'react'
 
 export default function Login() { 
@@ -25,7 +25,7 @@ export default function Login() {
   <br/>At least one uppercase letter
 </p>
     <div className="card-actions justify-start">
-      <button className="btn btn-white">Submit</button>
+    <Link href="/admin" className="btn btn-white mr-10">Log In</Link>
     </div>
   </div>
 </div>
