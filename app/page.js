@@ -1,5 +1,5 @@
 "use client"
-import BlankHeader from "./components/blankHeader";
+import BlankHeader from "../components/blankHeader";
 import React from 'react'
 import Link from 'next/link';
 

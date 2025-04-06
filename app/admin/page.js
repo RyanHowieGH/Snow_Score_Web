@@ -1,6 +1,6 @@
 'use client';
-import Header from "../components/header";
-import Sidebar from "../components/sidebar"; // Import the Sidebar
+import Header from "../../components/header";
+import Sidebar from "../../components/sidebar"; // Import the Sidebar
 import React, { useState } from 'react';
 import Link from 'next/link';
 

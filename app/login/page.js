@@ -1,4 +1,4 @@
-import BlankHeader from "../components/blankHeader";
+import BlankHeader from "../../components/blankHeader";
 import Link from 'next/link';
 import React from 'react'
 

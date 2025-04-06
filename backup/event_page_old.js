@@ -1,6 +1,6 @@
 "use client";
-import Header from "../components/header";
-import Sidebar from "../components/sidebar"; // Import the Sidebar
+import Header from "../../components/header";
+import Sidebar from "../../components/sidebar"; // Import the Sidebar
 import React, { useState } from "react";
 import Link from "next/link";
 
@@ -34,10 +34,149 @@ export default function Admin() {
             </Link>
           </div>
           <div className="flex flex-col items-center justify-center mt-4">
+            {/* Upcoming Events List */}
             <ul className="list bg-base-100 rounded-box shadow-md">
+              <li className="p-4 pb-2 text-xs opacity-60 tracking-wide">
+                Upcoming Events
+              </li>
+              <li className="list-row">
+                <div>
+                  <div className="text-lg">Spring Provincials 2025 - Winsport</div>
+                  <div className="text-sm uppercase font-semibold opacity-60 mt-1">
+                  Mar 20-23, 2025	
+                  <div className="badge badge-secondary badge-outline badge-sm ml-2">
+                  UPCOMING
+                </div>
+                  </div>
+                </div>
+                
+                <button className="btn btn-square btn-ghost">
+                  <svg
+                    className="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M6 3L20 12 6 21 6 3z"></path>
+                    </g>
+                  </svg>
+                </button>
+                <button className="btn btn-square btn-ghost">
+                  <svg
+                    className="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                    </g>
+                  </svg>
+                </button>
+              </li>
+              <li className="list-row">
+                <div>
+                  <div>Nitehawk Grom Games 2025 - Nitehawk Adventure Park</div>
+                  <div className="text-xs uppercase font-semibold opacity-60">
+                    Mar 15-16, 2025
+                  </div>
+                </div>
+                <button className="btn btn-square btn-ghost">
+                  <svg
+                    className="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M6 3L20 12 6 21 6 3z"></path>
+                    </g>
+                  </svg>
+                </button>
+                <button className="btn btn-square btn-ghost">
+                  <svg
+                    className="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                    </g>
+                  </svg>
+                </button>
+              </li>
+
+              <li className="list-row">
+                <div>
+                  <div>Air Nation, Sr Nationals - Winsport</div>
+                  <div className="text-xs uppercase font-semibold opacity-60">
+                    Feb 22-28, 2025
+                  </div>
+                </div>
+                <button className="btn btn-square btn-ghost">
+                  <svg
+                    className="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M6 3L20 12 6 21 6 3z"></path>
+                    </g>
+                  </svg>
+                </button>
+                <button className="btn btn-square btn-ghost">
+                  <svg
+                    className="size-[1.2em]"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                  >
+                    <g
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      strokeWidth="2"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                    </g>
+                  </svg>
+                </button>
+              </li>
+            </ul>
+            {/* Previous Events List */}
+            <ul className="list bg-base-100 rounded-box shadow-md mt-10">
               <li className="p-4 pb-2 text-xs opacity-60 tracking-wide">
                 Most played songs this week
               </li>
+
               <li className="list-row">
                 <div>
                   <img
