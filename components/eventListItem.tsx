@@ -1,9 +1,9 @@
-// src/components/EventListItem.tsx
+// src/components/eventListItem.tsx
 import React from "react";
 import Link from 'next/link'; // Import Link
 
 // Define and export the type for the event data (using event_id)
-export interface Event {
+export interface SnowEvent {
     event_id: number;
     name: string;
     start_date: Date;
@@ -12,7 +12,7 @@ export interface Event {
 }
 
 interface EventListItemProps {
-    event: Event;
+    event: SnowEvent;
     isUpcoming: boolean;
 }
 

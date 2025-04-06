@@ -1,22 +1,38 @@
+// /components/header.js
 import React from "react";
+import Link from 'next/link'; // Import Link
 
-export default function Header() {
+// Add eventName prop (optional)
+export default function Header({ eventName }) {
     return (
-        <div className="navbar bg-primary shadow-sm">
-            <div className="flex-1">
-                <img src="/assets/goggles_borderless.png" alt="Goggles" className="ml-5 h-10 rounded-full" />
+        <div className="navbar bg-primary text-primary-content shadow-sm"> {/* Ensure text color contrasts */}
+            <div className="flex-1 flex items-center"> {/* Use flex to align items */}
+                {/* Link the logo back to a relevant page, e.g., admin dashboard */}
+                <Link href="/admin">
+                   <img src="/assets/goggles_borderless.png" alt="Goggles Logo" className="ml-5 h-10 rounded-full cursor-pointer" />
+                </Link>
+                {/* Display event name if provided */}
+                {eventName && (
+                    <span className="ml-4 text-xl font-semibold hidden sm:inline"> {/* Hide on extra small screens */}
+                        {eventName}
+                    </span>
+                )}
             </div>
-            <div className="flex gap-2">
-                <button className="btn inline-block mt-1 mr-10 w-18 rounded-full bg-primary hover:bg-primary-focus text-white text-2xl border-none shadow-sm">
+            <div className="flex-none gap-2 mr-4"> {/* Use flex-none and adjust margin */}
+                 {/* Use Link components for navigation instead of buttons for better semantics */}
+                 <Link href="/athletes" className="btn btn-ghost text-primary-content">
                     Athletes
-                    </button>
-                    <button className="btn inline-block mt-1 mr-10 w-18 rounded-full bg-primary hover:bg-primary-focus text-white text-2xl border-none shadow-sm">
+                 </Link>
+                 <Link href="/events" className="btn btn-ghost text-primary-content">
                     Events
-                    </button>
-                <button className="btn inline-block mt-1 mr-10 w-18 rounded-full bg-primary hover:bg-primary-focus text-white border-none shadow-sm">
-                    <img src="/assets/admin_logo.png" alt="Admin Logo" />
-                </button>
+                 </Link>
+                 {/* Consider what the admin logo button should do - maybe link to user settings? */}
+                 <button className="btn btn-ghost btn-circle avatar">
+                    <div className="w-8 rounded-full"> {/* Adjust size */}
+                       <img src="/assets/admin_logo.png" alt="Admin Menu" />
+                     </div>
+                 </button>
             </div>
         </div>
-        )
-    }   
+    );
+}

@@ -1,10 +1,10 @@
 // src/components/EventList.tsx
 import React from "react";
-import EventListItem, { Event } from "./eventListItem"; // Import type and component
+import EventListItem, { SnowEvent } from "./eventListItem"; // Import type and component
 import Link from 'next/link'; // Import Link
 
 interface EventListProps {
-    events: Event[];
+    events: SnowEvent[];
 }
 
 const EventList: React.FC<EventListProps> = ({ events }) => {

@@ -1,4 +1,3 @@
-// src/app/admin/AdminLayout.tsx (NEW FILE)
 "use client"; // This component needs client-side interactivity (useState)
 
 import React, { useState } from "react";
