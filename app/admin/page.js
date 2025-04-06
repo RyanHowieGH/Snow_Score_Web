@@ -1,3 +1,4 @@
+// src\app\admin\page.js
 'use client';
 import Header from "../../components/header";
 import Sidebar from "../../components/sidebar"; // Import the Sidebar

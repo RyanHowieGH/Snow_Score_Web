@@ -2,8 +2,16 @@
 import React from "react";
 import Link from 'next/link'; // Import Link
 
+
+/**
+ * Header component for the application.
+ * Can optionally display an event name.
+ *
+ * @param {object} props - Component props.
+ * @param {string | null | undefined} [props.eventName] - The name of the event to display (optional).
+ */
 // Add eventName prop (optional)
-export default function Header({ eventName }) {
+export default function Header({ eventName = null }) {
     return (
         <div className="navbar bg-primary text-primary-content shadow-sm"> {/* Ensure text color contrasts */}
             <div className="flex-1 flex items-center"> {/* Use flex to align items */}

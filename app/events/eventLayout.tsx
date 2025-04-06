@@ -1,3 +1,5 @@
+
+// src\app\events\eventLayout.tsx
 "use client"; // This component needs client-side interactivity (useState)
 
 import React, { useState } from "react";
