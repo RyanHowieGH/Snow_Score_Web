@@ -32,10 +32,6 @@ export default function Admin() {
                         <p className="text-lg mb-8">Manage your events and athletes</p>
                         <Link href="/events" className="btn btn-xl btn-white m-2">Events</Link>
                         <Link href="/athletes" className="btn btn-xl btn-white m-2">Athletes</Link>
-                        {/* Add more content here to test scrolling */}
-                        <div className="h-[150vh] bg-blue-200 w-full mt-10">
-                           <p className="p-4">Very tall content to demonstrate scrolling...</p>
-                        </div>
                     </div>
                 </main>
             </div>

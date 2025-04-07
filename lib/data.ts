@@ -14,6 +14,14 @@ export interface Division {
 // Define the combined type for event details including the correct Division type
 export interface EventDetails extends SnowEvent {
     divisions: Division[];
+    athletes: RegisteredAthlete[]; // Add athletes array
+}
+
+export interface RegisteredAthlete {
+    athlete_id: number;
+    first_name: string;
+    last_name: string;
+    bib_num: string | null; // Bib number might be null
 }
 
 // Function to fetch a single event and its associated divisions
@@ -63,16 +71,35 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         );
         console.log(`Found ${divisionResult.rows.length} divisions for event ${eventId}.`);
 
+        const athleteQuery = `
+            SELECT
+                a.athlete_id,
+                a.first_name,
+                a.last_name,
+                r.bib_num
+            FROM
+                ss_athletes a
+            JOIN
+                ss_event_registrations r ON a.athlete_id = r.athlete_id
+            WHERE
+                r.event_id = $1
+            ORDER BY
+                a.last_name ASC, a.first_name ASC
+        `;
+        const athleteResult = await client.query<RegisteredAthlete>(athleteQuery, [eventId]);
+        console.log(`Found ${athleteResult.rows.length} registered athletes for event ${eventId}.`);
+
         // --- THIS IS THE CORRECTED PART (Explicit Construction) ---
         // Construct the final object explicitly, assigning each property
         // This directly tells TypeScript what properties the object has.
         const eventDetails: EventDetails = {
             event_id: eventData.event_id,
-            name: eventData.name,                 // Explicitly assign name
-            location: eventData.location,         // Explicitly assign location
-            start_date: new Date(eventData.start_date), // Create Date object
-            end_date: new Date(eventData.end_date),     // Create Date object
-            divisions: divisionResult.rows        // Add the specific divisions property
+            name: eventData.name,
+            location: eventData.location,
+            start_date: new Date(eventData.start_date),
+            end_date: new Date(eventData.end_date),
+            divisions: divisionResult.rows,
+            athletes: athleteResult.rows // Add the fetched athletes
         };
         // --- END OF CORRECTION ---
 
