@@ -5,17 +5,18 @@ import Link from 'next/link';
 // REMOVE THIS IMPORT: import SingleEventLayout from "./layout";
 
 interface EventDashboardPageProps {
-    params: {
+    params: Promise<{
         eventId: string;
-    };
+    }>;
 }
 
-export default async function EventDashboardPage({ params }: EventDashboardPageProps) {
+export default async function EventDashboardPage(props: EventDashboardPageProps) {
+    const params = await props.params;
     const eventId = parseInt(params.eventId, 10);
-     if (isNaN(eventId)) {
-        console.error("Invalid event ID in URL:", params.eventId);
-        notFound();
-     }
+    if (isNaN(eventId)) {
+       console.error("Invalid event ID in URL:", params.eventId);
+       notFound();
+    }
 
     const eventDetails = await fetchEventById(eventId);
 
@@ -104,16 +105,17 @@ export default async function EventDashboardPage({ params }: EventDashboardPageP
 }
 
 // Metadata function remains the same
-export async function generateMetadata({ params }: EventDashboardPageProps) {
-  const eventId = parseInt(params.eventId, 10);
-   if (isNaN(eventId)) {
-      return { title: 'Invalid Event' };
-   }
-  const eventDetails = await fetchEventById(eventId);
-  if (!eventDetails) {
-    return { title: 'Event Not Found' };
-  }
-  return {
-    title: `Dashboard - ${eventDetails.name}`,
-  };
+export async function generateMetadata(props: EventDashboardPageProps) {
+    const params = await props.params;
+    const eventId = parseInt(params.eventId, 10);
+    if (isNaN(eventId)) {
+       return { title: 'Invalid Event' };
+    }
+    const eventDetails = await fetchEventById(eventId);
+    if (!eventDetails) {
+      return { title: 'Event Not Found' };
+    }
+    return {
+      title: `Dashboard - ${eventDetails.name}`,
+    };
 }
