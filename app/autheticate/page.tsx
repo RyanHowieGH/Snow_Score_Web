@@ -1,53 +1,72 @@
-// app/authenticate/page.tsx (Example Handler Page)
-'use client'; // Needs client hooks
+// app/authenticate/page.tsx
+'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useStytch, useStytchSession } from '@stytch/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function AuthenticatePage() {
   const stytch = useStytch();
-  const { session } = useStytchSession();
+  const { session, isInitialized } = useStytchSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [message, setMessage] = useState('Authenticating...');
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
 
   useEffect(() => {
-    if (stytch && !session) {
-      // If no session, check URL for tokens and authenticate
-      // The SDK often handles magic links/oauth automatically here.
-      // For passwords, the session might already be set upon redirect.
-      console.log('Authenticate page: No session, checking tokens...');
-      // Stytch SDK's StytchProvider likely handles token exchange automatically
-      // We might just need to wait or check if authentication fails.
-      // Add a small delay or check stytch.user.get() if needed,
-      // but often just checking session on next render is enough.
+    if (!isInitialized || !stytch) { /* ... Initializing ... */ return; }
+    if (session) { /* ... Session found, redirect to /admin ... */ return; }
 
-    } else if (session) {
-       console.log('Authenticate page: Session found, redirecting to admin...');
-      // If session exists, authentication was successful (or already logged in)
-      // Redirect to the desired page
-      router.replace('/admin'); // Use replace to avoid history entry
-    } else {
-         // Handle cases where authentication might fail or is still pending
-         console.log('Authenticate page: Waiting for session or token...');
-         // Maybe show a loading indicator
+    const token = searchParams.get('token');
+    const tokenType = searchParams.get('stytch_token_type');
+
+    // Handle Magic Link
+    if (token && tokenType === 'magic_links' && !hasAttemptedAuth) {
+        setHasAttemptedAuth(true);
+        setMessage('Processing link...');
+        stytch.magicLinks.authenticate(token, { session_duration_minutes: 60 * 24 * 7 })
+            .then(() => console.log('Magic link auth successful.')) // Rely on re-render for redirect
+            .catch((err) => { /* ... handle error ... */ });
+        return;
     }
 
-    // If after some time no session appears, redirect to login
-    const timer = setTimeout(() => {
-         if (!session) {
-              console.log('Authenticate page: Timeout, redirecting to login.');
-              router.replace('/login');
-         }
-    }, 5000); // 5 second timeout example
+    // --- REVISED: Handle Password Reset Token ---
+    if (token && tokenType === 'reset_password' && !hasAttemptedAuth) {
+        setHasAttemptedAuth(true);
+        console.log('Authenticate page: Password reset token found, authenticating session...');
+        setMessage('Processing password reset link...');
+        // Use passwords.authenticate with the session_token option
+        // This exchanges the reset token for an active (short-lived) session
+        stytch.passwords.authenticate({
+                session_token: token, // Pass the reset token here
+                session_duration_minutes: 30 // Keep session short for reset purpose
+            })
+            .then(() => {
+                 console.log('Authenticate page: Password reset token authenticated into session.');
+                 // NOW that a session exists, redirect to the page where they can set the password
+                 setMessage('Redirecting to set new password...');
+                 router.replace('/set-new-password'); // No token needed in URL now
+            })
+            .catch((err) => {
+                 console.error('Password reset token authentication error:', err);
+                 setMessage('Authentication failed. Invalid or expired link.');
+                 setIsProcessing(false); // Use isProcessing state if needed
+                 setTimeout(() => router.replace('/login'), 3000);
+            });
+        return;
+    }
+    // --- END REVISED ---
 
-    return () => clearTimeout(timer);
+    // Fallback if no session/token after init
+    if (isInitialized && !session && !hasAttemptedAuth && !(token && (tokenType === 'magic_links' || tokenType === 'reset_password'))) {
+        // ... redirect to login ...
+         console.log('Authenticate page: Initialized, no session, no valid tokens found. Redirecting to login.');
+         setMessage('Authentication required.');
+         router.replace('/login');
+    }
 
-  }, [stytch, session, router]);
+  }, [stytch, session, isInitialized, router, searchParams, hasAttemptedAuth]); // Added isInitialized
 
-  return (
-    <div className="flex justify-center items-center min-h-screen">
-      <span className="loading loading-dots loading-lg"></span>
-      <p className="ml-4">Authenticating...</p>
-    </div>
-  );
+  // ... render loading ...
+   return ( <div className="flex flex-col justify-center items-center min-h-screen"> {/* ... loading indicator ... */} </div> );
 }
