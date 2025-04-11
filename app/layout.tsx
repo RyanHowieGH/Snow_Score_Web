@@ -24,12 +24,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     // Wrap the entire app with the StytchProvider
-    <StytchProvider stytch={stytch}>
+    // <StytchProvider stytch={stytch}>
       <html lang="en">
         <body className={`${geistSans.className} ${geistMono.className} antialiased`}>
           {children}
         </body>
       </html>
-    </StytchProvider>
+    // </StytchProvider>
   );
 }
