@@ -15,7 +15,7 @@ export default function Home() {
       <p className="py-6">
         The new way to track snowboarding and skiing events.
       </p>
-      <Link href="/login" className="btn btn-primary mr-10">Log In</Link>
+      <Link href="/sign-in" className="btn btn-primary mr-10">Log In</Link>
       <Link href="https://example.com" className="btn btn-primary">Browse Events</Link>
     </div>
   </div>
