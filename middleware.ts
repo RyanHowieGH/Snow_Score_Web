@@ -1,30 +1,47 @@
-// middleware.ts (Revised for Stytch Cookies)
-import { NextResponse, type NextRequest } from 'next/server';
+// middleware.ts (or src/middleware.ts)
+import { clerkMiddleware, createRouteMatcher, ClerkMiddlewareAuth } from '@clerk/nextjs/server';
+import { NextRequest } from 'next/server'; // Import NextRequest type
 
-const STYTCH_SESSION_COOKIE = 'stytch_session'; // Opaque token cookie name
-const STYTCH_JWT_COOKIE = 'stytch_session_jwt'; // JWT cookie name
+// Define routes that should be publicly accessible
+const isPublicRoute = createRouteMatcher([
+  '/', // Landing page
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  // Add other public pages
+]);
 
-export async function middleware(request: NextRequest) {
-    const sessionCookie = request.cookies.get(STYTCH_SESSION_COOKIE)?.value;
-    const jwtCookie = request.cookies.get(STYTCH_JWT_COOKIE)?.value;
-    const userIsPotentiallyAuthenticated = !!sessionCookie || !!jwtCookie;
-    const pathname = request.nextUrl.pathname;
+// Define routes that should *always* be protected
+const isProtectedRoute = createRouteMatcher([
+    '/admin(.*)', // Protect everything under /admin
+    // Add other protected routes
+]);
 
-    // If user is not potentially authenticated and trying to access protected routes
-    if (!userIsPotentiallyAuthenticated && pathname.startsWith('/admin')) {
-        // ... redirect to login ...
-         console.log("Middleware: No Stytch session cookie, redirecting to login from", pathname);
-         const url = request.nextUrl.clone(); url.pathname = '/login'; return NextResponse.redirect(url);
-    }
+// --- Use the 'auth' object passed as the first argument ---
+export default clerkMiddleware((auth: ClerkMiddlewareAuth, req: NextRequest) => {
+  // Add explicit types for clarity
 
-    // If user IS potentially authenticated and trying to access login page
-    if (userIsPotentiallyAuthenticated && pathname === '/login') {
-        // ... redirect to admin ...
-         console.log("Middleware: Stytch session cookie exists, redirecting from login to /admin");
-         return NextResponse.redirect(new URL('/admin', request.url));
-    }
+  // Protect routes based on the matcher
+  if (isProtectedRoute(req)) {
+      console.log(`Middleware: Protecting route: ${req.nextUrl.pathname}`);
+      // --- Call protect() directly on the 'auth' argument ---
+      auth.protect();
+      // --- END CORRECTION ---
+  }
 
-    return NextResponse.next();
-}
+  // Optional: Example of accessing userId within middleware (after protection/check)
+  // if (!isPublicRoute(req)) {
+  //     const { userId, sessionClaims } = auth; // Access properties directly
+  //     console.log(`Middleware: Authenticated User ID: ${userId}, Path: ${req.nextUrl.pathname}`);
+  //     // Example role redirect (ensure sessionClaims includes your custom role)
+  //     // if (userId && sessionClaims?.metadata?.role === 'volunteer' && req.nextUrl.pathname.startsWith('/admin/users')) {
+  //     //     return Response.redirect(new URL('/unauthorized', req.url));
+  //     // }
+  // }
 
-export const config = { /* ... matcher ... */ };
+
+}, { debug: process.env.NODE_ENV === 'development' });
+
+
+export const config = {
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+};
