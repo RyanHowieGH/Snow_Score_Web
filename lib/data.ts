@@ -23,7 +23,33 @@ export interface RegisteredAthlete {
     last_name: string;
     bib_num: string | null; // Bib number might be null
 }
+// --- NEW: Discipline Interface ---
+export interface Discipline {
+    discipline_id: string; // TEXT PRIMARY KEY
+    category_name: string;
+    subcategory_name: string;
+    discipline_name: string;
+}
 
+// --- NEW: Function to fetch all disciplines ---
+export async function fetchDisciplines(): Promise<Discipline[]> {
+    console.log("Attempting to fetch disciplines...");
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query<Discipline>(
+            'SELECT discipline_id, category_name, subcategory_name, discipline_name FROM ss_disciplines ORDER BY category_name, subcategory_name, discipline_name'
+        );
+        console.log(`Fetched ${result.rows.length} disciplines.`);
+        return result.rows;
+    } catch (error) {
+        console.error("Error fetching disciplines:", error);
+        return []; // Return empty array on error
+    } finally {
+        if (client) client.release();
+    }
+}
 // Function to fetch a single event and its associated divisions
 export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
     console.log(`Attempting to fetch event with ID: ${eventId}...`);
