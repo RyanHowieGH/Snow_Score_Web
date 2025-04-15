@@ -1,41 +1,45 @@
-// /app/events/page.tsx (REMOVE "use client";)
-// No "use client" here - this is now a Server Component
+// /app/admin/(standard)/events/page.tsx
+// This is a Server Component - No 'use client' needed
 
-import Header from "../../../../components/header";
-import EventList from "../../../../components/eventList";
-import AdminLayout from "./layout"; // NEW: Client component wrapper
-import { fetchEvents } from "@/lib/data"; // Import the data fetching function (adjust path)
-import Link from "next/link";
+import React from 'react'; // Import React (optional in newer Next.js but good practice)
+import Link from 'next/link';
+import EventList from '@/components/eventList'; // Assuming alias '@/components/' is setup
+import { fetchEvents, SnowEvent } from '@/lib/data'; // Assuming alias '@/lib/' is setup
+import type { Metadata } from 'next'; // For metadata
 
-// This component now fetches data directly on the server
-export default async function AdminPage() {
-    // Fetch data directly. This happens on the server before rendering.
-    // Error handling happens within fetchEvents()
-    const events = await fetchEvents();
+// Metadata for the page (optional but recommended)
+export const metadata: Metadata = {
+  title: 'Events Dashboard - Admin',
+  description: 'Manage upcoming and past ski and snowboard events.',
+};
 
+// Optional: Set revalidation interval if needed
+// export const revalidate = 3600; // Revalidate data every hour
+
+// The Page component - async because it fetches data
+export default async function EventsListPage() {
+    // Fetch events data directly on the server before rendering
+    console.log("Fetching events for /admin/events page...");
+    const events: SnowEvent[] = await fetchEvents();
+    console.log(`Fetched ${events.length} events.`);
+
+    // This component should ONLY return the content specific to this page.
+    // The layout structure (Header, Sidebar, main tag) is provided by
+    // the layout file in the route group: /app/admin/(standard)/layout.tsx
     return (
-        // AdminLayout handles the client-side state (sidebar)
-        <AdminLayout>
-            {/* Content specific to this page */}
-            <div className="flex flex-row items-center justify-between mb-6 px-4 md:px-6 lg:px-8 pt-4"> {/* Add padding */}
+        // Use a Fragment <>...</> or a simple <div> if you need a single root element
+        <>
+            {/* Header section for this page */}
+            <div className="flex flex-row items-center justify-between mb-6 px-1 md:px-0"> {/* Adjust padding if needed */}
                 <h2 className="text-2xl md:text-3xl font-bold">Events Dashboard</h2>
+                {/* Button to navigate to the event creation page */}
                 <Link href="/admin/events/create" className="btn btn-primary">
                     Create Event
                 </Link>
             </div>
 
-            {/* Pass the server-fetched events to the EventList */}
-            {/* EventList itself doesn't need state, just receives props */}
+            {/* Render the EventList component, passing the fetched events */}
             <EventList events={events} />
-
-        </AdminLayout>
+        </>
     );
 }
-
-// Optional: Add metadata for the page
-export const metadata = {
-  title: 'Admin - Events Dashboard',
-};
-
-// Optional: Revalidate data periodically or on demand
-// export const revalidate = 3600; // Revalidate every hour
