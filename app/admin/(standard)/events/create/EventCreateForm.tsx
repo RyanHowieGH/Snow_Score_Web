@@ -2,11 +2,11 @@
 'use client';
 
 // Assuming React 19:
-import React, { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+// import React, { useActionState } from 'react';
+// import { useFormStatus } from 'react-dom';
 // If React 18:
-// import React from 'react';
-// import { useFormState, useFormStatus } from 'react-dom';
+import React from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 
 import { createEventAction, CreateEventFormState } from './actions'; // Import action and state type
 import type { Discipline, Division } from '@/lib/data'; // Import types for props
@@ -43,7 +43,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
         error: undefined,
         fieldErrors: undefined,
     };
-    const [state, formAction] = useActionState(createEventAction, initialState);
+    const [state, formAction] = useFormState(createEventAction, initialState);
     // If React 18: const [state, formAction] = useFormState(createEventAction, initialState);
 
     return (

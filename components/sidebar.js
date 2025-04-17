@@ -5,8 +5,13 @@ import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/
 
 /**
  * Sidebar component for general navigation.
- * // ... (JSDoc comments) ...
+ *
+ * @param {object} props - Component props.
+ * @param {boolean} props.isOpen - Whether the sidebar is open or closed.
+ * @param {function} props.toggleSidebar - Function to toggle the sidebar state.
+ * @param {import('@/components/ClientSideAuthWrapper').ClientUser | null | undefined} [props.user] - Optional authenticated user object (conforming to ClientUser type) or null/undefined.
  */
+// Default parameter user = null is fine here
 export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
   const baseClasses = `relative bg-primary text-primary-content h-screen flex flex-col transition-width duration-300 ease-in-out overflow-hidden`;
   const widthClasses = isOpen ? 'w-48' : 'w-16';

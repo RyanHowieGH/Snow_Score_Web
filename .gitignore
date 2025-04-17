@@ -21,6 +21,9 @@
 # production
 /build
 
+# Ignore backup directory
+/backup/
+
 # misc
 .DS_Store
 *.pem

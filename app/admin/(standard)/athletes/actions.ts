@@ -5,7 +5,7 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-import { ZodError, z } from 'zod'; // Import Zod
+import { z } from 'zod'; // Import Zod
 
 // Simple schema to validate the ID is a positive integer
 const AthleteIdSchema = z.coerce.number().int().positive("Invalid Athlete ID.");

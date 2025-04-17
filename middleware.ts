@@ -1,6 +1,6 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextRequest } from 'next/server';
+// import { NextRequest } from 'next/server';
 
 // Public: /, sign-in, sign-up. EVERYTHING else requires auth by default with clerkMiddleware
 const isPublicRoute = createRouteMatcher([
