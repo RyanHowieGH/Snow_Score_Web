@@ -1,9 +1,11 @@
 // app/admin/users/CreateUserForm.tsx
 'use client';
 
-import React from 'react';
-// --- Use imports for React 18 ---
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useActionState } from 'react'; // Import useActionState from react
+import { useFormStatus } from 'react-dom';    // useFormStatus STAYS in react-dom
+// import React from 'react';
+// // --- Use imports for React 18 ---
+// import { useFormState, useFormStatus } from 'react-dom';
 
 // --- Import the EXPORTED state type and action from actions.ts ---
 import { createUserAction, CreateUserFormState } from './actions';
@@ -38,9 +40,7 @@ export default function CreateUserForm({ assignableRoles }: CreateUserFormProps)
         fieldErrors: undefined,
         tempPassword: undefined,
     };
-    // --- Use useFormState with the correct types ---
-    const [state, formAction] = useFormState(createUserAction, initialState);
-
+    const [state, formAction] = useActionState(createUserAction, initialState);
     return (
         <form action={formAction} className="space-y-4 mt-4">
 
