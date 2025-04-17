@@ -1,16 +1,17 @@
 // app/admin/events/create/page.tsx (Server Component)
 import React from 'react';
-import { fetchDisciplines, Discipline } from '@/lib/data'; // Fetch disciplines
-import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Check permission
+import Link from 'next/link';
+import { fetchDisciplines, fetchAllDivisions, Discipline, Division } from '@/lib/data';
+import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
 import EventCreateForm from './EventCreateForm'; // Client component for the form
-import Link from 'next/link';
+import type { Metadata } from 'next';
 
-export const metadata = {
-    title: 'Create New Event',
+export const metadata: Metadata = {
+    title: 'Create New Event - Admin',
 };
 
-// Helper function to create the display string for sorting/display
+// Helper to format discipline display text
 function getDisciplineDisplayString(d: Discipline): string {
      return `${d.discipline_name} - ${d.subcategory_name} (${d.category_name})`;
 }
@@ -21,33 +22,38 @@ export default async function CreateEventPage() {
     const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
     if (!user || !allowedRoles.includes(user.roleName)) {
         console.log(`User ${user?.email} role ${user?.roleName} denied access to /admin/events/create`);
-        redirect('/admin');
+        redirect('/admin'); // Redirect if not authorized
     }
 
-    // Fetch disciplines data
-    const disciplinesData: Discipline[] = await fetchDisciplines();
+    // Fetch required data in parallel
+    const [disciplinesData, divisionsData] = await Promise.all([
+        fetchDisciplines(),
+        fetchAllDivisions()
+    ]);
 
-    // --- SORT DISCIPLINES HERE ---
+    // Sort disciplines for the dropdown
     const sortedDisciplines = disciplinesData.sort((a, b) => {
-        const displayA = getDisciplineDisplayString(a);
-        const displayB = getDisciplineDisplayString(b);
-        return displayA.localeCompare(displayB); // Alphabetical sort based on display string
+        return getDisciplineDisplayString(a).localeCompare(getDisciplineDisplayString(b));
     });
-    // --- END SORT ---
+
+    // Divisions are already sorted by name from the fetch query
 
     return (
         <div className="space-y-6">
-             <div className='flex justify-between items-center'>
+             <div className='flex justify-between items-center mb-4'>
                 <h2 className="text-3xl font-bold">Create New Event</h2>
-                <Link href="/events" className="btn btn-sm btn-outline">
+                <Link href="/admin/events" className="btn btn-sm btn-outline">
                     Back to Events List
                 </Link>
             </div>
 
-            <div className="card bg-base-100 shadow">
+            <div className="card bg-base-100 shadow-md w-full max-w-2xl mx-auto"> {/* Added centering/max-width */}
                 <div className="card-body">
-                     {/* Pass the SORTED list to the Client Component form */}
-                    <EventCreateForm disciplines={sortedDisciplines} />
+                     {/* Pass fetched & sorted data to the Client Component form */}
+                    <EventCreateForm
+                        disciplines={sortedDisciplines}
+                        divisions={divisionsData}
+                    />
                 </div>
             </div>
         </div>

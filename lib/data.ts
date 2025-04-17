@@ -1,37 +1,124 @@
-// src/lib/data.ts
+// lib/data.ts
 import getDbPool from './db';
 import { PoolClient } from 'pg';
-// export type { SnowEvent } from '../components/eventListItem'; // Keep existing Event type export
-import type { SnowEvent } from '../components/eventListItem'; // Keep existing Event type export
+import type { SnowEvent } from '@/components/eventListItem'; // Adjust path if needed
 
-// Define the Division type based on ss_division
+// Base Event Type
+export type { SnowEvent } from '@/components/eventListItem';
+
+// Division Interface
 export interface Division {
-    division_id: string; // Matches TEXT PRIMARY KEY in ss_division
-    division_name: string; // Matches division_name in ss_division
-    // Add other fields from ss_division if needed later
+    division_id: number;
+    division_name: string;
 }
 
-// Define the combined type for event details including the correct Division type
-export interface EventDetails extends SnowEvent {
-    divisions: Division[];
-    athletes: RegisteredAthlete[]; // Add athletes array
-}
-
+// For Event Detail Page
 export interface RegisteredAthlete {
     athlete_id: number;
     first_name: string;
     last_name: string;
-    bib_num: string | null; // Bib number might be null
+    bib_num: string | null;
 }
-// --- NEW: Discipline Interface ---
+export interface EventDetails extends SnowEvent {
+    divisions: Division[];
+    athletes: RegisteredAthlete[];
+}
+
+// Discipline Interface
 export interface Discipline {
-    discipline_id: string; // TEXT PRIMARY KEY
+    discipline_id: string;
     category_name: string;
     subcategory_name: string;
     discipline_name: string;
 }
 
-// --- NEW: Function to fetch all disciplines ---
+// --- NEW: Athlete Interface ---
+export interface Athlete {
+    athlete_id: number;
+    last_name: string;
+    first_name: string;
+    dob: Date; // Keep as Date object for use in components
+    gender: string;
+    nationality: string | null;
+    stance: string | null;
+    fis_num: string | null;
+}
+
+// --- Function to fetch a single event with details ---
+export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
+    console.log(`Attempting to fetch event details including athletes for ID: ${eventId}...`);
+     if (isNaN(eventId)) {
+        console.error("Invalid event ID provided.");
+        return null;
+    }
+
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+
+    try {
+        client = await pool.connect();
+        // Fetch event base details
+        const eventResult = await client.query<Omit<SnowEvent, 'start_date' | 'end_date'> & { start_date: string | Date, end_date: string | Date }>(
+            'SELECT event_id, name, start_date, end_date, location FROM ss_events WHERE event_id = $1',
+            [eventId]
+        );
+        if (eventResult.rows.length === 0) { console.log(`Event ${eventId} not found.`); return null; }
+        const eventData = eventResult.rows[0];
+
+        // Fetch linked divisions
+        const divisionResult = await client.query<Division>(
+            `SELECT d.division_id, d.division_name
+             FROM ss_division d JOIN ss_event_divisions ed ON d.division_id = ed.division_id
+             WHERE ed.event_id = $1 ORDER BY d.division_name ASC`,
+            [eventId]
+        );
+
+        // Fetch registered athletes
+        const athleteQuery = `
+            SELECT a.athlete_id, a.first_name, a.last_name, r.bib_num
+            FROM ss_athletes a JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
+            WHERE r.event_id = $1 ORDER BY a.last_name ASC, a.first_name ASC
+        `;
+        const athleteResult = await client.query<RegisteredAthlete>(athleteQuery, [eventId]);
+
+        // Combine results
+        const eventDetails: EventDetails = {
+            event_id: eventData.event_id,
+            name: eventData.name,
+            location: eventData.location,
+            start_date: new Date(eventData.start_date),
+            end_date: new Date(eventData.end_date),
+            divisions: divisionResult.rows,
+            athletes: athleteResult.rows
+        };
+        return eventDetails;
+
+    } catch (error) { /* ... error handling ... */ return null; }
+    finally { if (client) client.release(); }
+}
+
+// --- Function to fetch all events (list) ---
+export async function fetchEvents(): Promise<SnowEvent[]> {
+    console.log("Attempting to fetch all events...");
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query<Omit<SnowEvent, 'start_date' | 'end_date'> & { start_date: string | Date, end_date: string | Date }>(
+          'SELECT event_id, name, start_date, end_date, location FROM ss_events ORDER BY start_date DESC'
+        );
+        const events: SnowEvent[] = result.rows.map(row => ({
+            ...row,
+            start_date: new Date(row.start_date),
+            end_date: new Date(row.end_date),
+        }));
+        console.log(`Fetched ${events.length} events.`);
+        return events;
+    } catch (error) { /* ... error handling ... */ return []; }
+    finally { if (client) client.release(); }
+}
+
+// --- Function to fetch all disciplines ---
 export async function fetchDisciplines(): Promise<Discipline[]> {
     console.log("Attempting to fetch disciplines...");
     const pool = getDbPool();
@@ -43,169 +130,93 @@ export async function fetchDisciplines(): Promise<Discipline[]> {
         );
         console.log(`Fetched ${result.rows.length} disciplines.`);
         return result.rows;
+    } catch (error) { /* ... error handling ... */ return []; }
+     finally { if (client) client.release(); }
+}
+
+// --- Function to fetch all base divisions ---
+export async function fetchAllDivisions(): Promise<Division[]> {
+    console.log("Attempting to fetch all base divisions...");
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query<Division>(
+            'SELECT division_id, division_name FROM ss_division ORDER BY division_name ASC'
+        );
+        console.log(`Fetched ${result.rows.length} base divisions.`);
+        return result.rows;
+    } catch (error) { /* ... error handling ... */ return []; }
+     finally { if (client) client.release(); }
+}
+
+// --- Function to fetch assigned division IDs for an event ---
+export async function fetchAssignedDivisionIds(eventId: number): Promise<number[]> {
+    console.log(`Attempting to fetch assigned division IDs for event ${eventId}...`);
+    if (isNaN(eventId)) return [];
+
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query<{ division_id: number }>(
+            'SELECT division_id FROM ss_event_divisions WHERE event_id = $1',
+            [eventId]
+        );
+        const ids = result.rows.map(row => row.division_id);
+        console.log(`Found ${ids.length} assigned division IDs for event ${eventId}.`);
+        return ids;
+    } catch (error) { /* ... error handling ... */ return []; }
+    finally { if (client) client.release(); }
+}
+
+// --- NEW: Function to fetch all athletes ---
+export async function fetchAllAthletes(): Promise<Athlete[]> {
+    console.log("Attempting to fetch all athletes...");
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        // Select relevant columns, order consistently
+        const result = await client.query<Omit<Athlete, 'dob'> & { dob: string | Date }>( // Type hint for raw row
+            `SELECT
+                athlete_id, last_name, first_name, dob, gender,
+                nationality, stance, fis_num
+             FROM ss_athletes
+             ORDER BY last_name ASC, first_name ASC`
+        );
+        // Ensure DOB is a Date object in the final array
+        const athletes: Athlete[] = result.rows.map(row => ({
+            ...row,
+            dob: new Date(row.dob) // Convert string/date from DB to Date object
+        }));
+        console.log(`Fetched ${athletes.length} athletes.`);
+        return athletes;
     } catch (error) {
-        console.error("Error fetching disciplines:", error);
+        console.error("Error fetching all athletes:", error);
         return []; // Return empty array on error
     } finally {
         if (client) client.release();
     }
 }
-// Function to fetch a single event and its associated divisions
-export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
-    console.log(`Attempting to fetch event with ID: ${eventId}...`);
-    if (isNaN(eventId)) {
-        console.error("Invalid event ID provided.");
-        return null;
-    }
 
-    const pool = getDbPool();
-    let client: PoolClient | null = null;
 
-    try {
-        client = await pool.connect();
-        console.log("DB client connected for fetchEventById.");
-
-        // Fetch event details - Use a more generic type initially from DB if needed
-        // Or stick with <Event> but be aware dates are strings initially
-        const eventResult = await client.query<{
-             event_id: number;
-             name: string;
-             start_date: string | Date; // DB returns string/Date
-             end_date: string | Date;
-             location: string;
-        }>(
-            'SELECT event_id, name, start_date, end_date, location FROM ss_events WHERE event_id = $1',
-            [eventId]
-        );
-
-        if (eventResult.rows.length === 0) {
-            console.log(`Event with ID ${eventId} not found.`);
-            return null;
-        }
-
-        const eventData = eventResult.rows[0]; // eventData now has the raw DB types
-        console.log(`Found event: ${eventData.name}`); // Should work here
-
-        // Fetch associated divisions (query remains the same)
-        const divisionResult = await client.query<Division>(
-            `SELECT d.division_id, d.division_name
-             FROM ss_division d
-             JOIN ss_event_divisions ed ON d.division_id = ed.division_id
-             WHERE ed.event_id = $1
-             ORDER BY d.division_name ASC`,
-            [eventId]
-        );
-        console.log(`Found ${divisionResult.rows.length} divisions for event ${eventId}.`);
-
-        const athleteQuery = `
-            SELECT
-                a.athlete_id,
-                a.first_name,
-                a.last_name,
-                r.bib_num
-            FROM
-                ss_athletes a
-            JOIN
-                ss_event_registrations r ON a.athlete_id = r.athlete_id
-            WHERE
-                r.event_id = $1
-            ORDER BY
-                a.last_name ASC, a.first_name ASC
-        `;
-        const athleteResult = await client.query<RegisteredAthlete>(athleteQuery, [eventId]);
-        console.log(`Found ${athleteResult.rows.length} registered athletes for event ${eventId}.`);
-
-        // --- THIS IS THE CORRECTED PART (Explicit Construction) ---
-        // Construct the final object explicitly, assigning each property
-        // This directly tells TypeScript what properties the object has.
-        const eventDetails: EventDetails = {
-            event_id: eventData.event_id,
-            name: eventData.name,
-            location: eventData.location,
-            start_date: new Date(eventData.start_date),
-            end_date: new Date(eventData.end_date),
-            divisions: divisionResult.rows,
-            athletes: athleteResult.rows // Add the fetched athletes
-        };
-        // --- END OF CORRECTION ---
-
-        // Now, eventDetails strictly conforms to the EventDetails type definition
-        return eventDetails;
-
-    } catch (error) {
-        console.error(`Error fetching event details for ID ${eventId}:`, error);
-        return null;
-    } finally {
-        if (client) {
-            client.release();
-            console.log("DB client released for fetchEventById.");
-        }
-    }
-}
-
-// Keep existing fetchEvents function (no changes needed based on schema for this function)
-export async function fetchEvents(): Promise<SnowEvent[]> {
-    console.log("Attempting to fetch events..."); // Add logging if missing
-    const pool = getDbPool(); // Get the singleton pool instance
-    let client: PoolClient | null = null; // ---> DECLARE client LOCALLY <---
-
-    try {
-        client = await pool.connect(); // Assign to the local client
-        console.log("DB client connected for fetchEvents."); // Add logging
-
-        const result = await client.query<{
-            event_id: number;
-            name: string;
-            start_date: string | Date;
-            end_date: string | Date;
-            location: string;
-        }>(
-          'SELECT event_id, name, start_date, end_date, location FROM ss_events ORDER BY start_date DESC'
-        );
-        console.log(`Fetched ${result.rows.length} events.`); // Add logging
-
-        const events: SnowEvent[] = result.rows.map(row => ({
-            event_id: row.event_id,
-            name: row.name,
-            start_date: new Date(row.start_date),
-            end_date: new Date(row.end_date),
-            location: row.location,
-        }));
-        return events;
-
-    } catch (error) {
-        console.error("Error fetching events:", error);
-        return []; // Return empty array on error
-    } finally {
-        if (client) { // Check the local client
-            client.release(); // Release the local client back to the pool
-            console.log("DB client released for fetchEvents."); // Add logging
-        }
-    }
-}
-
-// Keep existing formatDate helper (or move to utils)
+// --- Date Formatting Helpers ---
 export const formatDate = (date: Date, options?: Intl.DateTimeFormatOptions): string => {
-    if (isNaN(date.getTime())) return "Invalid Date";
-    const defaultOptions: Intl.DateTimeFormatOptions = {
-        year: 'numeric', month: 'long', day: 'numeric'
-    };
+    if (!date || isNaN(date.getTime())) return "Invalid Date";
+    const defaultOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     return date.toLocaleDateString("en-US", options ?? defaultOptions);
 };
-
-// Keep existing formatDateRange helper (or move to utils)
 export const formatDateRange = (start: Date, end: Date): string => {
+    if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return "Invalid Date Range";
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Invalid Date";
     const startDateStr = start.toLocaleDateString("en-US", options);
     const endDateStr = end.toLocaleDateString("en-US", options);
     if (startDateStr === endDateStr) return startDateStr;
     const startMonthYear = start.toLocaleDateString("en-US", { year: 'numeric', month: 'short' });
     const endMonthYear = end.toLocaleDateString("en-US", { year: 'numeric', month: 'short' });
     if (startMonthYear === endMonthYear) {
-        const startDay = start.getDate();
-        const endDay = end.getDate();
-        return `${start.toLocaleDateString("en-US", { month: 'short' })} ${startDay}-${endDay}, ${start.getFullYear()}`;
+        return `${start.toLocaleDateString("en-US", { month: 'short' })} ${start.getDate()}-${end.getDate()}, ${start.getFullYear()}`;
     }
     return `${startDateStr} - ${endDateStr}`;
 };

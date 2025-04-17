@@ -28,10 +28,10 @@ export default function Header({ eventName = null }) {
             </div>
             <div className="flex-none gap-2 mr-4"> {/* Use flex-none and adjust margin */}
                  {/* Use Link components for navigation instead of buttons for better semantics */}
-                 <Link href="/athletes" className="btn btn-ghost text-primary-content">
+                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content">
                     Athletes
                  </Link>
-                 <Link href="/events" className="btn btn-ghost text-primary-content">
+                 <Link href="/admin/events" className="btn btn-ghost text-primary-content">
                     Events
                  </Link>
                  {/* Consider what the admin logo button should do - maybe link to user settings? */}

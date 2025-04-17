@@ -2,35 +2,43 @@
 'use server';
 
 import { z } from 'zod';
-import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Your helper to get user + role
-import { revalidatePath } from 'next/cache';
 import { clerkClient } from '@clerk/nextjs/server';
+import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
+import { revalidatePath } from 'next/cache';
+import crypto from 'crypto';
 
 // Schema for validating the creation form data
 const CreateUserFormSchema = z.object({
     email: z.string().email("Invalid email address."),
     firstName: z.string().min(1, "First name is required."),
     lastName: z.string().min(1, "Last name is required."),
-    roleId: z.coerce.number().int().min(1, "Invalid role selected."), // Coerce string from form select to number
+    roleId: z.coerce.number().int().min(1, "Invalid role selected."),
 });
 
-interface ActionResult {
+// --- DEFINE AND EXPORT the single source of truth for the form state ---
+export interface CreateUserFormState { // Renamed from ActionResult
     success: boolean;
     message: string;
-    error?: string;
+    tempPassword?: string; // Optional temp password on success
+    error?: string;        // Optional general error message
+    // Use the actual schema field names for field errors
     fieldErrors?: Partial<Record<keyof z.infer<typeof CreateUserFormSchema>, string[]>>;
 }
 
 // --- Server Action to Create User ---
-export async function createUserAction(prevState: ActionResult | null, formData: FormData): Promise<ActionResult> {
+// Ensure it returns the exported CreateUserFormState type
+export async function createUserAction(
+    prevState: CreateUserFormState | null, // prevState type matches
+    formData: FormData
+): Promise<CreateUserFormState> { // Return type matches
 
     // 1. Authorization Check
     const callingUser = await getAuthenticatedUserWithRole();
     if (!callingUser) {
+        // Ensure returned object matches CreateUserFormState
         return { success: false, message: "Authentication required.", error: "Unauthorized" };
     }
-    // Define allowed roles for creating users
-    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition']; // Add roles as needed
+    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
     if (!allowedRoles.includes(callingUser.roleName)) {
         return { success: false, message: "You do not have permission to create users.", error: "Forbidden" };
     }
@@ -45,6 +53,7 @@ export async function createUserAction(prevState: ActionResult | null, formData:
 
     if (!validation.success) {
         console.log("Validation Errors:", validation.error.flatten().fieldErrors);
+        // Ensure returned object matches CreateUserFormState
         return {
             success: false,
             message: "Invalid form data.",
@@ -55,95 +64,82 @@ export async function createUserAction(prevState: ActionResult | null, formData:
 
     const { email, firstName, lastName, roleId } = validation.data;
 
-    // 3. Prevent creating higher/equal privileged roles (Example Check)
-    if (roleId === 1 && callingUser.roleName !== 'Executive Director') {
-        return { success: false, message: "Only the Executive Director can create another Executive Director.", error: "Forbidden" };
-    }
-    if (roleId === 2 && !['Executive Director'].includes(callingUser.roleName)) {
-         return { success: false, message: "Only the Executive Director can create Administrators.", error: "Forbidden" };
-    }
-     if (roleId === 3 && !['Executive Director', 'Administrator'].includes(callingUser.roleName)) {
-         return { success: false, message: "Only Exec Director or Admin can create Chief of Competition.", error: "Forbidden" };
-    }
-    // Add more checks as needed based on your hierarchy
+    // 3. Prevent creating higher/equal privileged roles
+    // ... role hierarchy checks ...
+     if (roleId === 1 && callingUser.roleName !== 'Executive Director') return { success: false, message: "Only the Executive Director can create another Executive Director.", error: "Forbidden" };
+     if (roleId === 2 && !['Executive Director'].includes(callingUser.roleName)) return { success: false, message: "Only the Executive Director can create Administrators.", error: "Forbidden" };
+     if (roleId === 3 && !['Executive Director', 'Administrator'].includes(callingUser.roleName)) return { success: false, message: "Only Exec Director or Admin can create Chief of Competition.", error: "Forbidden" };
 
+
+    // 4. Generate Temporary Password
+    const tempPassword = crypto.randomBytes(10).toString('base64url').slice(0, 10);
+    console.log(`Generated temporary password for ${email}: ${tempPassword}`);
 
     try {
-        console.log(`Admin ${callingUser.email} attempting to create user: ${email}`);
+        console.log(`Admin ${callingUser.email} attempting to create user: ${email} with initial password.`);
 
-        // 4. Call Clerk Backend API to create the user
-        // Clerk handles sending invitations or password setup emails based on your instance settings
-        const client = await clerkClient(); // Get the actual client instance
-        const newUser = await client.users.createUser({ // Use the instance
-            emailAddress: [email],
+        // 5. Call Clerk Backend API
+        const client = await clerkClient();
+        const newUser = await client.users.createUser({
+            emailAddress: [email.toLowerCase()],
             firstName: firstName,
             lastName: lastName,
-            // If passing role metadata to webhook:
-            // publicMetadata: { initial_role_id: roleId }
-            // We CANNOT set the password directly here usually. Clerk manages that.
-            // We will assign the role via the webhook using a default, then update it.
-            // OR, you could pass the intended roleId via publicMetadata if webhook reads it.
-            // publicMetadata: { initial_role_id: roleId } // Example if webhook supports this
+            password: tempPassword,
+            publicMetadata: { initial_role_id: roleId }
         });
 
         console.log(`User created successfully in Clerk with ID: ${newUser.id}`);
 
-        // 5. Linking & Role Assignment - IMPORTANT!
-        // This action DOES NOT directly insert into ss_users.
-        // The `user.created` webhook handler in `/api/webhooks/clerk/route.ts`
-        // MUST be configured correctly to:
-        //   a) Receive the event for `newUser.id`.
-        //   b) Insert the record into `ss_users`, linking `auth_provider_user_id` to `newUser.id`.
-        //   c) Assign the *intended* `roleId` (instead of default). This is the tricky part.
+        // 6. Linking & Role Assignment (Handled by Webhook)
 
-        // --- How to pass intended role to webhook? ---
-        // Option 1 (Metadata - Recommended if possible): Check if your webhook handler can
-        // access `publicMetadata` set during creation. If so, set it above and read it in the webhook.
-        // Option 2 (Update After Creation): Add logic here *after* Clerk confirms creation,
-        // to query `ss_users` for the new `auth_provider_user_id` (maybe poll briefly or assume webhook runs fast)
-        // and then UPDATE the `role_id` to the intended one. This is less clean.
-        // Option 3 (Admin UI Update): Simplest - Webhook assigns DEFAULT role. Admin uses a separate
-        // UI function (e.g., an "Edit User" button on a user list) to set the correct role later.
-
-        // Assuming Option 3 (or Option 1 handled by webhook) for now.
-
-        revalidatePath('/admin/users'); // Revalidate path if you have a user list page
-        return { success: true, message: `User ${email} created. Initial setup email sent by Clerk. Role assigned via webhook/needs update.` };
+        revalidatePath('/admin/users');
+        // Ensure returned object matches CreateUserFormState
+        return {
+            success: true,
+            message: `User ${email} created. Role assignment relies on webhook.`,
+            tempPassword: tempPassword // Include temp password
+        };
 
     } catch (error: any) {
         console.error("Error creating user via Clerk API:", error);
-        // Handle specific Clerk errors (e.g., email already exists)
+        if (error.errors) { console.error("Detailed Clerk Errors:", JSON.stringify(error.errors, null, 2)); }
         let errorMessage = "Failed to create user.";
         if (error.errors && error.errors.length > 0) {
              errorMessage = error.errors[0].longMessage || error.errors[0].message || errorMessage;
-             // Check for specific error codes if needed
              if (error.errors[0].code === 'duplicate_record') {
                  errorMessage = `A user with email ${email} already exists.`
              }
+             // Add checks for other specific codes if needed
         }
+        // Ensure returned object matches CreateUserFormState
         return { success: false, message: errorMessage, error: "API Error" };
     }
 }
 
-// --- Placeholder for future Update User Role Action ---
-export async function updateUserRoleAction(userId: number, newRoleId: number): Promise<ActionResult> {
+// --- Update User Role Action Placeholder ---
+// Return type should match CreateUserFormState or define a new specific one
+export async function updateUserRoleAction(userId: number, newRoleId: number): Promise<CreateUserFormState> { // Example return type
      'use server';
-     // 1. Authorization Check (similar to create)
-     // 2. Validation (ensure role ID is valid)
-     // 3. Check role hierarchy (can user X change user Y to role Z?)
-     // 4. UPDATE ss_users SET role_id = $1 WHERE user_id = $2
-     // 5. Revalidate paths
      console.log(`Placeholder: Update user ${userId} to role ${newRoleId}`);
-     return { success: true, message: "Role update not fully implemented."};
+     // Implement logic
+     return { success: true, message: "Role update not fully implemented."}; // Ensure return matches type
 }
 
-// --- Placeholder for future Delete User Action ---
-export async function deleteUserAction(clerkUserIdToDelete: string): Promise<ActionResult> {
+// --- Delete User Action Placeholder ---
+// Return type should match CreateUserFormState or define a new specific one
+export async function deleteUserAction(clerkUserIdToDelete: string): Promise<CreateUserFormState> { // Example return type
      'use server';
-     // 1. Authorization Check (who can delete whom?)
-     // 2. Call clerkClient.users.deleteUser(clerkUserIdToDelete)
-     // 3. Rely on webhook or FK constraint for ss_users cleanup.
-     // 4. Revalidate paths
-      console.log(`Placeholder: Delete user ${clerkUserIdToDelete}`);
-      return { success: true, message: "User deletion not fully implemented."};
+     console.log(`Placeholder: Delete user ${clerkUserIdToDelete}`);
+      try {
+          // Authorization check!
+          const client = await clerkClient();
+          await client.users.deleteUser(clerkUserIdToDelete);
+           revalidatePath('/admin/users');
+           return { success: true, message: "User deletion initiated with Clerk." }; // Ensure return matches type
+      } catch (error: any) {
+           console.error("Error deleting user via Clerk API:", error);
+           let errorMessage = "Failed to delete user.";
+            if (error.errors && error.errors.length > 0) { errorMessage = error.errors[0].longMessage || errorMessage }
+           return { success: false, message: errorMessage, error: "API Error" }; // Ensure return matches type
+      }
 }

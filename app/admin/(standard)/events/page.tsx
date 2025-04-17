@@ -4,7 +4,8 @@
 import React from 'react'; // Import React (optional in newer Next.js but good practice)
 import Link from 'next/link';
 import EventList from '@/components/eventList'; // Assuming alias '@/components/' is setup
-import { fetchEvents, SnowEvent } from '@/lib/data'; // Assuming alias '@/lib/' is setup
+import { fetchEvents } from '@/lib/data';            // Import function from data.ts
+import type { SnowEvent } from '@/components/eventListItem'; // Import type directly from its source
 import type { Metadata } from 'next'; // For metadata
 
 // Metadata for the page (optional but recommended)
