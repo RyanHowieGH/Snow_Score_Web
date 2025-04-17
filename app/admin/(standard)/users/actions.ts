@@ -27,6 +27,13 @@ interface ClerkApiErrorItem { // Interface for a single error object
     meta?: Record<string, unknown>;
 }
 
+export interface CreateUserFormState { // Defined and EXPORTED here
+    success: boolean;
+    message: string;
+    tempPassword?: string;
+    error?: string;
+    fieldErrors?: Partial<Record<keyof z.infer<typeof CreateUserFormSchema>, string[]>>;
+}
 function isClerkApiError(error: unknown): error is ClerkApiError {
     return (
         typeof error === 'object' &&
