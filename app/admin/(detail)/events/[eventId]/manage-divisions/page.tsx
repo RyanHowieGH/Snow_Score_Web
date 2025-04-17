@@ -10,16 +10,18 @@ import type { Metadata } from 'next';
 
 
 // --- Define Explicit Page Props Type ---
-interface ManageEventDivisionsPageProps {
-    params: {
-        eventId: string; // eventId from the URL segment
-    };
-    // searchParams?: { [key: string]: string | string[] | undefined }; // Optional searchParams if needed
-}
+// interface ManageEventDivisionsPageProps {
+//     params: {
+//         eventId: string; // eventId from the URL segment
+//     };
+//     // searchParams?: { [key: string]: string | string[] | undefined }; // Optional searchParams if needed
+// }
 // --- End Props Type Definition ---
 
 // Dynamic metadata generation (using the defined props type)
-export async function generateMetadata({ params }: ManageEventDivisionsPageProps): Promise<Metadata> {
+export async function generateMetadata(
+    { params }: { params: { eventId: string } } // Inline type
+): Promise<Metadata> {
     const eventId = parseInt(params.eventId, 10);
     if (isNaN(eventId)) return { title: 'Invalid Event' };
     const eventDetails = await fetchEventById(eventId);
@@ -29,7 +31,9 @@ export async function generateMetadata({ params }: ManageEventDivisionsPageProps
 }
 
 // Page Component
-export default async function ManageEventDivisionsPage({ params }: ManageEventDivisionsPageProps) {
+export default async function ManageEventDivisionsPage(
+    { params }: { params: { eventId: string } } // Inline type
+) {
     // --- Type of params is now explicitly ManageEventDivisionsPageProps['params'] ---
     const eventId = parseInt(params.eventId, 10);
 
