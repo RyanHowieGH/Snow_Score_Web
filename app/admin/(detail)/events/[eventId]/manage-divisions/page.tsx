@@ -19,10 +19,10 @@ import type { Metadata } from 'next';
 // --- End Props Type Definition ---
 
 // Dynamic metadata generation (using the defined props type)
-export async function generateMetadata(
-    { params }: { params: { eventId: string } } // Inline type
-): Promise<Metadata> {
-    const eventId = parseInt(params.eventId, 10);
+export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
+    const eventIdString = params?.eventId;
+    if (typeof eventIdString !== 'string') return { title: 'Invalid Event ID Type' };
+    const eventId = parseInt(eventIdString, 10);
     if (isNaN(eventId)) return { title: 'Invalid Event' };
     const eventDetails = await fetchEventById(eventId);
     return {
@@ -31,11 +31,13 @@ export async function generateMetadata(
 }
 
 // Page Component
-export default async function ManageEventDivisionsPage(
-    { params }: { params: { eventId: string } } // Inline type
-) {
-    // --- Type of params is now explicitly ManageEventDivisionsPageProps['params'] ---
-    const eventId = parseInt(params.eventId, 10);
+export default async function ManageEventDivisionsPage({ params }: { params: any }) {
+    const eventIdString = params?.eventId;
+    if (typeof eventIdString !== 'string') {
+         console.error("Invalid eventId type in params:", params);
+         notFound();
+    }
+    const eventId = parseInt(eventIdString, 10);
 
     if (isNaN(eventId)) {
         notFound();
