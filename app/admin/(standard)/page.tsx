@@ -24,8 +24,9 @@ export default function AdminDashboardPage() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
                  {/* Link to the Events List page */}
+                 {canManageEvents && ( // Add this check
                  <Link href="/admin/events" className="btn btn-lg btn-accent">Events</Link>
-
+                 )}
                  {/* Conditionally show Users link */}
                  {canManageUsers && (
                      <Link href="/admin/users" className="btn btn-lg btn-accent">Users</Link>

@@ -1,6 +1,7 @@
 // /components/header.js
 import React from "react";
 import Link from 'next/link'; // Import Link
+import Image from "next/image";
 
 
 /**
@@ -17,7 +18,7 @@ export default function Header({ eventName = null }) {
             <div className="flex-1 flex items-center"> {/* Use flex to align items */}
                 {/* Link the logo back to a relevant page, e.g., admin dashboard */}
                 <Link href="/admin">
-                   <img src="/assets/goggles_borderless.png" alt="Goggles Logo" className="ml-5 h-10 rounded-full cursor-pointer" />
+                   <Image src="/assets/goggles_borderless.png" alt="Goggles Logo" className="ml-5 h-10 rounded-full cursor-pointer" />
                 </Link>
                 {/* Display event name if provided */}
                 {eventName && (
@@ -37,7 +38,7 @@ export default function Header({ eventName = null }) {
                  {/* Consider what the admin logo button should do - maybe link to user settings? */}
                  <button className="btn btn-ghost btn-circle avatar">
                     <div className="w-8 rounded-full"> {/* Adjust size */}
-                       <img src="/assets/admin_logo.png" alt="Admin Menu" />
+                       <Image src="/assets/admin_logo.png" alt="Admin Menu" />
                      </div>
                  </button>
             </div>

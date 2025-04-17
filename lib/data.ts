@@ -93,7 +93,7 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         };
         return eventDetails;
 
-    } catch (error) { /* ... error handling ... */ return null; }
+    } catch (error) { console.error("Error details:", error); return null; }
     finally { if (client) client.release(); }
 }
 
@@ -114,7 +114,7 @@ export async function fetchEvents(): Promise<SnowEvent[]> {
         }));
         console.log(`Fetched ${events.length} events.`);
         return events;
-    } catch (error) { /* ... error handling ... */ return []; }
+    } catch (error) { console.error("Error details:", error); return []; }
     finally { if (client) client.release(); }
 }
 
@@ -130,7 +130,7 @@ export async function fetchDisciplines(): Promise<Discipline[]> {
         );
         console.log(`Fetched ${result.rows.length} disciplines.`);
         return result.rows;
-    } catch (error) { /* ... error handling ... */ return []; }
+    } catch (error) { console.error("Error details:", error); return []; }
      finally { if (client) client.release(); }
 }
 
@@ -146,7 +146,7 @@ export async function fetchAllDivisions(): Promise<Division[]> {
         );
         console.log(`Fetched ${result.rows.length} base divisions.`);
         return result.rows;
-    } catch (error) { /* ... error handling ... */ return []; }
+    } catch (error) { console.error("Error details:", error); return []; }
      finally { if (client) client.release(); }
 }
 
@@ -166,7 +166,7 @@ export async function fetchAssignedDivisionIds(eventId: number): Promise<number[
         const ids = result.rows.map(row => row.division_id);
         console.log(`Found ${ids.length} assigned division IDs for event ${eventId}.`);
         return ids;
-    } catch (error) { /* ... error handling ... */ return []; }
+    } catch (error) { console.error("Error details:", error); return []; }
     finally { if (client) client.release(); }
 }
 

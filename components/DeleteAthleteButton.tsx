@@ -1,17 +1,15 @@
 // components/DeleteAthleteButton.tsx
 'use client';
 
-import React, { useTransition, useState } from 'react';
-// Adjust path based on your actions file location
-import { deleteAthleteAction } from '@/app/admin/(standard)/athletes/actions';
+import React, { useTransition } from 'react'; // Removed unused useState
+import { deleteAthleteAction } from '@/app/admin/(standard)/athletes/actions'; // Adjust path if needed
 import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface DeleteAthleteButtonProps {
     athleteId: number;
-    athleteName: string; // Used for the confirmation message
-    // Callbacks to inform the parent list component
-    onDeleted: (athleteId: number) => void;
-    onError: (athleteId: number, message: string) => void;
+    athleteName: string; // For confirmation message
+    onDeleted: (athleteId: number) => void; // Callback after successful deletion
+    onError: (athleteId: number, message: string) => void; // Callback for errors
 }
 
 export default function DeleteAthleteButton({
@@ -20,20 +18,13 @@ export default function DeleteAthleteButton({
     onDeleted,
     onError
 }: DeleteAthleteButtonProps) {
-    // useTransition manages pending state without blocking UI
     const [isPending, startTransition] = useTransition();
-    // Local error state if needed for this button specifically
-    // const [error, setError] = useState<string | null>(null);
 
     const handleClick = () => {
-        // Simple browser confirmation dialog
         if (!window.confirm(`Are you sure you want to permanently delete athlete: ${athleteName} (ID: ${athleteId})? This cannot be undone.`)) {
-            return; // Stop if user cancels
+            return;
         }
 
-        // setError(null); // Clear previous local errors if using local state
-
-        // Wrap the server action call in startTransition
         startTransition(async () => {
             const result = await deleteAthleteAction(athleteId);
             if (result.success) {
@@ -42,7 +33,6 @@ export default function DeleteAthleteButton({
             } else {
                 console.error("Deletion failed:", result.message, result.error);
                 onError(athleteId, result.message); // Notify parent list of error
-                // setError(result.message); // Set local error state if preferred
             }
         });
     };
@@ -51,17 +41,14 @@ export default function DeleteAthleteButton({
         <button
             type="button"
             onClick={handleClick}
-            // Styling using DaisyUI button classes
-            className="btn btn-xs btn-ghost text-error hover:bg-error hover:text-error-content disabled:text-base-content/30 p-1" // Adjust padding/size
-            disabled={isPending} // Disable button while action is pending
+            className="btn btn-xs btn-ghost text-error hover:bg-error hover:text-error-content disabled:text-base-content/30 p-1"
+            disabled={isPending}
             title={`Delete ${athleteName}`}
             aria-label={`Delete athlete ${athleteName}`}
         >
             {isPending ? (
-                // Show spinner when pending
                 <span className="loading loading-spinner loading-xs"></span>
             ) : (
-                // Show icon when not pending
                 <TrashIcon className="h-4 w-4" />
             )}
         </button>

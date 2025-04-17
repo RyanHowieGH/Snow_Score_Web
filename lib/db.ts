@@ -1,5 +1,5 @@
-// src/lib/db.ts (create this file if it doesn't exist)
-import { Pool } from 'pg';
+// lib/db.ts
+import { Pool, PoolClient } from 'pg'; // Import PoolClient type for clarity
 
 let pool: Pool | null = null;
 
@@ -8,21 +8,26 @@ const getDbPool = (): Pool => {
         if (!process.env.POSTGRES_URL) {
             throw new Error("POSTGRES_URL environment variable is not set.");
         }
-        console.log('Creating new DB connection pool...'); // Log pool creation
+        console.log('Creating new DB connection pool...');
         pool = new Pool({
             connectionString: process.env.POSTGRES_URL,
-             // Add SSL configuration if required by Neon (check their docs)
-             // ssl: {
-             //   rejectUnauthorized: false // Often needed for free tiers/local dev
-             // }
+            // ssl: { rejectUnauthorized: false } // Uncomment if needed
         });
 
         // Optional: Add listeners for errors or client acquisition
-        pool.on('error', (err, client) => {
-            console.error('Unexpected error on idle client', err);
-            // You might want to terminate the process or take other actions
+        // The second argument 'client' is the specific client that errored
+        pool.on('error', (err: Error, client: PoolClient) => { // Add types for clarity
+            // --- REMOVED reference to client.processID ---
+            // Log the error. You still *have* the client object if you needed
+            // to attempt specific actions on it, but don't assume properties like processID.
+            console.error('Unexpected error on idle client:', err);
+            console.error('Client that errored:', client);
+            // --- END REMOVAL ---
+
+            // Optional: Terminate the process if pool errors are critical
             // process.exit(-1);
         });
+        console.log('DB connection pool created.');
     }
     return pool;
 };

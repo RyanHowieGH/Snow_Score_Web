@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect, notFound } from 'next/navigation'; // Import notFound
 // Import necessary fetch functions and types
-import { fetchEventById, fetchAllDivisions, fetchAssignedDivisionIds, Division } from '@/lib/data';
+import { fetchEventById, fetchAllDivisions, fetchAssignedDivisionIds } from '@/lib/data';
 import ManageDivisionsForm from '@/components/ManageDivisionsForm'; // Import the new form component
 import type { Metadata } from 'next';
 

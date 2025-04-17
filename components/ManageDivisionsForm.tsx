@@ -56,7 +56,7 @@ export default function ManageDivisionsForm({
             {/* Hidden input to pass eventId to the action */}
             <input type="hidden" name="eventId" value={eventId} />
 
-            <h3 className="card-title text-lg">Assign Divisions for "{eventName}"</h3>
+            <h3 className="card-title text-lg">Assign Divisions for &quot;{eventName}&quot;</h3>
             <p className="text-sm opacity-70 mb-2">Select the divisions that will compete in this event. Unchecking all will remove all divisions.</p>
 
             {/* Division Checkboxes Section */}

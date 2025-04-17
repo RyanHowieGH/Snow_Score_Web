@@ -4,7 +4,6 @@ import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
 import { fetchAllAthletes, Athlete } from '@/lib/data';
 import AthleteList from '@/components/AthleteList'; // Import client list component
-// import Link from 'next/link'; // For potential "Add Athlete" button
 import type { Metadata } from 'next';
 
 // Page metadata

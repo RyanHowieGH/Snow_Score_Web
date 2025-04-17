@@ -1,10 +1,11 @@
-// app/admin/events/create/page.tsx (Server Component)
+// app/admin/(standard)/events/create/page.tsx
 import React from 'react';
 import Link from 'next/link';
-import { fetchDisciplines, fetchAllDivisions, Discipline, Division } from '@/lib/data';
+// Removed unused Division type import
+import { fetchDisciplines, fetchAllDivisions, Discipline } from '@/lib/data';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
-import EventCreateForm from './EventCreateForm'; // Client component for the form
+import EventCreateForm from './EventCreateForm';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -13,7 +14,11 @@ export const metadata: Metadata = {
 
 // Helper to format discipline display text
 function getDisciplineDisplayString(d: Discipline): string {
-     return `${d.discipline_name} - ${d.subcategory_name} (${d.category_name})`;
+     // Added checks for null/undefined properties just in case
+     const disciplineName = d.discipline_name || 'Unknown Discipline';
+     const subCategory = d.subcategory_name || 'N/A';
+     const category = d.category_name || 'N/A';
+     return `${disciplineName} - ${subCategory} (${category})`;
 }
 
 export default async function CreateEventPage() {
@@ -28,31 +33,30 @@ export default async function CreateEventPage() {
     // Fetch required data in parallel
     const [disciplinesData, divisionsData] = await Promise.all([
         fetchDisciplines(),
-        fetchAllDivisions()
+        fetchAllDivisions() // Fetch all base divisions for the form
     ]);
 
     // Sort disciplines for the dropdown
-    const sortedDisciplines = disciplinesData.sort((a, b) => {
+    const sortedDisciplines = [...disciplinesData].sort((a, b) => { // Create shallow copy before sort
         return getDisciplineDisplayString(a).localeCompare(getDisciplineDisplayString(b));
     });
 
-    // Divisions are already sorted by name from the fetch query
+    // Divisions should already be sorted by name from the fetch query in lib/data.ts
 
     return (
         <div className="space-y-6">
-             <div className='flex justify-between items-center mb-4'>
-                <h2 className="text-3xl font-bold">Create New Event</h2>
+             <div className='flex flex-col sm:flex-row justify-between items-center gap-2 mb-4'>
+                <h2 className="text-2xl md:text-3xl font-bold">Create New Event</h2>
                 <Link href="/admin/events" className="btn btn-sm btn-outline">
                     Back to Events List
                 </Link>
             </div>
 
-            <div className="card bg-base-100 shadow-md w-full max-w-2xl mx-auto"> {/* Added centering/max-width */}
+            <div className="card bg-base-100 shadow-md w-full max-w-2xl mx-auto">
                 <div className="card-body">
-                     {/* Pass fetched & sorted data to the Client Component form */}
                     <EventCreateForm
                         disciplines={sortedDisciplines}
-                        divisions={divisionsData}
+                        divisions={divisionsData} // Pass divisions to the form
                     />
                 </div>
             </div>
