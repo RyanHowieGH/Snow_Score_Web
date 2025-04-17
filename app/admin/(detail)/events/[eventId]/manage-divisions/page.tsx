@@ -19,6 +19,8 @@ import type { Metadata } from 'next';
 // --- End Props Type Definition ---
 
 // Dynamic metadata generation (using the defined props type)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const eventIdString = params?.eventId;
     if (typeof eventIdString !== 'string') return { title: 'Invalid Event ID Type' };
@@ -31,6 +33,7 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
 }
 
 // Page Component
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function ManageEventDivisionsPage({ params }: { params: any }) {
     const eventIdString = params?.eventId;
     if (typeof eventIdString !== 'string') {
