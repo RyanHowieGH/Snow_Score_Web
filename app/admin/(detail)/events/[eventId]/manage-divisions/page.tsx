@@ -20,7 +20,6 @@ import type { Metadata } from 'next';
 
 // Dynamic metadata generation (using the defined props type)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const eventIdString = params?.eventId;
     if (typeof eventIdString !== 'string') return { title: 'Invalid Event ID Type' };
