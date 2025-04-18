@@ -1,22 +1,15 @@
-// app/admin/users/CreateUserForm.tsx
+// app/admin/(standard)/users/CreateUserForm.tsx
 'use client';
 
-import React, { useActionState } from 'react'; // Import useActionState from react
-import { useFormStatus } from 'react-dom';    // useFormStatus STAYS in react-dom
-
-// import React from 'react';
-// // --- Use imports for React 18 ---
-// import { useFormState, useFormStatus } from 'react-dom';
-
-// --- Import the EXPORTED state type and action from actions.ts ---
+import React, { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { createUserAction, CreateUserFormState } from './actions';
-// --- Remove incorrect/local state definitions ---
 
 // Define roles prop type
 interface Role { role_id: number; role_name: string; }
 interface CreateUserFormProps { assignableRoles: Role[]; }
 
-// Submit Button Component (no changes needed)
+// Submit Button Component
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -32,11 +25,9 @@ function SubmitButton() {
 
 // Main Form Component
 export default function CreateUserForm({ assignableRoles }: CreateUserFormProps) {
-    // --- Use the IMPORTED state type for initialization ---
     const initialState: CreateUserFormState = {
         success: false,
         message: "",
-        // Initialize optional fields explicitly if desired
         error: undefined,
         fieldErrors: undefined,
         tempPassword: undefined,
@@ -53,7 +44,6 @@ export default function CreateUserForm({ assignableRoles }: CreateUserFormProps)
                     name="email"
                     placeholder="user@example.com"
                     required
-                    // Use state.fieldErrors correctly
                     className={`input input-bordered w-full ${state?.fieldErrors?.email ? 'input-error' : ''}`}
                     aria-invalid={!!state?.fieldErrors?.email}
                     aria-describedby={state?.fieldErrors?.email ? "email-error" : undefined}

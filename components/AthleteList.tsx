@@ -2,16 +2,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { Athlete } from '@/lib/data'; // Import the Athlete type
-import DeleteAthleteButton from './DeleteAthleteButton'; // Import the delete button
+import type { Athlete } from '@/lib/data';
+import DeleteAthleteButton from './DeleteAthleteButton';
 
 interface AthleteListProps {
     athletes: Athlete[];
 }
 
 export default function AthleteList({ athletes: initialAthletes }: AthleteListProps) {
-    // Keep track of athletes locally to remove immediately on success if desired,
-    // though revalidation should handle the refresh eventually.
     const [athletes, setAthletes] = useState(initialAthletes);
     // Store error messages keyed by athlete ID
     const [errorMessages, setErrorMessages] = useState<Record<number, string>>({});
@@ -19,7 +17,6 @@ export default function AthleteList({ athletes: initialAthletes }: AthleteListPr
     const handleDeletionError = (athleteId: number, message: string) => {
          console.log(`Setting error for ${athleteId}: ${message}`);
          setErrorMessages(prev => ({ ...prev, [athleteId]: message }));
-         // Optional: Clear the error message after a delay
          setTimeout(() => {
              setErrorMessages(prev => {
                  const newState = { ...prev };
@@ -31,7 +28,6 @@ export default function AthleteList({ athletes: initialAthletes }: AthleteListPr
 
     const handleSuccessfulDeletion = (deletedAthleteId: number) => {
          console.log(`Deletion successful for ${deletedAthleteId}, list should revalidate.`);
-         // Optimistic UI update: remove athlete from local state immediately
          setAthletes(prev => prev.filter(a => a.athlete_id !== deletedAthleteId));
          // Clear any previous error for this athlete
          setErrorMessages(prev => {

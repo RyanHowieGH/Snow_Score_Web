@@ -1,7 +1,7 @@
 // lib/auth/user.ts (Clerk Version)
 import getDbPool from "@/lib/db";
 import { PoolClient } from 'pg';
-import { auth, currentUser } from '@clerk/nextjs/server'; // Import Auth type if needed
+import { auth, currentUser } from '@clerk/nextjs/server';
 
 // Define interface for our user data including role
 export interface AppUserWithRole {
@@ -18,20 +18,15 @@ export interface AppUserWithRole {
 // Fetches Clerk user ID, then joins DB tables
 export async function getAuthenticatedUserWithRole(): Promise<AppUserWithRole | null> {
     // 1. Get authenticated Clerk user object server-side
-    // --- CORRECTED: Await auth() and then access userId ---
     const authObject = await auth();
     const userId: string | null = authObject.userId;
-    // --- END CORRECTION ---
 
-    // Optionally get full Clerk user object for more details (this IS async)
     const clerkUser = await currentUser();
 
     // Check if userId is null (not authenticated)
     if (!userId) {
-        // console.log("getAuthenticatedUserWithRole: Not authenticated via Clerk (userId is null).");
         return null;
     }
-    // You might optionally check clerkUser too
     if (!clerkUser) {
          console.warn(`getAuthenticatedUserWithRole: userId ${userId} exists, but currentUser() returned null.`);
          return null; // Treat as incomplete data / potential issue

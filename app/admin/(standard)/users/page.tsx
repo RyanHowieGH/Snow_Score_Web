@@ -1,9 +1,9 @@
 // app/admin/users/page.tsx
 import React from 'react';
-import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Check user role
+import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
-import CreateUserForm from './CreateUserForm'; // Separate form component
-import getDbPool from '@/lib/db'; // To fetch roles for dropdown
+import CreateUserForm from './CreateUserForm';
+import getDbPool from '@/lib/db';
 
 // Fetch available roles server-side
 async function getRoles() {
@@ -26,7 +26,6 @@ async function getRoles() {
         console.error("Failed to fetch roles:", error);
         return [];
     }
-    // Note: No client release needed for pool.query() if not using explicit connect/release
 }
 
 

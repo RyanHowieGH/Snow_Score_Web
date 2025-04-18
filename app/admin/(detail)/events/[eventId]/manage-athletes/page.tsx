@@ -4,10 +4,8 @@
 import { useState, ChangeEvent, useTransition, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Papa from 'papaparse';
-// --- Updated Import Path & added getEventDivisions ---
 import { checkAthletesAgainstDb, addAndRegisterAthletes, getEventDivisions } from './actions';
 import Link from 'next/link';
-// --- Import needed icons ---
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
 // Define types locally (match types used/returned by actions)
@@ -58,7 +56,7 @@ export default function ManageAthletesPage() {
     const [isRegistering, setIsRegistering] = useState(false);
     const [checkedAthletes, setCheckedAthletes] = useState<CheckedAthleteClient[]>([]);
     const [eventDivisions, setEventDivisions] = useState<Division[]>([]);
-    const [selectedDivisionId, setSelectedDivisionId] = useState<string>(''); // Keep as string for select value
+    const [selectedDivisionId, setSelectedDivisionId] = useState<string>('');
     const [processingError, setProcessingError] = useState<string | null>(null);
     const [registrationResult, setRegistrationResult] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -163,7 +161,6 @@ export default function ManageAthletesPage() {
           const athleteToEdit = checkedAthletes.find(a => a.csvIndex === csvIndex);
           console.log("Edit athlete data:", athleteToEdit);
           alert(`Implement editing UI for athlete: ${athleteToEdit?.first_name} ${athleteToEdit?.last_name} (CSV index: ${csvIndex})`);
-          // Needs state update logic after modal/form edit completes
      };
 
     const handleRegisterAthletes = () => {
@@ -175,7 +172,6 @@ export default function ManageAthletesPage() {
          const athletesToSubmit: AthleteToRegister[] = checkedAthletes
             .filter(a => a.isSelected && a.status !== 'error')
             .map(a => {
-                // --- Use specific type, not any ---
                 const payload: AthleteToRegister = {
                     csvIndex: a.csvIndex,
                     status: a.status as 'matched' | 'new', // Type assertion after filter

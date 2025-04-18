@@ -1,10 +1,6 @@
-// app/admin/events/create/EventCreateForm.tsx (Client Component)
+// app/admin/(standard)/events/create/EventCreateForm.tsx (Client Component)
 'use client';
 
-// Assuming React 19:
-// import React, { useActionState } from 'react';
-// import { useFormStatus } from 'react-dom';
-// If React 18:
 import React from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 
@@ -36,7 +32,6 @@ function SubmitButton() {
 
 // Main Form Component
 export default function EventCreateForm({ disciplines, divisions }: EventCreateFormProps) {
-    // Initialize form state using useActionState (React 19)
     const initialState: CreateEventFormState = {
         success: false,
         message: "",
@@ -44,7 +39,6 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
         fieldErrors: undefined,
     };
     const [state, formAction] = useFormState(createEventAction, initialState);
-    // If React 18: const [state, formAction] = useFormState(createEventAction, initialState);
 
     return (
         // The form element calls the server action directly
@@ -173,7 +167,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                 >
                      {divisions.length > 0 ? (
                           divisions.map(div => (
-                            <label key={div.division_id} className="label cursor-pointer justify-start gap-2 p-0"> {/* Adjust padding */}
+                            <label key={div.division_id} className="label cursor-pointer justify-start gap-2 p-0">
                                 <input
                                     type="checkbox"
                                     name="division_ids" // Same name for all checkboxes in the group
@@ -206,7 +200,6 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                      <span>{state.message}</span>
                  </div>
             )}
-             {/* Success message might not be seen due to redirect */}
              {state?.message && state.success && (
                  <div role="alert" className="alert alert-success mt-4 text-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>

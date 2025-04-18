@@ -124,7 +124,6 @@ export async function createEventAction(
              const divisionResult = await client.query(insertDivisionsQuery, [newEventId, division_ids]);
              console.log(`Linked ${divisionResult.rowCount ?? 0} divisions to event ${newEventId}.`);
         } else if (!newEventId) {
-             // This case should be caught by the error above, but good to note
              console.error("Cannot link divisions because event ID was not obtained.");
         } else {
              console.log(`No divisions selected for event ${newEventId}.`);
@@ -148,8 +147,6 @@ export async function createEventAction(
          console.log(`Redirecting to /admin/events/${newEventId}`);
          redirect(`/admin/events/${newEventId}`); // Redirect on success
     }
-
-    // This state might not be seen due to the redirect, but return it for consistency
     return { success: true, message: `Event "${name}" created successfully!` };
 
 } // End of createEventAction

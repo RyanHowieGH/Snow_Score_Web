@@ -1,7 +1,7 @@
 // src/components/EventList.tsx
 import React from "react";
-import EventListItem, { SnowEvent } from "./eventListItem"; // Import type and component
-import Link from 'next/link'; // Import Link
+import EventListItem, { SnowEvent } from "./eventListItem";
+import Link from 'next/link';
 
 interface EventListProps {
     events: SnowEvent[];
@@ -20,13 +20,13 @@ const EventList: React.FC<EventListProps> = ({ events }) => {
         .sort((a, b) => b.start_date.getTime() - a.start_date.getTime()); // Sort previous descending
 
     return (
-        <div className="flex flex-col items-center w-full space-y-8 max-w-2xl mx-auto"> {/* Added spacing & max-width */}
+        <div className="flex flex-col items-center w-full space-y-8 max-w-2xl mx-auto">
 
             {/* Upcoming Events Section */}
             <section className="w-full">
                 <h3 className="text-xl font-semibold mb-3 opacity-80 px-1">Upcoming Events</h3>
                 {upcomingEvents.length > 0 ? (
-                    <ul className="list bg-base-100 rounded-box shadow-lg w-full"> {/* Increased shadow */}
+                    <ul className="list bg-base-100 rounded-box shadow-lg w-full">
                         {upcomingEvents.map((event) => (
                             <EventListItem key={`upcoming-${event.event_id}`} event={event} isUpcoming={true} />
                         ))}
@@ -46,8 +46,6 @@ const EventList: React.FC<EventListProps> = ({ events }) => {
                 <h3 className="text-xl font-semibold mb-3 opacity-80 px-1">Previous Events</h3>
                 {previousEvents.length > 0 ? (
                     <ul className="list bg-base-100 rounded-box shadow-lg w-full">
-                        {/* Optional: Add header row if needed */}
-                        {/* <li className="p-4 pb-2 text-xs opacity-60 tracking-wide">Previous Events</li> */}
                         {previousEvents.map((event) => (
                             <EventListItem key={`previous-${event.event_id}`} event={event} isUpcoming={false} />
                         ))}

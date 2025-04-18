@@ -40,8 +40,6 @@ export default function EventSidebar({ isOpen, toggleSidebar, eventId }) {
          {/* Optionally show icons only when collapsed */}
          {!isOpen && (
             <div className="flex flex-col items-center space-y-4 mt-4">
-                 {/* Add icons here if desired for collapsed view */}
-                 {/* Example: <HomeIcon className="h-6 w-6" /> */}
             </div>
          )}
       </nav>
@@ -64,9 +62,3 @@ export default function EventSidebar({ isOpen, toggleSidebar, eventId }) {
     </div>
   );
 }
-
-// Add this to your globals.css or tailwind.config.js if it doesn't exist
-// .h-screen-minus-header {
-//   height: calc(100vh - YOUR_HEADER_HEIGHT); /* Replace YOUR_HEADER_HEIGHT with actual height e.g., 4rem or 64px */
-// }
-// Or rely on flex-1 in the parent container to fill height. Let's assume flex-1 in parent handles height.

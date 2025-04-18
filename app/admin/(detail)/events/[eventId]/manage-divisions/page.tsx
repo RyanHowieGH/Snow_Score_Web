@@ -2,21 +2,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-import { redirect, notFound } from 'next/navigation'; // Import notFound
-// Import necessary fetch functions and types
+import { redirect, notFound } from 'next/navigation';
 import { fetchEventById, fetchAllDivisions, fetchAssignedDivisionIds } from '@/lib/data';
-import ManageDivisionsForm from '@/components/ManageDivisionsForm'; // Import the new form component
+import ManageDivisionsForm from '@/components/ManageDivisionsForm';
 import type { Metadata } from 'next';
-
-
-// --- Define Explicit Page Props Type ---
-// interface ManageEventDivisionsPageProps {
-//     params: {
-//         eventId: string; // eventId from the URL segment
-//     };
-//     // searchParams?: { [key: string]: string | string[] | undefined }; // Optional searchParams if needed
-// }
-// --- End Props Type Definition ---
 
 // Dynamic metadata generation (using the defined props type)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

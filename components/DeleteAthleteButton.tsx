@@ -1,8 +1,8 @@
 // components/DeleteAthleteButton.tsx
 'use client';
 
-import React, { useTransition } from 'react'; // Removed unused useState
-import { deleteAthleteAction } from '@/app/admin/(standard)/athletes/actions'; // Adjust path if needed
+import React, { useTransition } from 'react';
+import { deleteAthleteAction } from '@/app/admin/(standard)/athletes/actions';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface DeleteAthleteButtonProps {

@@ -1,5 +1,5 @@
-// app/admin/(standard)/layout.tsx (NEW FILE)
-'use client'; // Needs client wrapper which uses state
+// app/admin/(standard)/layout.tsx
+'use client';
 
 import React from 'react';
 import AdminLayoutClientWrapper from '@/components/AdminLayoutClientWrapper';

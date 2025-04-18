@@ -36,13 +36,11 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
                 Events
                 </Link>
             )}
-            {/* --- ADDED ATHLETES LINK --- */}
             {canViewAthletes && (
                 <Link href="/admin/athletes" className="hover:bg-primary-focus p-2 rounded block">
                 Athletes
                 </Link>
             )}
-            {/* --- END ADDED LINK --- */}
             {canManageUsers && (
               <Link href="/admin/users" className="hover:bg-primary-focus p-2 rounded block">
                 Manage Users
@@ -55,7 +53,6 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
         )}
          {!isOpen && (
              <div className="flex flex-col items-center space-y-4 mt-4">
-                 {/* TODO: Add Icons for collapsed view */}
              </div>
          )}
       </nav>

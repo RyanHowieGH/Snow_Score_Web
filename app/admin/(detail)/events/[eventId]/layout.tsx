@@ -1,14 +1,10 @@
-// app/admin/(detail)/events/[eventId]/layout.tsx (REVISED - Simpler)
+// app/admin/(detail)/events/[eventId]/layout.tsx
 'use client'; // Needs client state for sidebar toggle
 
 import React, { useState } from "react";
-import Header from "@/components/header"; // Adjust path
-import EventSidebar from "@/components/eventSidebar"; // Adjust path
-import { useParams } from "next/navigation"; // Hook to get params client-side
-// Fetching data client-side in layout is generally discouraged,
-// but acceptable for simple things like event name for the header if needed,
-// or rely on page data passed via context/state management if complex.
-// For now, let's assume Header doesn't NEED eventName immediately or page handles title.
+import Header from "@/components/header";
+import EventSidebar from "@/components/eventSidebar";
+import { useParams } from "next/navigation";
 
 interface EventDetailLayoutProps {
     children: React.ReactNode;
@@ -23,8 +19,7 @@ export default function EventDetailLayout({ children }: EventDetailLayoutProps) 
     const toggleEventSidebar = () => setIsEventSidebarOpen(!isEventSidebarOpen);
 
     // We might not have eventName readily available here without an extra fetch
-    // The Header component was modified to make eventName optional
-    const eventName = "Event Details"; // Placeholder or fetch later/use page title
+    const eventName = "Event Details";
 
     return (
         <div className="flex flex-col h-screen bg-gray-100">
@@ -44,5 +39,3 @@ export default function EventDetailLayout({ children }: EventDetailLayoutProps) 
         </div>
     );
 }
-
-// Remove the separate SingleEventLayout.tsx component file if this replaces its functionality.

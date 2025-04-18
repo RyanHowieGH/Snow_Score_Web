@@ -1,6 +1,6 @@
 // src/components/eventListItem.tsx
 import React from "react";
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 
 // Define and export the type for the event data (using event_id)
 export interface SnowEvent {
@@ -16,7 +16,7 @@ interface EventListItemProps {
     isUpcoming: boolean;
 }
 
-// Helper function to format date ranges (remains the same)
+// Helper function to format date ranges
 const formatDateRange = (start: Date, end: Date): string => {
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Invalid Date";
@@ -37,7 +37,7 @@ const formatDateRange = (start: Date, end: Date): string => {
 const EventListItem: React.FC<EventListItemProps> = ({ event, isUpcoming }) => {
     const formattedDate = formatDateRange(event.start_date, event.end_date);
     // Define the target URL for the event link
-    const eventUrl = `/admin/events/${event.event_id}`; // Adjust path if your event detail page is different
+    const eventUrl = `/admin/events/${event.event_id}`;
 
     return (
         // The <li> still provides the list structure

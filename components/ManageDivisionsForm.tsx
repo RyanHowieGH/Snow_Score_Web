@@ -2,13 +2,10 @@
 'use client';
 
 
-// If React 18:
 import React from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
-
-// Adjust import path based on actual location
 import { updateEventDivisionsAction, UpdateDivisionsFormState } from '@/app/admin/(detail)/events/[eventId]/manage-divisions/actions';
-import type { Division } from '@/lib/data'; // Import Division type
+import type { Division } from '@/lib/data';
 
 // Props for the form component
 interface ManageDivisionsFormProps {
@@ -73,7 +70,7 @@ export default function ManageDivisionsForm({
                 >
                      {allDivisions.length > 0 ? (
                           allDivisions.map(div => (
-                            <label key={div.division_id} className="label cursor-pointer justify-start gap-2 p-1"> {/* Minimal padding */}
+                            <label key={div.division_id} className="label cursor-pointer justify-start gap-2 p-1">
                                 <input
                                     type="checkbox"
                                     name="division_ids" // Crucial: Same name for all checkboxes in group

@@ -15,9 +15,8 @@ interface ClerkApiError {
         code?: string;
         longMessage?: string;
         message?: string;
-        meta?: Record<string, unknown>; // Add other potential fields if needed
+        meta?: Record<string, unknown>;
     }[]; // It's an array of error objects
-    // Add other top-level Clerk error properties if known (e.g., status)
     status?: number;
 }
 interface ClerkApiErrorItem { // Interface for a single error object
@@ -104,7 +103,6 @@ export async function createUserAction(
     if (roleId === 1 && callingUser.roleName !== 'Executive Director') return { success: false, message: "Only the Executive Director can create another Executive Director.", error: "Forbidden" };
     if (roleId === 2 && !['Executive Director'].includes(callingUser.roleName)) return { success: false, message: "Only the Executive Director can create Administrators.", error: "Forbidden" };
     if (roleId === 3 && !['Executive Director', 'Administrator'].includes(callingUser.roleName)) return { success: false, message: "Only Exec Director or Admin can create Chief of Competition.", error: "Forbidden" };
-    // Add more hierarchy checks if needed
 
     // 4. Generate Temporary Password
     const tempPassword = crypto.randomBytes(10).toString('base64url').slice(0, 10);
@@ -141,7 +139,7 @@ export async function createUserAction(
 
          // --- Use Type Guard ---
          if (isClerkApiError(error) && error.errors && error.errors.length > 0) {
-            const clerkErrors = error.errors; // Now TS knows clerkErrors is an array (if it exists)
+            const clerkErrors = error.errors;
             console.error("Detailed Clerk Errors:", JSON.stringify(clerkErrors, null, 2));
             const firstError = clerkErrors[0];
             errorMessage = firstError.longMessage || firstError.message || errorMessage;
@@ -166,10 +164,6 @@ export async function updateUserRoleAction(userId: number, newRoleId: number): P
      if (!callingUser) {
          return { success: false, message: "Authentication required.", error: "Unauthorized" };
      }
-     // Add more detailed permission checks here:
-     // e.g., Can callingUser change roles at all?
-     // e.g., Can callingUser assign the specific newRoleId?
-     // e.g., Cannot change own role? Cannot change Exec Dir role?
      console.warn("updateUserRoleAction: Authorization logic not fully implemented!");
 
      // 2. Validation (e.g., check if newRoleId is valid)
@@ -177,7 +171,6 @@ export async function updateUserRoleAction(userId: number, newRoleId: number): P
      let client: PoolClient | null = null;
      try {
          client = await pool.connect();
-         // Optional: Verify newRoleId exists in ss_roles
          const roleCheck = await client.query('SELECT 1 FROM ss_roles WHERE role_id = $1', [newRoleId]);
          if (roleCheck.rowCount === 0) {
               return { success: false, message: `Invalid target role ID: ${newRoleId}`, error: "Validation Failed" };
@@ -214,11 +207,9 @@ export async function deleteUserAction(clerkUserIdToDelete: string): Promise<Use
       if (!allowedDeleteRoles.includes(callingUser.roleName)) {
          return { success: false, message: "You do not have permission to delete users.", error: "Forbidden" };
      }
-      // Add checks: cannot delete self, cannot delete higher roles etc.
       if (callingUser.authProviderId === clerkUserIdToDelete) {
            return { success: false, message: "Cannot delete your own account.", error: "Forbidden" };
       }
-      // Optional: Fetch target user's role from DB via clerkUserIdToDelete and check hierarchy
 
      console.log(`User ${callingUser.email} attempting to delete Clerk user ID: ${clerkUserIdToDelete}`);
 
@@ -240,16 +231,14 @@ export async function deleteUserAction(clerkUserIdToDelete: string): Promise<Use
 
              // --- Use Type Guard and Specific Item Type ---
            if (isClerkApiError(error) && error.errors && error.errors.length > 0) {
-            // Now TypeScript knows error.errors is likely ClerkApiErrorItem[] | undefined
             const clerkErrors = error.errors;
-            // Access first error - TS should infer its type better now, or add annotation
-            const firstError: ClerkApiErrorItem = clerkErrors[0]; // Explicitly type firstError
+            const firstError: ClerkApiErrorItem = clerkErrors[0];
             errorMessage = firstError.longMessage || firstError.message || errorMessage;
             clerkErrorCode = firstError.code;
             if (clerkErrorCode === 'resource_not_found') {
                  errorMessage = "User not found in Clerk (might be already deleted).";
             }
-       } else if (error instanceof Error) { // Fallback for generic errors
+       } else if (error instanceof Error) {
            errorMessage = error.message;
        }
        // --- End Type Guard Usage ---

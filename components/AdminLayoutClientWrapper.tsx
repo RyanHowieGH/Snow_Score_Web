@@ -1,10 +1,10 @@
-// components/AdminLayoutClientWrapper.tsx (New File)
+// components/AdminLayoutClientWrapper.tsx
 'use client'; // This component manages state, must be client
 
 import React, { useState, ReactNode } from 'react';
 import Header from '@/components/header'; // Adjust paths
 import Sidebar from '@/components/sidebar';
-import type { ClientUser } from './ClientSideAuthWrapper'; // Import the type used for client-safe user
+import type { ClientUser } from './ClientSideAuthWrapper';
 
 interface AdminLayoutClientWrapperProps {
     children: ReactNode;
@@ -20,7 +20,6 @@ export default function AdminLayoutClientWrapper({ children, user }: AdminLayout
 
     return (
         <div className="flex flex-col h-screen">
-            {/* Header can receive user if needed */}
             <Header /* user={user} */ />
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar receives state, toggle function, AND user data */}

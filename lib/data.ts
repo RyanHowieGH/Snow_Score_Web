@@ -1,7 +1,7 @@
 // lib/data.ts
 import getDbPool from './db';
 import { PoolClient } from 'pg';
-import type { SnowEvent } from '@/components/eventListItem'; // Adjust path if needed
+import type { SnowEvent } from '@/components/eventListItem';
 
 // Base Event Type
 export type { SnowEvent } from '@/components/eventListItem';
@@ -32,12 +32,12 @@ export interface Discipline {
     discipline_name: string;
 }
 
-// --- NEW: Athlete Interface ---
+// --- Athlete Interface ---
 export interface Athlete {
     athlete_id: number;
     last_name: string;
     first_name: string;
-    dob: Date; // Keep as Date object for use in components
+    dob: Date;
     gender: string;
     nationality: string | null;
     stance: string | null;

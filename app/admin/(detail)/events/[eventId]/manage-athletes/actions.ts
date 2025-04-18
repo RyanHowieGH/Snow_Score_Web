@@ -27,14 +27,13 @@ const AthleteCsvSchema = z.object({
 type AthleteCsvData = z.infer<typeof AthleteCsvSchema>;
 
 // Define structure for checking athletes against DB
-interface CheckedAthlete extends Omit<AthleteCsvData, 'stance'> { // Omit the stricter stance type
+interface CheckedAthlete extends Omit<AthleteCsvData, 'stance'> { 
     csvIndex: number;
     status: 'matched' | 'new' | 'error';
     dbAthleteId?: number | null;
     validationError?: string;
     dbDetails?: { first_name: string; last_name: string; dob: Date };
-    // Add stance back with a broader type for the overall interface
-    stance?: "" | "Regular" | "Goofy" | string | null; // Allow generic string too
+    stance?: "" | "Regular" | "Goofy" | string | null; // Allow empty string or null for stance
 }
 
 // Define structure for the combined result of checking athletes and divisions
@@ -61,7 +60,7 @@ export async function checkAthletesAgainstDb(
     // --- Authorization Check ---
     const user = await getAuthenticatedUserWithRole();
     if (!user) return { success: false, error: "Authentication required." };
-    const allowedCheckRoles = ['Executive Director', 'Administrator', 'Chief of Competition']; // Adjust roles
+    const allowedCheckRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
     if (!allowedCheckRoles.includes(user.roleName)) {
          return { success: false, error: "Permission denied to check athletes." };
     }
@@ -75,7 +74,7 @@ export async function checkAthletesAgainstDb(
     const results: CheckedAthlete[] = [];
     const fisNumsToCheck: string[] = [];
     const nameDobToCheck: { first_name: string; last_name: string; dob: string }[] = [];
-    const validatedGenders = new Set<string>(); // Changed to const
+    const validatedGenders = new Set<string>();
 
     // 1. Validate and prepare data
     for (let i = 0; i < parsedAthletes.length; i++) {
@@ -99,7 +98,6 @@ export async function checkAthletesAgainstDb(
                 csvIndex: i,
                 status: 'error',
                 validationError: parseResult.error.flatten().fieldErrors ? JSON.stringify(parseResult.error.flatten().fieldErrors) : "Invalid data format",
-                // dbDetails and dbAthleteId remain undefined/null
             });
             continue;
         }
@@ -317,16 +315,3 @@ export async function getEventDivisions(eventId: number): Promise<{ success: boo
         if (client) client.release();
     }
 }
-
-// Helper type (ensure this is defined if not already)
-// Redefining locally as it was removed from page.tsx context, ensure consistency
-// interface CheckedAthleteClient extends Record<string, unknown> {
-//     csvIndex: number;
-//     status: 'matched' | 'new' | 'error';
-//     dbAthleteId?: number | null;
-//     validationError?: string;
-//     dbDetails?: { first_name: string; last_name: string; dob: Date | string; };
-//     isSelected?: boolean;
-//     last_name?: string; first_name?: string; dob?: string; gender?: string;
-//     nationality?: string | null; stance?: string | null; fis_num?: string | null;
-// }

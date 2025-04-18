@@ -1,7 +1,6 @@
 // app/admin/(standard)/events/create/page.tsx
 import React from 'react';
 import Link from 'next/link';
-// Removed unused Division type import
 import { fetchDisciplines, fetchAllDivisions, Discipline } from '@/lib/data';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
@@ -41,7 +40,6 @@ export default async function CreateEventPage() {
         return getDisciplineDisplayString(a).localeCompare(getDisciplineDisplayString(b));
     });
 
-    // Divisions should already be sorted by name from the fetch query in lib/data.ts
 
     return (
         <div className="space-y-6">

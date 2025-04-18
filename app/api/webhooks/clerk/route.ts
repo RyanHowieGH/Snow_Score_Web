@@ -6,12 +6,10 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 
 // Define a default role ID for new users IF no role metadata is found in the webhook.
-// IMPORTANT: This Role ID MUST exist in your ss_roles table.
 const DEFAULT_NEW_USER_ROLE_ID = 6; // Example: Role ID for 'Volunteer' or 'Coach'
 
-// Define the expected shape of metadata if using Option 1 for role assignment
 interface UserPublicMetadata {
-  initial_role_id?: number; // Optional: Role ID set during admin creation
+  initial_role_id?: number;
 }
 
 export async function POST(req: Request) {
@@ -90,7 +88,6 @@ export async function POST(req: Request) {
       let assignedRoleId = DEFAULT_NEW_USER_ROLE_ID; // Start with default
       const publicMetadata = userData.public_metadata as UserPublicMetadata; // Cast metadata
       if (publicMetadata?.initial_role_id && typeof publicMetadata.initial_role_id === 'number') {
-          // Optional: Add validation here to ensure this role ID is valid in your DB
           assignedRoleId = publicMetadata.initial_role_id;
           console.log(`Webhook: Found initial_role_id ${assignedRoleId} in public metadata for ${authProviderId}.`);
       } else {
@@ -98,7 +95,7 @@ export async function POST(req: Request) {
       }
       // ---> End Role ID Determination <---
 
-      // Insert into your ss_users table
+      // Insert into ss_users table
       client = await pool.connect();
       const insertQuery = `
         INSERT INTO ss_users (name, email, role_id, auth_provider_user_id)
@@ -113,7 +110,6 @@ export async function POST(req: Request) {
         authProviderId,
       ]);
 
-      // Use Nullish Coalescing for rowCount check
       const rowsAffected = result?.rowCount ?? 0;
       if (rowsAffected > 0) {
            console.log(`Successfully linked Clerk user ${authProviderId} to ss_users with role ID ${assignedRoleId}.`);
@@ -142,28 +138,10 @@ export async function POST(req: Request) {
          } else {
              console.warn(`Skipping ss_users update for ${authProviderId} due to missing name or email.`);
          }
-         // Note: Role updates should likely happen via your app's admin UI, not triggered by Clerk profile updates.
     }
     // --- Handle user.deleted ---
     else if (eventType === 'user.deleted') {
          console.log(`Processing user.deleted event for Clerk ID: ${authProviderId}`);
-         // If using `ON DELETE SET NULL` or `ON DELETE CASCADE` on the foreign key
-         // `ss_users.auth_provider_user_id REFERENCES neon_auth.users_sync(id)`,
-         // and Neon Auth removes the user from `neon_auth.users_sync` upon deletion,
-         // the database might handle this automatically. Verify this behavior.
-
-         // If explicit deletion from ss_users is needed:
-         /*
-         try {
-              client = await pool.connect();
-              const deleteQuery = `DELETE FROM ss_users WHERE auth_provider_user_id = $1`;
-              const deleteResult = await client.query(deleteQuery, [authProviderId]);
-              console.log(`Attempted deletion from ss_users for Clerk ID ${authProviderId}. Rows affected: ${deleteResult?.rowCount ?? 0}`);
-         } catch(dbDeleteError) {
-              console.error(`Database error processing user.deleted webhook for ${authProviderId}:`, dbDeleteError);
-              // Decide if this should be a 500 error
-         }
-         */
          console.log(`User deletion event received for ${authProviderId}. Action depends on FK/sync behavior.`);
     }
     // --- Handle other events if needed ---
@@ -183,7 +161,6 @@ export async function POST(req: Request) {
     // Ensure database client is always released
     if (client) {
         client.release();
-        // console.log("Webhook DB client released."); // Optional: reduce logging noise
     }
   }
 }

@@ -5,7 +5,7 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-import { z } from 'zod'; // Import Zod (ZodError not needed)
+import { z } from 'zod';
 
 // Schema to validate the Athlete ID is a positive integer
 const AthleteIdSchema = z.coerce.number().int().positive("Invalid Athlete ID.");
@@ -71,7 +71,6 @@ export async function deleteAthleteAction(athleteIdInput: unknown): Promise<Dele
         let errorCode = 'DB Error';
 
         // Type guard to check if it's a Postgres-like error with a code
-        // Note: This relies on the error object structure from 'pg'
         if (typeof error === 'object' && error !== null && 'code' in error) {
             const pgErrorCode = String(error.code); // Convert code to string for comparison
             errorCode = pgErrorCode; // Store the actual code
@@ -81,8 +80,6 @@ export async function deleteAthleteAction(athleteIdInput: unknown): Promise<Dele
                 userMessage = "Cannot delete athlete: They are likely registered for an event or have associated results.";
                 console.warn(`Deletion of athlete ID ${athleteId} failed due to foreign key constraint.`);
             } else if (error instanceof Error) {
-                 // If it has a code but isn't FK, maybe use the general message
-                 // userMessage = `Database error (${pgErrorCode}): ${error.message}`; // Avoid exposing too much detail
             }
         } else if (error instanceof Error) {
              // Fallback if it's a generic Error object without a code

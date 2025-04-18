@@ -1,21 +1,18 @@
 // /app/admin/(standard)/events/page.tsx
 // This is a Server Component - No 'use client' needed
 
-import React from 'react'; // Import React (optional in newer Next.js but good practice)
+import React from 'react';
 import Link from 'next/link';
-import EventList from '@/components/eventList'; // Assuming alias '@/components/' is setup
-import { fetchEvents } from '@/lib/data';            // Import function from data.ts
-import type { SnowEvent } from '@/components/eventListItem'; // Import type directly from its source
-import type { Metadata } from 'next'; // For metadata
+import EventList from '@/components/eventList';
+import { fetchEvents } from '@/lib/data';
+import type { SnowEvent } from '@/components/eventListItem';
+import type { Metadata } from 'next';
 
-// Metadata for the page (optional but recommended)
 export const metadata: Metadata = {
   title: 'Events Dashboard - Admin',
   description: 'Manage upcoming and past ski and snowboard events.',
 };
 
-// Optional: Set revalidation interval if needed
-// export const revalidate = 3600; // Revalidate data every hour
 
 // The Page component - async because it fetches data
 export default async function EventsListPage() {
@@ -28,10 +25,9 @@ export default async function EventsListPage() {
     // The layout structure (Header, Sidebar, main tag) is provided by
     // the layout file in the route group: /app/admin/(standard)/layout.tsx
     return (
-        // Use a Fragment <>...</> or a simple <div> if you need a single root element
         <>
             {/* Header section for this page */}
-            <div className="flex flex-row items-center justify-between mb-6 px-1 md:px-0"> {/* Adjust padding if needed */}
+            <div className="flex flex-row items-center justify-between mb-6 px-1 md:px-0">
                 <h2 className="text-2xl md:text-3xl font-bold">Events Dashboard</h2>
                 {/* Button to navigate to the event creation page */}
                 <Link href="/admin/events/create" className="btn btn-primary">
