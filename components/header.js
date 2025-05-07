@@ -13,11 +13,15 @@ import Image from "next/image";
  */
 // Add eventName prop
 export default function Header({ eventName = null }) {
+    const logoSize = 90;
+    const avatarSize = 32;
+
+
     return (
         <div className="navbar bg-primary text-primary-content shadow-sm"> {/* Ensure text color contrasts */}
             <div className="flex-1 flex items-center"> {/* Use flex to align items */}
                 <Link href="/admin">
-                   <Image src="/assets/goggles_borderless.png" alt="Goggles Logo" className="ml-5 h-10 rounded-full cursor-pointer" />
+                   <Image src="/assets/goggles_borderless.png" alt="Goggles Logo"  width={logoSize} height={logoSize} className="ml-5 rounded-full cursor-pointer" priority/>
                 </Link>
                 {/* Display event name if provided */}
                 {eventName && (
@@ -33,11 +37,11 @@ export default function Header({ eventName = null }) {
                  <Link href="/admin/events" className="btn btn-ghost text-primary-content">
                     Events
                  </Link>
-                 <button className="btn btn-ghost btn-circle avatar">
+                 {/* <button className="btn btn-ghost btn-circle avatar">
                     <div className="w-8 rounded-full">
                        <Image src="/assets/admin_logo.png" alt="Admin Menu" />
                      </div>
-                 </button>
+                 </button> */}
             </div>
         </div>
     );
