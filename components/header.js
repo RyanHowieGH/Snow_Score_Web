@@ -14,7 +14,6 @@ import Image from "next/image";
 // Add eventName prop
 export default function Header({ eventName = null }) {
     const logoSize = 90;
-    const avatarSize = 32;
 
 
     return (
