@@ -3,7 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import EventList from '@/components/eventList';
+import EventList from '@/components/EventList';
 import { fetchEvents } from '@/lib/data';
 import type { SnowEvent } from '@/components/eventListItem';
 import type { Metadata } from 'next';
