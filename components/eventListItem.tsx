@@ -1,13 +1,18 @@
 // src/components/eventListItem.tsx
 import React from "react";
 import Link from 'next/link';
+import { formatDateRange } from '@/lib/data'; // Import from lib/data.ts
 
-// Define and export the type for the event data (using event_id)
+// SnowEvent interface defined in lib/data.ts is re-exported there,
+// but also defined here for clarity if this component needs it independently.
+// Best practice would be to import it from lib/data.ts if it's the single source of truth.
+// import type { SnowEvent } from '@/lib/data';
+// For now, assuming the local definition is used or you manage the import.
 export interface SnowEvent {
     event_id: number;
     name: string;
-    start_date: Date;
-    end_date: Date;
+    start_date: Date; // Expect this to be a Date object
+    end_date: Date;   // Expect this to be a Date object
     location: string;
 }
 
@@ -16,42 +21,20 @@ interface EventListItemProps {
     isUpcoming: boolean;
 }
 
-// Helper function to format date ranges
-const formatDateRange = (start: Date, end: Date): string => {
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return "Invalid Date";
-    const startDateStr = start.toLocaleDateString("en-US", options);
-    const endDateStr = end.toLocaleDateString("en-US", options);
-    if (startDateStr === endDateStr) return startDateStr;
-    const startMonthYear = start.toLocaleDateString("en-US", { year: 'numeric', month: 'short' });
-    const endMonthYear = end.toLocaleDateString("en-US", { year: 'numeric', month: 'short' });
-    if (startMonthYear === endMonthYear) {
-        const startDay = start.getDate();
-        const endDay = end.getDate();
-        return `${start.toLocaleDateString("en-US", { month: 'short' })} ${startDay}-${endDay}, ${start.getFullYear()}`;
-    }
-    return `${startDateStr} - ${endDateStr}`;
-};
-
-
 const EventListItem: React.FC<EventListItemProps> = ({ event, isUpcoming }) => {
+    // Assuming event.start_date and event.end_date are already Date objects
+    // as fetchEvents in lib/data.ts converts them.
     const formattedDate = formatDateRange(event.start_date, event.end_date);
-    // Define the target URL for the event link
-    const eventUrl = `/admin/events/${event.event_id}`;
+    const eventUrl = `/events/${event.event_id}`;
 
     return (
-        // The <li> still provides the list structure
         <li>
-            {/* Link wraps the entire content, making it clickable */}
             <Link
                 href={eventUrl}
-                // Apply flex, padding, hover effects etc., directly to the link
-                // Replace 'list-row' styling here
                 className="flex justify-between items-center w-full p-4 hover:bg-base-200 focus:bg-base-300 focus:outline-none rounded-lg transition-colors duration-150 cursor-pointer"
-                aria-label={`View details for ${event.name}`} // Accessibility
+                aria-label={`View details for ${event.name}`}
             >
-                {/* Event Details Container (takes up available space) */}
-                <div className="flex-grow mr-4"> {/* Added margin-right for spacing */}
+                <div className="flex-grow mr-4">
                     <div className="text-lg font-medium">{event.name}</div>
                     <div className="text-sm text-gray-600">{event.location}</div>
                     <div className="text-sm uppercase font-semibold opacity-70 mt-1 flex items-center flex-wrap">
@@ -68,10 +51,8 @@ const EventListItem: React.FC<EventListItemProps> = ({ event, isUpcoming }) => {
                         )}
                     </div>
                 </div>
-
-                {/* "Go To Event" Button-like Text (doesn't shrink) */}
                 <div className="flex-shrink-0">
-                    <span className="btn btn-sm btn-outline btn-primary"> {/* Use span styled as button */}
+                    <span className="btn btn-sm btn-outline btn-primary">
                         Go To Event
                     </span>
                 </div>
