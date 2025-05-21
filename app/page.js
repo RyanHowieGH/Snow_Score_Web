@@ -1,6 +1,6 @@
 // app/page.js (Assuming Server Component structure from previous example)
 import BlankHeader from "../components/blankHeader";
-import EventList from "../components/EventList";
+import EventList from "@/components/EventList";
 import { fetchEvents } from "../lib/data"; // Adjust path if lib is not a sibling of app
 
 export default async function Home() {
