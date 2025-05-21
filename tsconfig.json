@@ -18,8 +18,13 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".", // Tells TypeScript to resolve non-relative paths from the project root
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"] // Maps @/* to the project root (e.g., @/components/* to ./components/*)
+                     // You can also be more specific:
+                     // "@/components/*": ["components/*"],
+                     // "@/lib/*": ["lib/*"]
+                     // etc.
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
