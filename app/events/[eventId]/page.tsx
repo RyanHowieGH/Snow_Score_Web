@@ -10,7 +10,7 @@ type PageContextProps = {
     searchParams?: { [key: string]: string | string[] | undefined };
 };
 
-export default async function EventDetailsPage({ params }: PageContextProps) { // Use the new type
+export default async function EventDetailsPage({ params }: PageContextProps) {
     const eventId = Number(params.eventId);
 
     if (isNaN(eventId)) {
@@ -62,10 +62,9 @@ export default async function EventDetailsPage({ params }: PageContextProps) { /
     );
 }
 
-// For generateMetadata, the simpler inline type for params is usually fine
-// as it specifically needs params.
-export async function generateMetadata({ params }: { params: { eventId: string } }) {
-    const eventId = Number(params.eventId);
+// Use PageContextProps for generateMetadata as well
+export async function generateMetadata({ params }: PageContextProps) { // <--- CHANGED HERE
+    const eventId = Number(params.eventId); // params.eventId is still available
     if (isNaN(eventId)) return { title: 'Event Not Found' };
 
     const event = await fetchEventById(eventId);
