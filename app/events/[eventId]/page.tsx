@@ -65,7 +65,6 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
 
 export async function generateMetadata(
   props: PageSegmentProps,
-  _parent?: ResolvingMetadata // If _parent is typed with ResolvingMetadata, keep the import
 ): Promise<Metadata> {
     const actualParams = await props.params;
     const eventId = Number(actualParams.eventId); // This 'eventId' will be used below
