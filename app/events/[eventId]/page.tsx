@@ -1,17 +1,18 @@
 // app/events/[eventId]/page.tsx
 import React from 'react';
-import { fetchEventById, formatDateRange } from '@/lib/data'; // Import formatDateRange
+import { fetchEventById, formatDateRange } from '@/lib/data';
 import BlankHeader from '@/components/blankHeader';
 import { notFound } from 'next/navigation';
-// No need to import SnowEvent here unless you use it directly for typing a variable
 
-interface EventDetailsPageProps {
-    params: {
-        eventId: string;
-    };
-}
+// Remove or comment out your custom EventDetailsPageProps interface
+// interface EventDetailsPageProps {
+//     params: {
+//         eventId: string;
+//     };
+// }
 
-export default async function EventDetailsPage({ params }: EventDetailsPageProps) {
+// Directly type the props inline or let TypeScript infer from usage
+export default async function EventDetailsPage({ params }: { params: { eventId: string } }) {
     const eventId = Number(params.eventId);
 
     if (isNaN(eventId)) {
@@ -24,7 +25,6 @@ export default async function EventDetailsPage({ params }: EventDetailsPageProps
         notFound();
     }
 
-    // The event dates from fetchEventById are already Date objects
     const formattedDate = formatDateRange(event.start_date, event.end_date);
 
     return (
@@ -42,12 +42,10 @@ export default async function EventDetailsPage({ params }: EventDetailsPageProps
                         <p className="text-md font-semibold text-base-content">
                             Dates:
                             <span className="font-normal ml-2">
-                                {formattedDate} {/* Use the formatted date */}
+                                {formattedDate}
                             </span>
                         </p>
                     </div>
-
-                    {/* Displaying Divisions */}
                     {event.divisions && event.divisions.length > 0 && (
                         <div className="mb-6">
                             <h2 className="text-xl font-semibold mb-2 text-secondary">Divisions</h2>
@@ -60,15 +58,14 @@ export default async function EventDetailsPage({ params }: EventDetailsPageProps
                             </ul>
                         </div>
                     )}
-
-                    {/* ... (rest of the component, e.g., athletes section if used) ... */}
                 </div>
             </div>
         </main>
     );
 }
 
-export async function generateMetadata({ params }: EventDetailsPageProps) {
+// For generateMetadata, also type params inline or use a consistent type
+export async function generateMetadata({ params }: { params: { eventId: string } }) {
     const eventId = Number(params.eventId);
     if (isNaN(eventId)) return { title: 'Event Not Found' };
 
@@ -77,6 +74,6 @@ export async function generateMetadata({ params }: EventDetailsPageProps) {
 
     return {
         title: `${event.name} | SnowScore`,
-        description: `Details for ${event.name}, taking place at ${event.location} from ${formatDateRange(event.start_date, event.end_date)}.`, // Use imported formatDateRange
+        description: `Details for ${event.name}, taking place at ${event.location} from ${formatDateRange(event.start_date, event.end_date)}.`,
     };
 }
