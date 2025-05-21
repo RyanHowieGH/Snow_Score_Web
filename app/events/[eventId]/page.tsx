@@ -3,7 +3,7 @@
 import { fetchEventById, formatDateRange } from '@/lib/data';
 import BlankHeader from '@/components/blankHeader'; // Keep if you use <BlankHeader />
 import { notFound } from 'next/navigation'; // Keep if you use notFound()
-import type { Metadata, ResolvingMetadata } from 'next'; // Keep ResolvingMetadata if _parent uses it
+import type { Metadata } from 'next'; // Keep ResolvingMetadata if _parent uses it
 
 type PageSegmentProps = {
   params: Promise<{ eventId: string }>;
