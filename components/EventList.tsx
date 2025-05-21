@@ -1,4 +1,4 @@
-// src/components/EventList.tsx
+// /components/EventList.tsx
 import React from "react";
 import EventListItem, { SnowEvent } from "./eventListItem";
 import Link from 'next/link';

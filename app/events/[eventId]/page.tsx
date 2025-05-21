@@ -4,15 +4,13 @@ import { fetchEventById, formatDateRange } from '@/lib/data';
 import BlankHeader from '@/components/blankHeader';
 import { notFound } from 'next/navigation';
 
-// Remove or comment out your custom EventDetailsPageProps interface
-// interface EventDetailsPageProps {
-//     params: {
-//         eventId: string;
-//     };
-// }
+// Define a type that includes searchParams, even if not used in this specific page's logic
+type PageContextProps = {
+    params: { eventId: string };
+    searchParams?: { [key: string]: string | string[] | undefined };
+};
 
-// Directly type the props inline or let TypeScript infer from usage
-export default async function EventDetailsPage({ params }: { params: { eventId: string } }) {
+export default async function EventDetailsPage({ params }: PageContextProps) { // Use the new type
     const eventId = Number(params.eventId);
 
     if (isNaN(eventId)) {
@@ -64,7 +62,8 @@ export default async function EventDetailsPage({ params }: { params: { eventId: 
     );
 }
 
-// For generateMetadata, also type params inline or use a consistent type
+// For generateMetadata, the simpler inline type for params is usually fine
+// as it specifically needs params.
 export async function generateMetadata({ params }: { params: { eventId: string } }) {
     const eventId = Number(params.eventId);
     if (isNaN(eventId)) return { title: 'Event Not Found' };
