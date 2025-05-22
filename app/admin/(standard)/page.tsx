@@ -13,6 +13,7 @@ export default function AdminDashboardPage() {
     const canManageUsers = user && ['Executive Director', 'Administrator'].includes(user.role_name);
     const canManageEvents = user && ['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.role_name);
 
+    const canAddJudges = user && ['Executive Director', 'Administrator', 'Chief of Competition', 'Head Judge'].includes(user.role_name);
 
     return (
         <div className="flex flex-col items-center justify-center pt-10">
@@ -32,6 +33,11 @@ export default function AdminDashboardPage() {
 
                   {/* Link to Athletes page */}
                  <Link href="/admin/athletes" className="btn btn-lg btn-accent">Athletes</Link>
+
+                 {/* Link to Judge Management page */}
+                 {canAddJudges && (
+                     <Link href="/admin/judges" className="btn btn-lg btn-accent">Judges</Link>
+                    )}
             </div>
         </div>
     );
