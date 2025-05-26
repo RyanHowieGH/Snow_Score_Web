@@ -13,7 +13,6 @@ export default function AdminDashboardPage() {
     const canManageUsers = user && ['Executive Director', 'Administrator'].includes(user.role_name);
     const canManageEvents = user && ['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.role_name);
 
-
     return (
         <div className="flex flex-col items-center justify-center pt-10">
             <h2 className="text-3xl font-bold mb-4">Admin Dashboard</h2>

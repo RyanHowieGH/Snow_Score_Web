@@ -21,6 +21,8 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
   const canManageEvents = user && ['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.role_name);
   // Assume most admin roles can view athletes, adjust if needed
   const canViewAthletes = user && ['Executive Director', 'Administrator', 'Chief of Competition', 'Technical Director', 'Head Judge'].includes(user.role_name);
+  // Currently Admin roles can view judges (for development & testing), expected to be further restricted
+  const canAddJudges = user && ['Executive Director', 'Administrator', 'Chief of Competition', 'Head Judge'].includes(user.role_name);
 
   return (
     <div className={`${baseClasses} ${widthClasses}`}>
@@ -44,6 +46,11 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
             {canManageUsers && (
               <Link href="/admin/users" className="hover:bg-primary-focus p-2 rounded block">
                 Manage Users
+              </Link>
+            )}
+            {canAddJudges && (
+              <Link href="/headJudge" className="hover:bg-primary-focus p-2 rounded block">
+                Head Judge
               </Link>
             )}
             <Link href="/admin/settings" className="hover:bg-primary-focus p-2 rounded block">
