@@ -1,33 +1,43 @@
 // middleware.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/api/webhooks/clerk(.*)', // Allow webhook endpoint
+  '/api/webhooks/clerk(.*)',
 ]);
 
+// Ensure this is the correct URL PATH for your admin page
+const ADMIN_DASHBOARD_PATH = '/admin';
 
-export default clerkMiddleware((auth, req) => {
-    // By default, clerkMiddleware protects all routes NOT matched by isPublicRoute
-    // So, we often don't need the explicit isProtectedRoute check here unless
-    // we have specific logic for *only* those routes beyond just protection.
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  // MUST AWAIT here because TypeScript says auth() returns a Promise
+  const authResult = await auth();
+  const { userId } = authResult; // Destructure from the awaited result
 
-    // If you WANT explicit protection (maybe slightly clearer):
-    // if (!isPublicRoute(req)) {
-    //     console.log(`Middleware: Protecting non-public route: ${req.nextUrl.pathname}`);
-    //     auth.protect();
-    // }
+  // Scenario 1: User is logged IN and trying to access the HOMEPAGE ('/')
+  if (userId && req.nextUrl.pathname === '/') {
+    const adminDashboardUrl = new URL(ADMIN_DASHBOARD_PATH, req.url);
+    console.log(`[Middleware] Logged-in user (${userId}) on '/', redirecting to ${adminDashboardUrl.toString()}`);
+    return NextResponse.redirect(adminDashboardUrl);
+  }
 
-    // Example: Role-based redirect *after* successful authentication
-    // const { userId, sessionClaims } = auth;
-    // if (userId && req.nextUrl.pathname === '/some-page' && sessionClaims?.metadata?.role !== 'requiredRole') {
-    //     return Response.redirect(new URL('/unauthorized', req.url));
-    // }
-
+  // Scenario 2: For any other route that is NOT public, protect it.
+  if (!isPublicRoute(req)) {
+    console.log(`[Middleware] Protecting non-public route: ${req.nextUrl.pathname}`);
+    // auth.protect() is also an async operation as per Clerk docs and our prior understanding
+    const protectionResponse = await auth.protect();
+    if (protectionResponse instanceof Response) {
+        return protectionResponse;
+    }
+  }
 }, { debug: process.env.NODE_ENV === 'development' });
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/(api|trpc)(.*)',
+  ],
 };
