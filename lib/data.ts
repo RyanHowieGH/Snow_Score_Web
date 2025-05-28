@@ -12,6 +12,12 @@ export interface Division {
     division_name: string;
 }
 
+// Judge Interface
+export interface Judge {
+    judge_personnel_id: string;
+    judge_header: string;
+    judge_name: string;
+}
 // For Event Detail Page
 export interface RegisteredAthlete {
     athlete_id: number;
@@ -19,9 +25,12 @@ export interface RegisteredAthlete {
     last_name: string;
     bib_num: string | null;
 }
+
+
 export interface EventDetails extends SnowEvent {
     divisions: Division[];
     athletes: RegisteredAthlete[];
+    judges: Judge[];
 }
 
 // Discipline Interface
@@ -81,6 +90,14 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         `;
         const athleteResult = await client.query<RegisteredAthlete>(athleteQuery, [eventId]);
 
+        // Fetch assigned judges
+        const judgeResult = await client.query<Judge>(
+            `SELECT personnel_id, header, name 
+            FROM ss_event_judges 
+            WHERE event_id = $1`, 
+            [eventId]
+        );
+
         // Combine results
         const eventDetails: EventDetails = {
             event_id: eventData.event_id,
@@ -89,7 +106,8 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             start_date: new Date(eventData.start_date),
             end_date: new Date(eventData.end_date),
             divisions: divisionResult.rows,
-            athletes: athleteResult.rows
+            athletes: athleteResult.rows,
+            judges: judgeResult.rows,
         };
         return eventDetails;
 
