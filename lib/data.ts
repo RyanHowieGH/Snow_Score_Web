@@ -96,7 +96,8 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         const judgeResult = await client.query<Judge>(
             `SELECT event_id, personnel_id, header, name
             FROM ss_event_judges 
-            WHERE event_id = $1`, 
+            WHERE event_id = $1
+            ORDER BY header`, 
             [eventId]
         );
 

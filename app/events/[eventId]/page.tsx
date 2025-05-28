@@ -104,20 +104,23 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
 
             <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12">
                 <div>
-                    <h2 className="text-xl font-semibold mb-2 text-secondary">
+                    <h2 className="text-xl font-semibold mb-8 text-secondary">
                     Judges
                     </h2>
-                    <ul className="list-disc list-inside space-y-1">
+                    <div className="flex list-disc list-inside space-y-1 space-x-20">
                     {event.judges.map((judge) => (
-                        <li
-                        key={judge.personnel_id}
-                        className="text-base-content"
+                      <div 
+                      className="border border-gray-300 bg-white p-4">
+                        <div
+                          key={judge.personnel_id}
+                          className="text-2xl md:text-2xl mb-2 text-black text-center font-bold"
                         >
                         {judge.header}
+                      </div>
                         {JudgeQRCode(String(eventId), judge.personnel_id)}
-                        </li>
+                        </div>
                     ))}
-                    </ul>
+                    </div>
                 </div>
             </div>
 
