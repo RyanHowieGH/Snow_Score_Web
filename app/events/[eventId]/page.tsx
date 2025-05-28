@@ -4,6 +4,7 @@ import { fetchEventById, formatDateRange } from "@/lib/data";
 import BlankHeader from "@/components/blankHeader"; // Keep if you use <BlankHeader />
 import { notFound } from "next/navigation"; // Keep if you use notFound()
 import type { Metadata } from "next"; // Keep ResolvingMetadata if _parent uses it
+import JudgeQRCode from "../../../components/JudgeQRCode";
 
 type PageSegmentProps = {
   params: Promise<{ eventId: string }>;
@@ -86,6 +87,9 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                   </ul>
                 </div>
 
+                      
+
+
                 <div className="flex flex-col space-y-4 w-full max-w-[200px]">
                   <button className="btn btn-primary w-full">
                     Create Judge
@@ -100,6 +104,43 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
               </div>
             </div>
           )}
+
+            <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12">
+                <div>
+                    <h2 className="text-xl font-semibold mb-2 text-secondary">
+                    Judges
+                    </h2>
+                    <ul className="list-disc list-inside space-y-1">
+                    {event.judges.map((judge) => (
+                        <li
+                        key={judge.judge_personnel_id}
+                        className="text-base-content"
+                        >
+                        {judge.judge_header}
+                        {JudgeQRCode(eventId, judge.judge_personnel_id)}
+                        </li>
+                    ))}
+                    </ul>
+                </div>
+            </div>
+
+          {
+                          <div>
+                <h2 className="text-xl font-semibold mb-2 text-secondary">
+                  Judges
+                </h2>
+                <ul className="list-disc list-inside space-y-1">
+                  {event.divisions.map((division) => (
+                    <li
+                      key={division.division_id}
+                      className="text-base-content"
+                    >
+                      {division.division_name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+          }
         </div>
       </div>
     </main>
