@@ -1,3 +1,5 @@
+// npm install qrcode
+
 import { toDataURL } from 'qrcode';
 
 export default async function JudgeQRCode(eventId: string, judgeId: string) {
@@ -13,7 +15,6 @@ export default async function JudgeQRCode(eventId: string, judgeId: string) {
         width={200}
         height={200}
       />
-      
     </main>
   );
 }

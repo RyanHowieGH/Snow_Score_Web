@@ -115,7 +115,7 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                           key={judge.personnel_id}
                           className="text-2xl md:text-2xl mb-2 text-black text-center font-bold"
                         >
-                        {judge.header}
+                        {judge.name == null ? judge.header : judge.name}
                       </div>
                         {JudgeQRCode(String(eventId), judge.personnel_id)}
                         </div>
