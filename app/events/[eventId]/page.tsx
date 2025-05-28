@@ -1,6 +1,5 @@
 // app/events/[eventId]/page.tsx
 // import React from 'react'; // No longer needed for JSX with modern React/Next.js
-
 import { fetchEventById, formatDateRange } from "@/lib/data";
 import BlankHeader from "@/components/blankHeader"; // Keep if you use <BlankHeader />
 import { notFound } from "next/navigation"; // Keep if you use notFound()
@@ -27,6 +26,8 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
   }
 
   const formattedDate = formatDateRange(event.start_date, event.end_date);
+
+  
 
   return (
     <main>
@@ -63,43 +64,6 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                 </ul>
               </div>
 
-              {/* Fix Margin left for dynamic screen sizes for tablets*/}
-              <div className="flex flex-row flex-wrap justify-end gap-8 flex-1">
-                <div className="mr-20">
-                  {/* THE FOLLOWING FUNCTIONALITY WILL BE IMPLEMENTED TO BE SEEN BY THE HEADJUDGE ONLY (currently allows admin access for testing): 
-          Displays List of Current Judges for Event, "Create Judge" takes user to 
-          Judge Creation Form for said event; *Tentative* "Monitor Scores" Allows user to 
-          view judge scoring for event as it occurs for easy access in a rush; "Generate QR Code"
-          Allows Head Judge to regenerate / retrieve an active Judges Generated QR Code in 
-          the case of a downtime or other sudden occurence. 
-          TODO: All of the above*/}
-                  <h2 className="text-xl font-semibold mb-2 text-secondary">
-                    Judges
-                  </h2>
-                  <ul className="list-disc list-inside space-y-1">
-                    {/* {event.judges.map((judge) => (
-                        <li
-                            key={judge.judge_id}
-                            className="text-base-content"
-                        >
-                            {judge.judge_name}
-                        </li>
-                        ))} */}
-                  </ul>
-                </div>
-
-                <div className="flex flex-col space-y-4 w-full max-w-[200px]">
-                  <button className="btn btn-primary w-full">
-                    Create Judge
-                  </button>
-                  <button className="btn btn-secondary w-full">
-                    Monitor Scores
-                  </button>
-                  <button className="btn btn-accent w-full">
-                    Generate QR Code
-                  </button>
-                </div>
-              </div>
             </div>
           )}
 
