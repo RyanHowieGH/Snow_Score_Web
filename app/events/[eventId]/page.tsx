@@ -87,9 +87,6 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                   </ul>
                 </div>
 
-                      
-
-
                 <div className="flex flex-col space-y-4 w-full max-w-[200px]">
                   <button className="btn btn-primary w-full">
                     Create Judge
@@ -117,7 +114,7 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                         className="text-base-content"
                         >
                         {judge.judge_header}
-                        {JudgeQRCode(eventId, judge.judge_personnel_id)}
+                        {JudgeQRCode(String(eventId), judge.judge_personnel_id)}
                         </li>
                     ))}
                     </ul>
@@ -125,7 +122,7 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
             </div>
 
           {
-                          <div>
+              <div>
                 <h2 className="text-xl font-semibold mb-2 text-secondary">
                   Judges
                 </h2>
