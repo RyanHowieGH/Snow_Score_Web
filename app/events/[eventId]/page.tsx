@@ -5,7 +5,7 @@ import { fetchEventById, formatDateRange } from "@/lib/data";
 import BlankHeader from "@/components/blankHeader"; // Keep if you use <BlankHeader />
 import { notFound } from "next/navigation"; // Keep if you use notFound()
 import type { Metadata } from "next"; // Keep ResolvingMetadata if _parent uses it
-import JudgeQRCode from "../../../components/JudgeQRCode";
+import JudgeEventSpecificSection from "@/components/JudgeEventSpecificSection";
 
 type PageSegmentProps = {
   params: Promise<{ eventId: string }>;
@@ -65,27 +65,9 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
             </div>
           )}
 
-            <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12">
-                <div>
-                    <h2 className="text-xl font-semibold mb-8 text-secondary">
-                    Judges
-                    </h2>
-                    <div className="flex list-disc list-inside space-y-1 space-x-20">
-                    {event.judges.map((judge) => (
-                      <div                           
-                      key={judge.personnel_id}
-                      className="border border-gray-300 bg-white p-4">
-                        <div
-                          className="text-2xl md:text-2xl mb-2 text-black text-center font-bold"
-                        >
-                        {judge.name == null ? judge.header : judge.name}
-                      </div>
-                        {JudgeQRCode(String(eventId), judge.personnel_id)}
-                        </div>
-                    ))}
-                    </div>
-                </div>
-            </div>
+          <JudgeEventSpecificSection
+            judges = {event.judges}
+          />
 
         </div>
       </div>
