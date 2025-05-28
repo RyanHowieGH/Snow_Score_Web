@@ -110,34 +110,17 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                     <ul className="list-disc list-inside space-y-1">
                     {event.judges.map((judge) => (
                         <li
-                        key={judge.judge_personnel_id}
+                        key={judge.personnel_id}
                         className="text-base-content"
                         >
-                        {judge.judge_header}
-                        {JudgeQRCode(String(eventId), judge.judge_personnel_id)}
+                        {judge.header}
+                        {JudgeQRCode(String(eventId), judge.personnel_id)}
                         </li>
                     ))}
                     </ul>
                 </div>
             </div>
 
-          {
-              <div>
-                <h2 className="text-xl font-semibold mb-2 text-secondary">
-                  Judges
-                </h2>
-                <ul className="list-disc list-inside space-y-1">
-                  {event.divisions.map((division) => (
-                    <li
-                      key={division.division_id}
-                      className="text-base-content"
-                    >
-                      {division.division_name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-          }
         </div>
       </div>
     </main>

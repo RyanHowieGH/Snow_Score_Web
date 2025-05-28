@@ -1,9 +1,8 @@
-// app/components/JudgeQRCode.tsx
 import { toDataURL } from 'qrcode';
 
 export default async function JudgeQRCode(eventId: string, judgeId: string) {
 
-  const urlToken = `https://snow-score-web.vercel.app/${eventId}+${judgeId}`;
+  const urlToken = `https://snow-score-web.vercel.app/${eventId}${judgeId}`;
   const dataUrl = await toDataURL(urlToken);
 
   return (
@@ -14,6 +13,7 @@ export default async function JudgeQRCode(eventId: string, judgeId: string) {
         width={200}
         height={200}
       />
+      
     </main>
   );
 }

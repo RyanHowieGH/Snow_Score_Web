@@ -14,10 +14,12 @@ export interface Division {
 
 // Judge Interface
 export interface Judge {
-    judge_personnel_id: string;
-    judge_header: string;
-    judge_name: string;
+    personnel_id: string;
+    header: string;
+    name: string;
+    event_id: number;
 }
+
 // For Event Detail Page
 export interface RegisteredAthlete {
     athlete_id: number;
@@ -92,7 +94,7 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
 
         // Fetch assigned judges
         const judgeResult = await client.query<Judge>(
-            `SELECT personnel_id, header, name 
+            `SELECT event_id, personnel_id, header, name
             FROM ss_event_judges 
             WHERE event_id = $1`, 
             [eventId]
@@ -111,8 +113,15 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         };
         return eventDetails;
 
-    } catch (error) { console.error("Error details:", error); return null; }
-    finally { if (client) client.release(); }
+    } catch (error) { 
+        console.error("Error details:", error); 
+        return null; 
+    }
+
+    finally { 
+        if (client) 
+            client.release(); 
+        }
 }
 
 // --- Function to fetch all events (list) ---
