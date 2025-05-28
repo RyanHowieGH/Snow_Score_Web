@@ -1,5 +1,6 @@
 // app/events/[eventId]/page.tsx
 // import React from 'react'; // No longer needed for JSX with modern React/Next.js
+
 import { fetchEventById, formatDateRange } from "@/lib/data";
 import BlankHeader from "@/components/blankHeader"; // Keep if you use <BlankHeader />
 import { notFound } from "next/navigation"; // Keep if you use notFound()

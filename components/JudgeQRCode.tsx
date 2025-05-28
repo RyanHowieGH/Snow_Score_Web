@@ -1,5 +1,4 @@
 // npm install qrcode
-
 import { toDataURL } from 'qrcode';
 
 export default async function JudgeQRCode(eventId: string, judgeId: string) {
