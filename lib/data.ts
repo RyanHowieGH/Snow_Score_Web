@@ -12,6 +12,14 @@ export interface Division {
     division_name: string;
 }
 
+// Judge Interface
+export interface Judge {
+    personnel_id: string;
+    header: string;
+    name: string;
+    event_id: number;
+}
+
 // For Event Detail Page
 export interface RegisteredAthlete {
     athlete_id: number;
@@ -19,9 +27,12 @@ export interface RegisteredAthlete {
     last_name: string;
     bib_num: string | null;
 }
+
+
 export interface EventDetails extends SnowEvent {
     divisions: Division[];
     athletes: RegisteredAthlete[];
+    judges: Judge[];
 }
 
 // Discipline Interface
@@ -81,6 +92,15 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         `;
         const athleteResult = await client.query<RegisteredAthlete>(athleteQuery, [eventId]);
 
+        // Fetch assigned judges
+        const judgeResult = await client.query<Judge>(
+            `SELECT event_id, personnel_id, header, name
+            FROM ss_event_judges 
+            WHERE event_id = $1
+            ORDER BY header`, 
+            [eventId]
+        );
+
         // Combine results
         const eventDetails: EventDetails = {
             event_id: eventData.event_id,
@@ -89,12 +109,20 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             start_date: new Date(eventData.start_date),
             end_date: new Date(eventData.end_date),
             divisions: divisionResult.rows,
-            athletes: athleteResult.rows
+            athletes: athleteResult.rows,
+            judges: judgeResult.rows,
         };
         return eventDetails;
 
-    } catch (error) { console.error("Error details:", error); return null; }
-    finally { if (client) client.release(); }
+    } catch (error) { 
+        console.error("Error details:", error); 
+        return null; 
+    }
+
+    finally { 
+        if (client) 
+            client.release(); 
+        }
 }
 
 // --- Function to fetch all events (list) ---
