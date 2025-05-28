@@ -229,6 +229,26 @@ export async function fetchAllAthletes(): Promise<Athlete[]> {
 }
 
 
+// --- Function to delete judge from an event ---
+export async function deleteJudgeFromEvent(eventId: number): Promise<number[]> {
+    console.log(`Attempting to fetch assigned division IDs for event ${eventId}...`);
+    if (isNaN(eventId)) return [];
+
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query<{ division_id: number }>(
+            'SELECT division_id FROM ss_event_divisions WHERE event_id = $1',
+            [eventId]
+        );
+        const ids = result.rows.map(row => row.division_id);
+        console.log(`Found ${ids.length} assigned division IDs for event ${eventId}.`);
+        return ids;
+    } catch (error) { console.error("Error details:", error); return []; }
+    finally { if (client) client.release(); }
+}
+
 // --- Date Formatting Helpers ---
 export const formatDate = (date: Date, options?: Intl.DateTimeFormatOptions): string => {
     if (!date || isNaN(date.getTime())) return "Invalid Date";
