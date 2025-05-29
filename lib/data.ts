@@ -230,23 +230,36 @@ export async function fetchAllAthletes(): Promise<Athlete[]> {
 
 
 // --- Function to delete judge from an event ---
-export async function deleteJudgeFromEvent(eventId: number): Promise<number[]> {
-    console.log(`Attempting to fetch assigned division IDs for event ${eventId}...`);
-    if (isNaN(eventId)) return [];
+export async function deleteJudgeFromEvent(
+    eventId: number,
+    personnel_id: string,
+    header: string
+) {
+    console.log(`Attempting to delete assigned judge from event ${eventId}...`); // ***event_id****
+    if (isNaN(eventId)) return null;
 
     const pool = getDbPool();
     let client: PoolClient | null = null;
     try {
         client = await pool.connect();
-        const result = await client.query<{ division_id: number }>(
-            'SELECT division_id FROM ss_event_divisions WHERE event_id = $1',
-            [eventId]
+        // now we pass both eventId and personnelId to the query
+        const result = await client.query<{ header: string }>(
+        `
+        DELETE FROM ss_event_judges
+        WHERE event_id = $1
+            AND personnel_id = $2
+        RETURNING header
+        `,
+        [eventId, personnel_id]
         );
-        const ids = result.rows.map(row => row.division_id);
-        console.log(`Found ${ids.length} assigned division IDs for event ${eventId}.`);
-        return ids;
-    } catch (error) { console.error("Error details:", error); return []; }
-    finally { if (client) client.release(); }
+        return result;
+    } catch (error) { 
+        console.error("Error details:", error); 
+        return []; 
+    }
+    finally { 
+        if (client) client.release(); 
+    }
 }
 
 // --- Date Formatting Helpers ---

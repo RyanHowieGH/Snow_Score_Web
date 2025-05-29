@@ -2,6 +2,7 @@
 import { EventDetails } from "@/lib/data";
 import JudgeQRCode from "./JudgeQRCode";
 import { useState, useEffect } from 'react';
+import { deleteJudgeFromEvent } from "@/lib/data";
 
 // Judge Interface
 export interface Judge {
@@ -21,12 +22,13 @@ export default function JudgeEventSpecificSection ({judges}: JudgesProps) {
     const [isEditionMode, setIsEditionMode] = useState(false);
 
     return(
-        <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12 border-white border-t-1 border-solid content-end border-white border-1">
-            <div>
+        <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12 border-t-1 border-solid content-end border-white border-1 w-full">
+            <div 
+            className="w-full">
                 <div
-                className="flex ">
+                className="flex items-center justify-between w-full border-b border-black dark:border-white pb-4">
                     <div>
-                        <h2 className="text-xl font-semibold mb-8 text-secondary mt-8 content-end border-white border-1">
+                        <h2 className="text-2xl font-semibold text-secondary">
                         Judges
                         </h2>
                     </div>
@@ -60,28 +62,28 @@ export default function JudgeEventSpecificSection ({judges}: JudgesProps) {
                     ))}
                     </div>
                     :
-                    <div className="">
-                    {judges?.map((judge) => (
-                        <div                           
-                        key={judge.personnel_id}
-                        className="flex border border-gray-30 p-4">
+                    <div>
+                        {judges?.map((judge) => (
                         <div
-                            className="text-1xl md:text-1xl mb-2 text-black text-center font-bold">
-                            <ul>
-                                <li>
-                                    {judge.name == null ? judge.header : judge.name}
-                                </li>
-                            </ul>
-                        </div>
-                        <button
-                        className="text-black"
-                        >
-                            Remove
-                        </button>
-                        </div>
-                    ))}
-                    </div>
+                            key={judge.personnel_id}
+                            className="flex items-center justify-between py-2 border-b border-black dark:border-white"
+            >
+                            {/* Judge name/header */}
+                            <div className="text-lg font-bold text-left text-black dark:text-white">
+                            {judge.name ?? judge.header}
+                            </div>
 
+                            {/* Remove button */}
+                            <button
+                            onClick={() => deleteJudgeFromEvent(judge.event_id, judge.personnel_id)}
+                            
+                            className="text-red-597 hover:text-red-800"
+                            >
+                            REMOVE
+                            </button>
+                        </div>
+                        ))}
+                    </div>
                     
                 }
 
