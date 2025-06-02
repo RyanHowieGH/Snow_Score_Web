@@ -44,7 +44,8 @@ export async function getAuthenticatedUserWithRole(): Promise<AppUserWithRole | 
                 app.auth_provider_user_id AS "authProviderId",
                 app.user_id AS "appUserId",
                 app.email,
-                app.name,
+                app.first_name,
+                app.last_name,
                 app.role_id AS "roleId",
                 role.role_name AS "roleName"
             FROM ss_users app
