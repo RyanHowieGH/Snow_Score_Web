@@ -1,13 +1,13 @@
-// app\admin\(standard)\events\create\EventCreateForm.tsx
-
+// app/admin/(standard)/events/create/EventCreateForm.tsx
 'use client';
 
-// CHANGE THE IMPORTS
-import React from 'react'; // Keep this for JSX and potentially useActionState
-import { useActionState } from 'react';    // <-- Import useActionState directly from 'react'
-import { useFormStatus } from 'react-dom'; // <-- useFormStatus remains in 'react-dom'
+import React from 'react';
+import { useActionState } from 'react';    // For React 19+ / Next.js 15+
+import { useFormStatus } from 'react-dom';
 
-import { createEventAction, CreateEventFormState } from './actions';
+// Ensure this action name matches the one in your ./actions.ts file
+// that saves as draft and redirects to athlete management.
+import { saveDraftAndGoToManageAthletesAction, CreateEventFormState } from './actions';
 import type { Discipline, Division } from '@/lib/data';
 
 interface EventCreateFormProps {
@@ -15,6 +15,7 @@ interface EventCreateFormProps {
     divisions: Division[];
 }
 
+// Separate Submit Button component to leverage useFormStatus
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -22,15 +23,16 @@ function SubmitButton() {
             {pending ? (
                 <>
                     <span className="loading loading-spinner loading-xs mr-2"></span>
-                    Creating...
+                    Saving Draft...
                 </>
              ) : (
-                 "Create Event"
+                 "Save Draft & Manage Athletes" // Updated button text
              )}
         </button>
     );
 }
 
+// Main Form Component
 export default function EventCreateForm({ disciplines, divisions }: EventCreateFormProps) {
     const initialState: CreateEventFormState = {
         success: false,
@@ -39,12 +41,11 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
         fieldErrors: undefined,
     };
 
-    // This line should now work as useActionState is imported from 'react'
-    const [state, formAction] = useActionState(createEventAction, initialState);
+    // Use the action that saves as draft and proceeds to athlete management
+    const [state, formAction] = useActionState(saveDraftAndGoToManageAthletesAction, initialState);
 
     return (
         <form action={formAction} className="space-y-4">
-            {/* ... rest of your form remains the same ... */}
 
             {/* Event Name Input */}
             <label className="form-control w-full">
@@ -98,7 +99,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                         type="date"
                         name="start_date"
                         required
-                        className={`input input-bordered w-full ${state?.fieldErrors?.start_date || state?.fieldErrors?.end_date ? 'input-error' : ''}`} // Highlight if end date error exists too
+                        className={`input input-bordered w-full ${state?.fieldErrors?.start_date || (state?.fieldErrors?.end_date && state.message.includes("End date cannot be before start date")) ? 'input-error' : ''}`}
                         aria-invalid={!!state?.fieldErrors?.start_date}
                         aria-describedby={state?.fieldErrors?.start_date ? "start-date-error" : undefined}
                      />
@@ -137,14 +138,15 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                     name="discipline_id"
                     required
                     className={`select select-bordered w-full ${state?.fieldErrors?.discipline_id ? 'select-error' : ''}`}
-                    defaultValue=""
+                    defaultValue="" // Ensures the placeholder option is selected by default
                     aria-invalid={!!state?.fieldErrors?.discipline_id}
                     aria-describedby={state?.fieldErrors?.discipline_id ? "discipline-error" : undefined}
                 >
                     <option value="" disabled>Select a discipline</option>
                     {disciplines.map(d => (
                         <option key={d.discipline_id} value={d.discipline_id}>
-                           {d.discipline_name} - {d.subcategory_name} ({d.category_name})
+                           {/* Using the getDisciplineDisplayString logic directly or via an imported helper */}
+                           {`${d.discipline_name || 'Unknown'} - ${d.subcategory_name || 'N/A'} (${d.category_name || 'N/A'})`}
                         </option>
                     ))}
                 </select>
@@ -157,9 +159,9 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
 
             {/* Division Checkboxes */}
             <div className="form-control w-full">
-                <label className="label" id="division-label">
+                <label className="label" id="division-label"> {/* Added id for better accessibility if needed by aria-labelledby */}
                     <span className="label-text font-semibold">Assign Divisions*</span>
-                    <span className="label-text-alt">(Select at least one)</span>
+                    <span className="label-text-alt">(Select at least one, if applicable for draft)</span>
                 </label>
                 <div
                     className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2 p-3 border rounded-lg ${state?.fieldErrors?.division_ids ? 'border-error' : 'border-base-300'}`}
@@ -172,15 +174,16 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                             <label key={div.division_id} className="label cursor-pointer justify-start gap-2 p-0">
                                 <input
                                     type="checkbox"
-                                    name="division_ids"
-                                    value={String(div.division_id)}
+                                    name="division_ids" // Same name for all checkboxes in the group
+                                    value={String(div.division_id)} // Value MUST be string for FormData
                                     className="checkbox checkbox-primary checkbox-sm"
+                                    // defaultChecked could be used if editing, but not for create
                                 />
                                 <span className="label-text text-sm">{div.division_name}</span>
                             </label>
                           ))
                      ) : (
-                          <p className="text-sm italic col-span-full text-base-content/70">No divisions found in the database. Please add divisions first.</p>
+                          <p className="text-sm italic col-span-full text-base-content/70">No divisions found. Please add divisions first.</p>
                      )}
                 </div>
                  {state?.fieldErrors?.division_ids && (
@@ -195,13 +198,15 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                 <SubmitButton />
             </div>
 
-            {state?.message && !state.success && (
+            {/* Display general error/success messages from the server action state */}
+            {/* Note: Success message might not be visible if redirect happens immediately */}
+            {state?.message && !state.success && ( // Show general errors if not field-specific
                  <div role="alert" className="alert alert-error mt-4 text-sm">
                      <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                     <span>{state.message}</span>
+                     <span>Error: {state.message} {state.error && `(${state.error})`}</span>
                  </div>
             )}
-             {state?.message && state.success && (
+             {state?.message && state.success && ( // Show success if action doesn't redirect immediately
                  <div role="alert" className="alert alert-success mt-4 text-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                      <span>{state.message}</span>
