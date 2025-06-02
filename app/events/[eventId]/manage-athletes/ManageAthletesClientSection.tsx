@@ -1,87 +1,92 @@
-'use client'; // This will be a client component
+// app/admin/events/[eventId]/manage-athletes/ManageAthletesClientSection.tsx
+'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import type { RegisteredAthlete } from '@/lib/data'; // Assuming RegisteredAthlete type is in lib/data.ts
-
-// You will eventually import server actions here:
-// import { importAthletesFromCsvAction, removeAthleteFromEventAction, getEventAthletesAction } from './actions'; // Assuming actions.ts in the same directory
+import type { RegisteredAthlete } from '@/lib/data';
+import {
+    getEventAthletesAction,
+    removeAthleteFromEventAction,
+    importAthletesFromCsvAction
+} from './actions'; // Assuming actions.ts is in the same directory
 
 interface ManageAthletesClientSectionProps {
     eventId: number;
-    // initialAthletes: RegisteredAthlete[]; // You might pass initially loaded athletes as a prop
+    initialAthletes: RegisteredAthlete[]; // Now expecting this prop
 }
 
-export default function ManageAthletesClientSection({ eventId /*, initialAthletes */ }: ManageAthletesClientSectionProps) {
-    // State for managing the list of athletes displayed
-    const [athletes, setAthletes] = useState<RegisteredAthlete[]>(/* initialAthletes || */ []);
+// Destructure initialAthletes from props
+export default function ManageAthletesClientSection({ eventId, initialAthletes }: ManageAthletesClientSectionProps) {
+    // Initialize 'athletes' state with 'initialAthletes' prop
+    const [athletes, setAthletes] = useState<RegisteredAthlete[]>(initialAthletes || []);
     const [csvFile, setCsvFile] = useState<File | null>(null);
-    const [isPending, startTransition] = useTransition(); // For loading states during server action calls
-    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [isProcessing, startTransition] = useTransition(); // Renamed from isPending for clarity
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string; errors?: any[] } | null>(null);
 
-    // Placeholder: Function to fetch/refresh athletes
+    useEffect(() => {
+        // This effect runs when 'initialAthletes' prop changes.
+        // It ensures the component's local 'athletes' state stays in sync
+        // with the data passed from the server component.
+        setAthletes(initialAthletes || []);
+    }, [initialAthletes]); // Dependency array: re-run effect if initialAthletes changes
+
     const refreshAthletesList = async () => {
-        console.log(`Placeholder: Refreshing athletes for event ID: ${eventId}`);
-        // In a real implementation, this would call a server action:
-        // const result = await getEventAthletesAction(eventId);
-        // if (result.success && result.data) {
-        //     setAthletes(result.data);
-        // } else {
-        //     setFeedback({ type: 'error', message: result.error || 'Failed to load athletes.' });
-        // }
-        // For now, let's simulate some data if initialAthletes is not provided
-        if (athletes.length === 0) { // Simple check to avoid overwriting if props were used
-            // setAthletes([
-            //     { athlete_id: 1, first_name: 'John', last_name: 'Doe', bib_num: '101' },
-            //     { athlete_id: 2, first_name: 'Jane', last_name: 'Smith', bib_num: '102' },
-            // ]);
-        }
+        startTransition(async () => {
+            setFeedback(null);
+            const result = await getEventAthletesAction(eventId);
+            if (result.success && result.data) {
+                setAthletes(result.data);
+            } else {
+                setFeedback({ type: 'error', message: result.error || 'Could not refresh athletes list.' });
+            }
+        });
     };
 
-    // Fetch initial athletes if not passed as props (or for refresh)
-    useEffect(() => {
-        // If you decide to fetch on client mount instead of passing initialAthletes prop
-        // refreshAthletesList();
-        // For now, we expect initialAthletes to be potentially passed or list to be empty
-    }, [eventId]);
+    // This useEffect might be redundant if initialAthletes is always provided and up-to-date.
+    // However, if you want to ensure a fresh fetch on mount or eventId change, you could use it.
+    // For now, relying on the prop and the above useEffect for initial data.
+    // useEffect(() => {
+    //    refreshAthletesList();
+    // }, [eventId]);
 
 
     const handleCsvImportSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        const currentForm = event.currentTarget;
         if (!csvFile) {
             setFeedback({ type: 'error', message: 'Please select a CSV file.' });
             return;
         }
         setFeedback(null);
-
         const formData = new FormData();
         formData.append('csvFile', csvFile);
-        formData.append('eventId', String(eventId)); // Server actions often take FormData or simple serializable args
+        formData.append('eventId', String(eventId));
 
         startTransition(async () => {
-            setFeedback({ type: 'success', message: `Placeholder: Simulating import of ${csvFile.name} for event ${eventId}...` });
-            // const result = await importAthletesFromCsvAction(formData);
-            // if (result.success) {
-            //     setFeedback({ type: 'success', message: result.message || 'Import successful!' });
-            //     refreshAthletesList(); // Refresh the list
-            // } else {
-            //     setFeedback({ type: 'error', message: result.error || 'Import failed.' });
-            // }
+            const result = await importAthletesFromCsvAction(formData);
+            if (result.success) {
+                setFeedback({ type: 'success', message: result.message || 'Athletes imported successfully!' });
+                refreshAthletesList();
+            } else {
+                setFeedback({ type: 'error', message: result.error || 'Failed to import athletes.', errors: result.errors });
+            }
+            setCsvFile(null);
+            currentForm.reset();
         });
     };
 
     const handleRemoveAthleteClick = (athleteId: number) => {
+        if (!confirm("Are you sure you want to remove this athlete from the event registration?")) {
+            return;
+        }
         setFeedback(null);
         startTransition(async () => {
-            setFeedback({ type: 'success', message: `Placeholder: Simulating removal of athlete ${athleteId} from event ${eventId}...` });
-            // const result = await removeAthleteFromEventAction(eventId, athleteId);
-            // if (result.success) {
-            //     setFeedback({ type: 'success', message: result.message || 'Athlete removed.' });
-            //     refreshAthletesList(); // Refresh the list
-            // } else {
-            //     setFeedback({ type: 'error', message: result.error || 'Removal failed.' });
-            // }
-            // Client-side optimistic update for demo purposes:
-            setAthletes(prevAthletes => prevAthletes.filter(athlete => athlete.athlete_id !== athleteId));
+            const result = await removeAthleteFromEventAction(eventId, athleteId);
+            if (result.success) {
+                setFeedback({ type: 'success', message: result.message || 'Athlete removed.' });
+                refreshAthletesList();
+            } else {
+                setFeedback({ type: 'error', message: result.error || 'Failed to remove athlete.' });
+            }
         });
     };
 
@@ -92,38 +97,68 @@ export default function ManageAthletesClientSection({ eventId /*, initialAthlete
                 <form onSubmit={handleCsvImportSubmit} className="card-body">
                     <h3 className="card-title text-lg">Import Athletes from CSV</h3>
                     <p className="text-xs opacity-70 mb-2">
-                        Columns: first_name, last_name, dob (YYYY-MM-DD), gender. Optional: bib_num, nationality, stance, fis_num.
+                        Required columns: first_name, last_name, dob (YYYY-MM-DD), gender. Optional: bib_num, nationality, stance, fis_num. (Header row expected)
                     </p>
                     <div className="form-control">
                         <input
                             type="file"
                             accept=".csv"
-                            onChange={(e) => setCsvFile(e.target.files ? e.target.files[0] : null)}
+                            key={csvFile ? 'file-selected' : 'no-file'} // To help with visual reset
+                            onChange={(e) => {
+                                setCsvFile(e.target.files ? e.target.files[0] : null);
+                                setFeedback(null); // Clear feedback when new file is selected
+                            }}
                             className="file-input file-input-bordered file-input-primary file-input-sm w-full max-w-md"
+                            required // Make file input required for form submission
                         />
                     </div>
                     <div className="card-actions justify-start mt-2">
-                        <button type="submit" className="btn btn-secondary btn-sm" disabled={isPending || !csvFile}>
-                            {isPending ? 'Importing...' : 'Upload and Process CSV'}
+                        <button type="submit" className="btn btn-secondary btn-sm" disabled={isProcessing || !csvFile}>
+                            {isProcessing ? 'Importing...' : 'Upload and Process CSV'}
                         </button>
                     </div>
                 </form>
             </div>
 
+             {/* Feedback Display */}
+            {feedback && (
+                <div className={`alert ${feedback.type === 'success' ? 'alert-success' : 'alert-error'} shadow-sm text-sm my-4`}>
+                    <div>
+                        <span>{feedback.message}</span>
+                        {feedback.errors && feedback.errors.length > 0 && (
+                            <div className="mt-2">
+                                <p className="font-semibold text-xs">Specific row errors:</p>
+                                <ul className="list-disc list-inside text-xs max-h-32 overflow-y-auto">
+                                    {feedback.errors.map((err, index) => (
+                                        <li key={index}>
+                                            Row {err.row}: {err.message}
+                                            {err.data && <pre className="whitespace-pre-wrap bg-base-300 p-1 rounded text-xs mt-1">{JSON.stringify(err.data, null, 2)}</pre>}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Registered Athletes List Section */}
             <div className="card bg-base-100 shadow-lg">
                 <div className="card-body">
-                    <h3 className="card-title text-lg">Registered Athletes</h3>
-                    {feedback && (
-                        <div className={`alert ${feedback.type === 'success' ? 'alert-success' : 'alert-error'} shadow-sm text-sm my-4`}>
-                            <div>
-                                <span>{feedback.message}</span>
-                            </div>
-                        </div>
-                    )}
-                    {isPending && <p>Processing...</p>}
-                    {!isPending && athletes.length === 0 && (
-                        <p className="italic py-4">No athletes are currently registered for this event.</p>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="card-title text-lg">Registered Athletes ({athletes.length})</h3>
+                        <button 
+                            onClick={refreshAthletesList} 
+                            className="btn btn-xs btn-outline btn-primary" 
+                            disabled={isProcessing}
+                        >
+                            {isProcessing && !csvFile ? 'Refreshing...' : 'Refresh List'}
+                        </button>
+                    </div>
+
+                    {isProcessing && athletes.length === 0 && <div className="flex justify-center py-4"><span className="loading loading-dots loading-md"></span></div>}
+                    {!isProcessing && athletes.length === 0 && (
+                        <p className="italic py-4 text-center">No athletes are currently registered for this event.</p>
                     )}
                     {athletes.length > 0 && (
                         <div className="overflow-x-auto">
@@ -139,12 +174,12 @@ export default function ManageAthletesClientSection({ eventId /*, initialAthlete
                                     {athletes.map((athlete) => (
                                         <tr key={athlete.athlete_id}>
                                             <td>{athlete.first_name} {athlete.last_name}</td>
-                                            <td>{athlete.bib_num || 'N/A'}</td>
+                                            <td>{athlete.bib_num || <span className="italic text-xs">N/A</span>}</td>
                                             <td className="text-right">
                                                 <button
                                                     onClick={() => handleRemoveAthleteClick(athlete.athlete_id)}
                                                     className="btn btn-xs btn-error btn-outline"
-                                                    disabled={isPending}
+                                                    disabled={isProcessing}
                                                 >
                                                     Remove
                                                 </button>
@@ -157,7 +192,6 @@ export default function ManageAthletesClientSection({ eventId /*, initialAthlete
                     )}
                 </div>
             </div>
-            {/* You might add a manual "Add Single Athlete" form/modal trigger here */}
         </div>
     );
 }

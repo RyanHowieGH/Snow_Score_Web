@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { fetchEventById } from '@/lib/data'; // Assuming this fetches basic event details
 // You will need a new function to fetch athletes for an event:
-// import { fetchRegisteredAthletesForEvent } from '@/lib/data';
+import { fetchRegisteredAthletesForEvent } from '@/lib/data';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import ManageAthletesClientSection from './ManageAthletesClientSection'; // We'll create this
@@ -36,7 +36,7 @@ export default async function ManageAthletesPage({ params }: ManageAthletesPageP
 
     // Fetch athletes registered for this event.
     // This function needs to be created in lib/data.ts
-    // const initialAthletes = await fetchRegisteredAthletesForEvent(eventId);
+    const initialAthletes = await fetchRegisteredAthletesForEvent(eventId);
 
     return (
         <div className="space-y-6 container mx-auto px-4 py-8">
@@ -61,7 +61,7 @@ export default async function ManageAthletesPage({ params }: ManageAthletesPageP
             {/* Client component to handle athlete management UI and actions */}
             <ManageAthletesClientSection
                 eventId={eventId}
-                // initialAthletes={initialAthletes || []} // Pass initially fetched athletes
+                initialAthletes={initialAthletes || []} // Pass initially fetched athletes
             />
 
             <div className="mt-8 flex justify-end gap-3">

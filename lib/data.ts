@@ -2,14 +2,14 @@
 import getDbPool from './db';
 import { PoolClient } from 'pg';
 
-// Assuming SnowEvent is defined in this path and has the base event fields
-// If it's just a type, it won't cause bundling issues.
-// Ensure eventListItem.tsx is not importing server-only functions from this file.
+// Import the SnowEvent type from its definition.
+// Ensure eventListItem.tsx is ONLY exporting this type and not trying to
+// import server-only functions from this lib/data.ts file.
 import type { SnowEvent } from '@/components/eventListItem';
 
 // --- Type Definitions ---
 
-// Re-export SnowEvent if it's defined elsewhere and used as a base
+// Re-export SnowEvent if you want lib/data.ts to be the canonical source for this type too
 export type { SnowEvent } from '@/components/eventListItem';
 
 export interface Division {
@@ -18,12 +18,10 @@ export interface Division {
 }
 
 export interface Judge {
-    // Assuming personnel_id is the primary key for a person who can be a judge
-    // and ss_event_judges links event_id, personnel_id, and role/header.
-    personnel_id: string; // This might be a user ID or a specific personnel ID
-    header: string;       // e.g., "Head Judge", "Technical Delegate", "Judge 1"
-    name: string;         // Name of the judge (likely fetched via a JOIN in a real scenario or stored denormalized)
-    event_id: number;     // To confirm it's for this event
+    personnel_id: string;
+    header: string;
+    name: string; // Name of the judge. Assumed to be on ss_event_judges or joined.
+    event_id: number;
 }
 
 export interface RegisteredAthlete {
@@ -33,27 +31,28 @@ export interface RegisteredAthlete {
     bib_num: string | null;
 }
 
-export interface EventDetails extends SnowEvent { // Extends your base SnowEvent type
-    status: string;                     // ADDED for event status
-    discipline_id?: number;             // The ID of the discipline
-    discipline_name?: string;           // ADDED for discipline name
+// This is the main detailed type for an event, used on detail/management pages
+export interface EventDetails extends SnowEvent {
+    status: string;
+    discipline_id?: number; // Foreign key
+    discipline_name?: string; // Fetched via JOIN
     divisions: Division[];
     athletes: RegisteredAthlete[];
     judges: Judge[];
 }
 
 export interface Discipline {
-    discipline_id: string; // Assuming string from previous usage, but often integer in DB
+    discipline_id: string; // Or number, if it's an integer PK in your DB
     category_name: string;
     subcategory_name: string;
     discipline_name: string;
 }
 
-export interface Athlete {
+export interface Athlete { // For the ss_athletes table
     athlete_id: number;
     last_name: string;
     first_name: string;
-    dob: Date;
+    dob: Date; // Will be converted to Date object after fetching
     gender: string;
     nationality: string | null;
     stance: string | null;
@@ -75,7 +74,6 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
     try {
         client = await pool.connect();
 
-        // Fetch main event data including status and join for discipline name
         const eventQuery = `
             SELECT
                 e.event_id,
@@ -83,9 +81,9 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
                 e.start_date,
                 e.end_date,
                 e.location,
-                e.status,          -- Select the status
-                e.discipline_id,   -- Select discipline_id from events table
-                d.discipline_name  -- Select the discipline name via JOIN
+                e.status,
+                e.discipline_id,
+                d.discipline_name
             FROM ss_events e
             LEFT JOIN ss_disciplines d ON e.discipline_id = d.discipline_id
             WHERE e.event_id = $1;
@@ -98,7 +96,6 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
         }
         const eventData = eventResult.rows[0];
 
-        // Fetch linked divisions in parallel
         const divisionQuery = `
             SELECT d.division_id, d.division_name
             FROM ss_division d
@@ -107,56 +104,38 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             ORDER BY d.division_name ASC;
         `;
 
-        // Fetch registered athletes in parallel
         const athleteQuery = `
             SELECT a.athlete_id, a.first_name, a.last_name, r.bib_num
             FROM ss_athletes a
             JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
             WHERE r.event_id = $1
-            ORDER BY a.last_name ASC, a.first_name ASC;
+            ORDER BY r.bib_num ASC, a.last_name ASC, a.first_name ASC;
         `;
 
-        // Fetch assigned judges in parallel
-        // Assuming ss_event_judges stores judge assignments.
-        // If 'name' needs to come from another table (e.g., ss_users or ss_personnel), you'd add a JOIN here.
+        // Assuming ss_event_judges.name stores the judge's name directly.
+        // If it needs a JOIN to ss_users or ss_personnel, adjust this query.
         const judgeQuery = `
-            SELECT ej.event_id, ej.personnel_id, ej.header, p.name -- Assuming 'name' comes from a personnel table 'p'
+            SELECT ej.event_id, ej.personnel_id, ej.header, ej.name
             FROM ss_event_judges ej
-            LEFT JOIN ss_personnel p ON ej.personnel_id = p.personnel_id -- Example join for judge name
             WHERE ej.event_id = $1
             ORDER BY ej.header;
         `;
-        // If ss_event_judges.name directly stores the name, then no join needed for 'name' there.
-        // Your previous query was:
-        // SELECT event_id, personnel_id, header, name FROM ss_event_judges WHERE event_id = $1 ORDER BY header
-        // This implies 'name' is directly on ss_event_judges or was a placeholder. I'll use this simpler one
-        // based on your last provided judge query. If name needs a join, adjust above.
-        const simplerJudgeQuery = `
-            SELECT event_id, personnel_id, header, name
-            FROM ss_event_judges
-            WHERE event_id = $1
-            ORDER BY header;
-        `;
-
 
         const [divisionResult, athleteResult, judgeResult] = await Promise.all([
             client.query<Division>(divisionQuery, [eventId]),
             client.query<RegisteredAthlete>(athleteQuery, [eventId]),
-            client.query<Judge>(simplerJudgeQuery, [eventId])
+            client.query<Judge>(judgeQuery, [eventId])
         ]);
 
         const eventDetails: EventDetails = {
-            // Fields from SnowEvent base type
             event_id: eventData.event_id,
             name: eventData.name,
             location: eventData.location,
-            start_date: new Date(eventData.start_date), // Ensure conversion to Date
-            end_date: new Date(eventData.end_date),     // Ensure conversion to Date
-            // Added fields
+            start_date: new Date(eventData.start_date),
+            end_date: new Date(eventData.end_date),
             status: eventData.status,
             discipline_id: eventData.discipline_id,
             discipline_name: eventData.discipline_name,
-            // Aggregated/Joined data
             divisions: divisionResult.rows,
             athletes: athleteResult.rows,
             judges: judgeResult.rows,
@@ -177,14 +156,15 @@ export async function fetchEvents(): Promise<SnowEvent[]> {
     let client: PoolClient | null = null;
     try {
         client = await pool.connect();
-        // Ensure you select all fields required by SnowEvent
         const result = await client.query(
           'SELECT event_id, name, start_date, end_date, location FROM ss_events ORDER BY start_date DESC'
         );
         const events: SnowEvent[] = result.rows.map(row => ({
-            ...row,
+            event_id: row.event_id,
+            name: row.name,
             start_date: new Date(row.start_date),
             end_date: new Date(row.end_date),
+            location: row.location,
         }));
         console.log(`Fetched ${events.length} events.`);
         return events;
@@ -257,7 +237,7 @@ export async function fetchAssignedDivisionIds(eventId: number): Promise<number[
 }
 
 export async function fetchAllAthletes(): Promise<Athlete[]> {
-    console.log("Fetching all athletes...");
+    console.log("Fetching all athletes (for general lists, not event-specific registration)...");
     const pool = getDbPool();
     let client: PoolClient | null = null;
     try {
@@ -273,7 +253,7 @@ export async function fetchAllAthletes(): Promise<Athlete[]> {
             ...row,
             dob: new Date(row.dob)
         }));
-        console.log(`Fetched ${athletes.length} athletes.`);
+        console.log(`Fetched ${athletes.length} athletes from ss_athletes.`);
         return athletes;
     } catch (error) {
         console.error("Error fetching all athletes:", error);
@@ -283,38 +263,70 @@ export async function fetchAllAthletes(): Promise<Athlete[]> {
     }
 }
 
-// This function was for deleting judges, which you said to ignore for now.
-// I'll keep it here as it was part of the file.
-export async function deleteJudgeFromEvent(
-    eventId: number,
-    personnel_id: string
-    // header was removed as it was not used in the DELETE query logic itself
-) {
-    console.log(`Attempting to delete judge ${personnel_id} from event ${eventId}...`);
-    if (isNaN(eventId) || !personnel_id) {
-        console.error("Invalid parameters for deleting judge.");
-        // Return a structure that indicates failure or throw an error
-        return { rowCount: 0, command: 'DELETE', error: 'Invalid parameters' };
+export async function fetchRegisteredAthletesForEvent(eventId: number): Promise<RegisteredAthlete[]> {
+    console.log(`Fetching registered athletes for event ID: ${eventId}`);
+    if (isNaN(eventId)) {
+        console.error("fetchRegisteredAthletesForEvent: Invalid event ID provided.");
+        return [];
     }
 
     const pool = getDbPool();
     let client: PoolClient | null = null;
     try {
         client = await pool.connect();
-        const result = await client.query( // No specific type for RETURNING header if we removed it or don't use it
+        const query = `
+            SELECT
+                a.athlete_id,
+                a.first_name,
+                a.last_name,
+                er.bib_num
+            FROM
+                ss_athletes a
+            JOIN
+                ss_event_registrations er ON a.athlete_id = er.athlete_id
+            WHERE
+                er.event_id = $1
+            ORDER BY
+                er.bib_num ASC, a.last_name ASC, a.first_name ASC;
+        `;
+        const result = await client.query<RegisteredAthlete>(query, [eventId]);
+        console.log(`Found ${result.rows.length} registered athletes for event ID: ${eventId}.`);
+        return result.rows;
+    } catch (error) {
+        console.error(`Database error fetching registered athletes for event ID ${eventId}:`, error);
+        return [];
+    } finally {
+        if (client) client.release();
+    }
+}
+
+// Function for deleting judges (kept as per previous state)
+export async function deleteJudgeFromEvent(
+    eventId: number,
+    personnel_id: string
+) {
+    console.log(`Attempting to delete judge ${personnel_id} from event ${eventId}...`);
+    if (isNaN(eventId) || !personnel_id) {
+        console.error("deleteJudgeFromEvent: Invalid parameters for deleting judge.");
+        return { rowCount: 0, command: 'DELETE', error: 'Invalid parameters', customError: true };
+    }
+
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query(
         `
         DELETE FROM ss_event_judges
-        WHERE event_id = $1
-            AND personnel_id = $2
-        `, // Removed RETURNING header as it wasn't used by consuming code and makes type simpler
+        WHERE event_id = $1 AND personnel_id = $2
+        `,
         [eventId, personnel_id]
         );
         console.log(`Delete judge result for event ${eventId}, personnel ${personnel_id}: ${result.rowCount} rows affected.`);
-        return result; // Returns QueryResult from pg (includes rowCount)
+        return result; // pg QueryResult
     } catch (error) {
         console.error(`Error deleting judge ${personnel_id} from event ${eventId}:`, error);
-        // Return a structure that indicates failure or throw an error
-        return { rowCount: 0, command: 'DELETE', error: (error as Error).message };
+        return { rowCount: 0, command: 'DELETE', error: (error as Error).message, customError: true };
     } finally {
         if (client) client.release();
     }
@@ -322,7 +334,6 @@ export async function deleteJudgeFromEvent(
 
 
 // --- Date Formatting Helpers ---
-// These are pure functions and are fine to be here, or could be moved to a utils.ts
 export const formatDate = (dateInput: Date | string | undefined | null, options?: Intl.DateTimeFormatOptions): string => {
     if (!dateInput) return "N/A";
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -345,7 +356,6 @@ export const formatDateRange = (startInput: Date | string | undefined | null, en
 
     if (startDateStr === endDateStr) return startDateStr;
 
-    // Check if same month and year for "Month Day1-Day2, Year" format
     if (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) {
         return `${start.toLocaleDateString("en-US", { month: 'short' })} ${start.getDate()}-${end.getDate()}, ${start.getFullYear()}`;
     }
