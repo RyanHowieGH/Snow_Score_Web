@@ -8,7 +8,7 @@ import type { Metadata } from 'next';
 
 // Page metadata
 export const metadata: Metadata = {
-    title: 'Manage Athletes - Admin',
+    title: 'Athletes - Admin',
     description: 'View and manage athletes in the database.',
 };
 
@@ -30,7 +30,7 @@ export default async function ManageAthletesPage() {
         <div className="space-y-6">
              {/* Page Header */}
              <div className='flex flex-col sm:flex-row justify-between items-center gap-4 mb-4'>
-                <h2 className="text-2xl md:text-3xl font-bold">Manage Athletes</h2>
+                <h2 className="text-2xl md:text-3xl font-bold">Athletes</h2>
             </div>
 
             {/* Card containing the athlete list */}
