@@ -1,19 +1,20 @@
-// app/admin/(standard)/events/create/EventCreateForm.tsx (Client Component)
+// app\admin\(standard)\events\create\EventCreateForm.tsx
+
 'use client';
 
-import React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+// CHANGE THE IMPORTS
+import React from 'react'; // Keep this for JSX and potentially useActionState
+import { useActionState } from 'react';    // <-- Import useActionState directly from 'react'
+import { useFormStatus } from 'react-dom'; // <-- useFormStatus remains in 'react-dom'
 
-import { createEventAction, CreateEventFormState } from './actions'; // Import action and state type
-import type { Discipline, Division } from '@/lib/data'; // Import types for props
+import { createEventAction, CreateEventFormState } from './actions';
+import type { Discipline, Division } from '@/lib/data';
 
-// Define props expected by this component
 interface EventCreateFormProps {
     disciplines: Discipline[];
-    divisions: Division[]; // Receive the pre-fetched divisions
+    divisions: Division[];
 }
 
-// Separate Submit Button component to leverage useFormStatus
 function SubmitButton() {
     const { pending } = useFormStatus();
     return (
@@ -30,7 +31,6 @@ function SubmitButton() {
     );
 }
 
-// Main Form Component
 export default function EventCreateForm({ disciplines, divisions }: EventCreateFormProps) {
     const initialState: CreateEventFormState = {
         success: false,
@@ -38,11 +38,13 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
         error: undefined,
         fieldErrors: undefined,
     };
-    const [state, formAction] = useFormState(createEventAction, initialState);
+
+    // This line should now work as useActionState is imported from 'react'
+    const [state, formAction] = useActionState(createEventAction, initialState);
 
     return (
-        // The form element calls the server action directly
         <form action={formAction} className="space-y-4">
+            {/* ... rest of your form remains the same ... */}
 
             {/* Event Name Input */}
             <label className="form-control w-full">
@@ -155,13 +157,13 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
 
             {/* Division Checkboxes */}
             <div className="form-control w-full">
-                <label className="label">
+                <label className="label" id="division-label">
                     <span className="label-text font-semibold">Assign Divisions*</span>
                     <span className="label-text-alt">(Select at least one)</span>
                 </label>
                 <div
                     className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-2 p-3 border rounded-lg ${state?.fieldErrors?.division_ids ? 'border-error' : 'border-base-300'}`}
-                    role="group" // for accessibility
+                    role="group"
                     aria-labelledby="division-label"
                     aria-describedby={state?.fieldErrors?.division_ids ? "division-ids-error" : undefined}
                 >
@@ -170,8 +172,8 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                             <label key={div.division_id} className="label cursor-pointer justify-start gap-2 p-0">
                                 <input
                                     type="checkbox"
-                                    name="division_ids" // Same name for all checkboxes in the group
-                                    value={String(div.division_id)} // Value MUST be string for FormData
+                                    name="division_ids"
+                                    value={String(div.division_id)}
                                     className="checkbox checkbox-primary checkbox-sm"
                                 />
                                 <span className="label-text text-sm">{div.division_name}</span>
@@ -193,7 +195,6 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                 <SubmitButton />
             </div>
 
-            {/* Display general error/success messages from the server action state */}
             {state?.message && !state.success && (
                  <div role="alert" className="alert alert-error mt-4 text-sm">
                      <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
