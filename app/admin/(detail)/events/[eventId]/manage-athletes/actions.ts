@@ -27,13 +27,13 @@ const AthleteCsvSchema = z.object({
 type AthleteCsvData = z.infer<typeof AthleteCsvSchema>;
 
 // Define structure for checking athletes against DB
-interface CheckedAthlete extends Omit<AthleteCsvData, 'stance'> { 
+interface CheckedAthlete extends Omit<AthleteCsvData, 'stance'> {
     csvIndex: number;
     status: 'matched' | 'new' | 'error';
     dbAthleteId?: number | null;
     validationError?: string;
-    dbDetails?: { first_name: string; last_name: string; dob: Date };
-    stance?: "" | "Regular" | "Goofy" | string | null; // Allow empty string or null for stance
+    dbDetails?: { first_name: string; last_name: string; dob: Date }; // DB DOB is Date
+    stance?: "" | "Regular" | "Goofy" | string | null;
 }
 
 // Define structure for the combined result of checking athletes and divisions
@@ -72,7 +72,7 @@ export async function checkAthletesAgainstDb(
     const pool = getDbPool();
     let client: PoolClient | null = null;
     const results: CheckedAthlete[] = [];
-    const fisNumsToCheck: string[] = [];
+    const fisNumStringsFromCsv: string[] = []; // Store FIS numbers from CSV as strings first
     const nameDobToCheck: { first_name: string; last_name: string; dob: string }[] = [];
     const validatedGenders = new Set<string>();
 
@@ -83,18 +83,15 @@ export async function checkAthletesAgainstDb(
 
         if (!parseResult.success) {
             console.warn(`Validation failed for CSV row ${i}:`, parseResult.error.flatten().fieldErrors);
-            // Cast rawAthlete to a simple record type to access properties
             const rawData = rawAthlete as Record<string, unknown>;
             results.push({
-                // Explicitly access properties with type checks/defaults
                 last_name: typeof rawData?.last_name === 'string' ? rawData.last_name : '',
                 first_name: typeof rawData?.first_name === 'string' ? rawData.first_name : '',
-                dob: typeof rawData?.dob === 'string' ? rawData.dob : '', // Keep as string for error display
+                dob: typeof rawData?.dob === 'string' ? rawData.dob : '',
                 gender: typeof rawData?.gender === 'string' ? rawData.gender : '',
                 nationality: typeof rawData?.nationality === 'string' ? rawData.nationality : null,
                 stance: typeof rawData?.stance === 'string' ? rawData.stance : null,
                 fis_num: typeof rawData?.fis_num === 'string' ? rawData.fis_num : null,
-                // Add the error-specific fields
                 csvIndex: i,
                 status: 'error',
                 validationError: parseResult.error.flatten().fieldErrors ? JSON.stringify(parseResult.error.flatten().fieldErrors) : "Invalid data format",
@@ -105,19 +102,29 @@ export async function checkAthletesAgainstDb(
         if (validatedAthlete.nationality === '') validatedAthlete.nationality = null;
         if (validatedAthlete.stance === '') validatedAthlete.stance = null;
         if (validatedAthlete.fis_num === '') validatedAthlete.fis_num = null;
-        results.push({ ...validatedAthlete, csvIndex: i, status: 'new' });
+
+        results.push({ ...validatedAthlete, csvIndex: i, status: 'new' }); // Initial status 'new'
+
         if (validatedAthlete.gender) validatedGenders.add(validatedAthlete.gender.trim().toUpperCase());
+
         if (validatedAthlete.fis_num) {
-             fisNumsToCheck.push(validatedAthlete.fis_num);
+             fisNumStringsFromCsv.push(validatedAthlete.fis_num);
         } else {
              nameDobToCheck.push({ first_name: validatedAthlete.first_name, last_name: validatedAthlete.last_name, dob: validatedAthlete.dob });
         }
     }
-    // Return early if no valid data, include empty divisions array
+
+    // Initialize divisions - will be populated later or returned empty/default
+    let divisions: Division[] = [];
+
     if (!results.some(r => r.status !== 'error')) {
          return { success: true, data: { athletes: results, divisions: [] }, error: "No valid athlete data found in the file." };
-     }
+    }
 
+    // Create numericFisNumsToQuery AFTER fisNumStringsFromCsv is populated
+    const numericFisNumsToQuery: number[] = fisNumStringsFromCsv
+        .map(fisStr => parseInt(fisStr, 10))
+        .filter(fisNum => !isNaN(fisNum));
 
     // 2. Handle Divisions & Perform DB Checks within a Transaction
     try {
@@ -129,8 +136,8 @@ export async function checkAthletesAgainstDb(
             SELECT d.division_id, d.division_name FROM ss_division d
             JOIN ss_event_divisions ed ON d.division_id = ed.division_id
             WHERE ed.event_id = $1 ORDER BY d.division_name ASC`;
-        let eventDivisionsResult = await client.query<Division>(getLinkedDivisionsQuery, [eventId]);
-        let divisions: Division[] = eventDivisionsResult.rows;
+        const eventDivisionsResult = await client.query<Division>(getLinkedDivisionsQuery, [eventId]);
+        divisions = eventDivisionsResult.rows; // Assign fetched divisions
 
         // 2b. If none linked, try to create/link standard 'MEN'/'WOMEN'
         if (divisions.length === 0 && validatedGenders.size > 0) {
@@ -158,37 +165,63 @@ export async function checkAthletesAgainstDb(
                     const linkPlaceholders = foundDivisionIds.map((_, i) => `($1, $${i + 2})`).join(',');
                     const linkDivisionQuery = `INSERT INTO ss_event_divisions (event_id, division_id) VALUES ${linkPlaceholders} ON CONFLICT DO NOTHING;`;
                     await client.query(linkDivisionQuery, [eventId, ...foundDivisionIds]);
-                    eventDivisionsResult = await client.query<Division>(getLinkedDivisionsQuery, [eventId]);
-                    divisions = eventDivisionsResult.rows;
+                    const updatedEventDivisionsResult = await client.query<Division>(getLinkedDivisionsQuery, [eventId]); // Re-fetch
+                    divisions = updatedEventDivisionsResult.rows; // Update divisions
                 }
             }
         }
 
         // 2c. Perform Athlete DB Checks (FIS & Name/DOB)
-        let matchedByFis: { athlete_id: number; fis_num: string; first_name: string; last_name: string; dob: Date }[] = [];
-        if (fisNumsToCheck.length > 0) {
-            const fisCheckQuery = `SELECT athlete_id, fis_num, first_name, last_name, dob FROM ss_athletes WHERE fis_num = ANY($1::text[])`;
-            matchedByFis = (await client.query(fisCheckQuery, [fisNumsToCheck])).rows;
+        let matchedByFis: { athlete_id: number; fis_num: number; first_name: string; last_name: string; dob: Date }[] = [];
+        if (numericFisNumsToQuery.length > 0) {
+            const fisCheckQuery = `
+                SELECT athlete_id, fis_num, first_name, last_name, dob
+                FROM ss_athletes
+                WHERE fis_num = ANY($1)`; // $1 is number[]
+            matchedByFis = (await client.query<{ athlete_id: number; fis_num: number; first_name: string; last_name: string; dob: Date }>(
+                fisCheckQuery,
+                [numericFisNumsToQuery]
+            )).rows;
         }
-        let matchedByNameDob: { athlete_id: number; first_name: string; last_name: string; dob: string, db_dob: Date }[] = [];
+
+        let matchedByNameDob: { athlete_id: number; first_name: string; last_name: string; dob: string; db_dob: Date }[] = [];
          if (nameDobToCheck.length > 0) {
             const conditions = nameDobToCheck.map((_, index) => `(LOWER(first_name)=LOWER($${index*3+1}) AND LOWER(last_name)=LOWER($${index*3+2}) AND dob=$${index*3+3}::date)`).join(' OR ');
             const values = nameDobToCheck.flatMap(a => [a.first_name, a.last_name, a.dob]);
-            if (conditions) {
+            if (conditions) { // Ensure conditions is not an empty string if nameDobToCheck was empty after filtering
                  const nameDobQuery = `SELECT athlete_id, first_name, last_name, dob as db_dob FROM ss_athletes WHERE ${conditions}`;
-                 matchedByNameDob = (await client.query(nameDobQuery, values)).rows.map(row => ({...row, dob: row.db_dob.toISOString().split('T')[0]}));
+                 matchedByNameDob = (await client.query(nameDobQuery, values)).rows.map(row => ({
+                    ...row,
+                    dob: row.db_dob.toISOString().split('T')[0] // Keep CSV compatible YYYY-MM-DD string for comparison
+                 }));
             }
          }
 
         // 3. Update status in results array
         for (const athleteResult of results) {
-            if (athleteResult.status === 'error') continue;
-            if (athleteResult.fis_num) {
-                const fisMatch = matchedByFis.find(db => db.fis_num === athleteResult.fis_num);
-                if (fisMatch) { athleteResult.status = 'matched'; athleteResult.dbAthleteId = fisMatch.athlete_id; athleteResult.dbDetails = { first_name: fisMatch.first_name, last_name: fisMatch.last_name, dob: fisMatch.dob }; }
-            } else {
-                const nameDobMatch = matchedByNameDob.find(db => db.first_name.toLowerCase()===athleteResult.first_name.toLowerCase() && db.last_name.toLowerCase()===athleteResult.last_name.toLowerCase() && db.dob===athleteResult.dob);
-                if (nameDobMatch) { athleteResult.status = 'matched'; athleteResult.dbAthleteId = nameDobMatch.athlete_id; athleteResult.dbDetails = { first_name: nameDobMatch.first_name, last_name: nameDobMatch.last_name, dob: nameDobMatch.db_dob }; }
+            if (athleteResult.status === 'error') continue; // Skip already errored items
+
+            if (athleteResult.fis_num && athleteResult.fis_num.trim() !== '') {
+                const csvFisNumAsInt = parseInt(athleteResult.fis_num, 10);
+                if (!isNaN(csvFisNumAsInt)) {
+                    const fisMatch = matchedByFis.find(dbAthlete => dbAthlete.fis_num === csvFisNumAsInt);
+                    if (fisMatch) {
+                        athleteResult.status = 'matched';
+                        athleteResult.dbAthleteId = fisMatch.athlete_id;
+                        athleteResult.dbDetails = { first_name: fisMatch.first_name, last_name: fisMatch.last_name, dob: fisMatch.dob };
+                    }
+                }
+            } else { // Try matching by name/DOB only if no valid FIS number was provided or matched
+                const nameDobMatch = matchedByNameDob.find(dbAthlete =>
+                    dbAthlete.first_name.toLowerCase() === athleteResult.first_name.toLowerCase() &&
+                    dbAthlete.last_name.toLowerCase() === athleteResult.last_name.toLowerCase() &&
+                    dbAthlete.dob === athleteResult.dob // athleteResult.dob is string YYYY-MM-DD from CSV
+                );
+                if (nameDobMatch) {
+                    athleteResult.status = 'matched';
+                    athleteResult.dbAthleteId = nameDobMatch.athlete_id;
+                    athleteResult.dbDetails = { first_name: nameDobMatch.first_name, last_name: nameDobMatch.last_name, dob: nameDobMatch.db_dob };
+                }
             }
         }
 
@@ -196,19 +229,19 @@ export async function checkAthletesAgainstDb(
         console.log("Transaction committed for checkAthletesAgainstDb.");
         return { success: true, data: { athletes: results, divisions: divisions } };
 
-    } catch (error: unknown) { // Use unknown type for error
+    } catch (error: unknown) {
         await client?.query('ROLLBACK');
         console.error("Error checking athletes/divisions:", error);
-        // Use type guard before accessing properties
         const message = error instanceof Error ? error.message : "An unknown database error occurred.";
-        // Return empty divisions array on error
-        return { success: false, data: { athletes: results, divisions: [] }, error: `Database error: ${message}` };
+        // Ensure 'divisions' has a value in the error case for type consistency
+        return { success: false, data: { athletes: results, divisions: divisions || [] }, error: `Database error: ${message}` };
     } finally {
         if (client) client.release();
     }
 }
 
 // ---- Server Action 2: Add/Register Athletes ----
+// (Your addAndRegisterAthletes function - assumed unchanged from previous version for this fix)
 export async function addAndRegisterAthletes(
     eventId: number,
     divisionId: number,
@@ -248,44 +281,77 @@ export async function addAndRegisterAthletes(
                  console.error(`Missing required data for new athlete at CSV index ${athlete.csvIndex}`, athlete);
                 return { success: false, error: `Missing required data for new athlete at CSV index ${athlete.csvIndex}. Edit or deselect.` };
             }
-            const insertQuery = `INSERT INTO ss_athletes (first_name, last_name, dob, gender, nationality, stance, fis_num) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (fis_num) WHERE fis_num IS NOT NULL DO NOTHING RETURNING athlete_id;`;
+            // Ensure fis_num is null if it's an empty string after Zod processing.
+            const fisNumForDb = athlete.fis_num && athlete.fis_num.trim() !== '' ? athlete.fis_num : null;
+
+            const insertQuery = `
+                INSERT INTO ss_athletes (first_name, last_name, dob, gender, nationality, stance, fis_num)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (fis_num) WHERE fis_num IS NOT NULL DO UPDATE SET
+                    first_name = EXCLUDED.first_name, -- Example: update if desired on conflict
+                    last_name = EXCLUDED.last_name,
+                    dob = EXCLUDED.dob,
+                    gender = EXCLUDED.gender,
+                    nationality = EXCLUDED.nationality,
+                    stance = EXCLUDED.stance
+                RETURNING athlete_id;`;
+            // Or ON CONFLICT (fis_num) WHERE fis_num IS NOT NULL DO NOTHING if you don't want to update existing.
+
             const stance = athlete.stance === '' ? null : athlete.stance;
             const nationality = athlete.nationality === '' ? null : athlete.nationality;
-            const fis_num = athlete.fis_num === '' ? null : athlete.fis_num;
-            const res = await client.query(insertQuery, [athlete.first_name, athlete.last_name, athlete.dob, athlete.gender, nationality, stance, fis_num]);
+
+            const res = await client.query(insertQuery, [
+                athlete.first_name, athlete.last_name, athlete.dob, athlete.gender,
+                nationality, stance, fisNumForDb
+            ]);
+
             if (res.rows.length > 0) {
                 athleteIdsToRegister.push(res.rows[0].athlete_id);
-            } else if (fis_num) {
-                 const findRes = await client.query('SELECT athlete_id FROM ss_athletes WHERE fis_num = $1', [fis_num]);
-                 if (findRes.rows.length > 0) { athleteIdsToRegister.push(findRes.rows[0].athlete_id); }
-                 else { console.warn(`New athlete ${athlete.first_name} with FIS# ${fis_num} conflict but not found.`); }
-            } else { console.warn(`Failed to get ID for new athlete ${athlete.first_name} (no FIS#).`); }
+            } else if (fisNumForDb) {
+                 // If ON CONFLICT DO NOTHING and it conflicted, or if update didn't return ID but should have
+                 const findRes = await client.query('SELECT athlete_id FROM ss_athletes WHERE fis_num = $1', [fisNumForDb]);
+                 if (findRes.rows.length > 0) {
+                    athleteIdsToRegister.push(findRes.rows[0].athlete_id);
+                 } else {
+                    console.warn(`New athlete ${athlete.first_name} with FIS# ${fisNumForDb} conflict/insert issue but not found post-insert.`);
+                 }
+            } else {
+                // This case (no fis_num, and insert didn't return ID) would be an issue if PK is not fis_num
+                console.warn(`Failed to get ID for new athlete ${athlete.first_name} (no FIS# and insert failed to return ID).`);
+            }
         }
 
         // 2. Add MATCHED athlete IDs
-        const matchedAthleteIds = athletesToProcess.filter(a => a.status==='matched' && typeof a.dbAthleteId==='number').map(a => a.dbAthleteId as number);
+        const matchedAthleteIds = athletesToProcess
+            .filter(a => a.status === 'matched' && typeof a.dbAthleteId === 'number')
+            .map(a => a.dbAthleteId as number);
         athleteIdsToRegister.push(...matchedAthleteIds);
 
         // 3. Insert into ss_event_registrations
         const uniqueAthleteIdsToRegister = Array.from(new Set(athleteIdsToRegister.filter(id => typeof id === 'number')));
         console.log(`Attempting to register ${uniqueAthleteIdsToRegister.length} unique athletes into division ${divisionId}.`);
         if (uniqueAthleteIdsToRegister.length > 0) {
-             const registrationQuery = `INSERT INTO ss_event_registrations (event_id, athlete_id, division_id) SELECT $1, athlete_id, $2 FROM unnest($3::int[]) AS athlete_id ON CONFLICT (event_id, athlete_id) DO NOTHING;`;
+             const registrationQuery = `
+                INSERT INTO ss_event_registrations (event_id, athlete_id, division_id)
+                SELECT $1, athlete_id_val, $2
+                FROM unnest($3::int[]) AS athlete_id_val
+                ON CONFLICT (event_id, athlete_id) DO NOTHING;`; // athlete_id is a keyword, use athlete_id_val
              const regRes = await client.query(registrationQuery, [eventId, divisionId, uniqueAthleteIdsToRegister]);
              registeredCount = regRes.rowCount ?? 0;
              console.log(`Inserted ${registeredCount} new registrations.`);
-        } else { console.log("No unique, valid athlete IDs identified."); }
+        } else {
+            console.log("No unique, valid athlete IDs identified for registration.");
+        }
 
         await client.query('COMMIT');
-        console.log("Transaction committed.");
+        console.log("Transaction committed for addAndRegisterAthletes.");
         revalidatePath(`/admin/events/${eventId}`);
         revalidatePath(`/admin/events/${eventId}/manage-athletes`);
         return { success: true, registeredCount };
 
-    } catch (error: unknown) { // Use unknown type
+    } catch (error: unknown) {
         await client?.query('ROLLBACK');
         console.error("Error processing athlete registration:", error);
-        // Use type guard
         const message = error instanceof Error ? error.message : "An unknown error occurred during registration.";
         return { success: false, error: `Registration failed: ${message}` };
     } finally {
@@ -293,7 +359,9 @@ export async function addAndRegisterAthletes(
     }
 }
 
+
 // --- Action to get divisions ---
+// (Your getEventDivisions function - assumed unchanged)
 export async function getEventDivisions(eventId: number): Promise<{ success: boolean; data?: Division[]; error?: string }> {
     console.log(`Server Action: getEventDivisions called for event ${eventId}`);
     if (isNaN(eventId)) return { success: false, error: "Invalid Event ID provided." };

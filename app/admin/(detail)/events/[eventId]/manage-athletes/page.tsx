@@ -281,21 +281,61 @@ export default function ManageAthletesPage() {
 
                                  {/* Display Table */}
                                  <div className="overflow-x-auto mb-4">
-                                     <table className="table table-sm table-zebra w-full">
-                                          <thead> <tr className="text-xs uppercase"> <th>Sel.</th><th>Status</th><th>CSV Data</th><th>DB Match Details</th><th>Action / Error</th> </tr> </thead>
-                                          <tbody>
-                                               {checkedAthletes.map(athlete => (
-                                                   <tr key={athlete.csvIndex} className={`${athlete.status === 'error' ? 'opacity-60' : ''} hover`}>
-                                                        <td><input type="checkbox" className="checkbox checkbox-primary checkbox-xs" checked={!!athlete.isSelected} onChange={() => handleSelectionChange(athlete.csvIndex)} disabled={athlete.status === 'error' || isLoading} /></td>
-                                                        <td><span className={`badge badge-sm ${athlete.status==='matched'?'badge-success':athlete.status==='new'?'badge-info':'badge-error'}`}>{athlete.status}</span></td>
-                                                        <td><div className='text-sm'><strong>{athlete.first_name} {athlete.last_name}</strong> <br /><span className='text-xs opacity-70'>DOB: {athlete.dob||'N/A'} | G: {athlete.gender||'N/A'} | FIS: {athlete.fis_num||'N/A'}</span></div></td>
-                                                        <td> {athlete.status === 'matched' && athlete.dbDetails && (<div className='text-xs'><span className='font-semibold'>ID: {athlete.dbAthleteId}</span><br/>{athlete.dbDetails.first_name} {athlete.dbDetails.last_name}<br/><span className='opacity-70'> DOB: {new Date(athlete.dbDetails.dob).toLocaleDateString()}</span></div>)} {athlete.status==='new' && (<span className='text-xs italic text-info'>New Athlete</span>)} </td>
-                                                        <td className='text-center'> {athlete.status === 'new' && !isLoading && (<button className="btn btn-xs btn-ghost text-info p-1" onClick={() => handleEditAthlete(athlete.csvIndex)} title="Edit athlete details"><PencilSquareIcon className="h-4 w-4" /></button> )} {athlete.status === 'error' && athlete.validationError && (<div className="text-error text-xs tooltip tooltip-left" data-tip={athlete.validationError}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>Error</div>)} </td>
-                                                   </tr>
-                                               ))}
-                                          </tbody>
-                                     </table>
-                                 </div>
+    <table className="table table-sm table-zebra w-full">
+        <thead>
+            <tr className="text-xs uppercase">
+                <th>Sel.</th>
+                <th>Status</th>
+                <th>CSV Data</th>
+                <th>DB Match Details</th>
+                <th>Action / Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            {checkedAthletes.map(athlete => (
+                <tr key={athlete.csvIndex} className={`${athlete.status === 'error' ? 'opacity-60' : ''} hover`}>
+                    <td><input type="checkbox" className="checkbox checkbox-primary checkbox-xs" checked={!!athlete.isSelected} onChange={() => handleSelectionChange(athlete.csvIndex)} disabled={athlete.status === 'error' || isLoading} /></td>
+                    <td><span className={`badge badge-sm ${athlete.status === 'matched' ? 'badge-success' : athlete.status === 'new' ? 'badge-info' : 'badge-error'}`}>{athlete.status}</span></td>
+                    <td><div className='text-sm'><strong>{athlete.first_name} {athlete.last_name}</strong> <br /><span className='text-xs opacity-70'>DOB: {athlete.dob || 'N/A'} | G: {athlete.gender || 'N/A'} | FIS: {athlete.fis_num || 'N/A'}</span></div></td>
+                    <td>
+                        {athlete.status === 'matched' && athlete.dbDetails && (
+                            <div className='text-xs'>
+                                <span className='font-semibold'>ID: {athlete.dbAthleteId}</span><br />
+                                {athlete.dbDetails.first_name} {athlete.dbDetails.last_name}<br />
+                                <span className='opacity-70'> DOB: {new Date(athlete.dbDetails.dob).toLocaleDateString()}</span>
+                            </div>
+                        )}
+                        {athlete.status === 'new' && (
+                            <span className='text-xs italic text-info'>New Athlete</span>
+                        )}
+                    </td>
+                    <td className='text-center'>
+                        {athlete.status === 'new' && !isLoading && (
+                            <button className="btn btn-xs btn-ghost text-info p-1" onClick={() => handleEditAthlete(athlete.csvIndex)} title="Edit athlete details">
+                                <PencilSquareIcon className="h-4 w-4" />
+                            </button>
+                        )}
+                        {athlete.status === 'error' && athlete.validationError && (
+                            <div className="text-error text-xs tooltip tooltip-left" data-tip={athlete.validationError}>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Error
+                            </div>
+                        )}
+                    </td>
+                </tr>
+            ))}
+            {checkedAthletes.length === 0 && (
+                <tr>
+                    <td colSpan={5} className="text-center italic py-2"> {/* Adjusted padding */}
+                        {isLoading ? 'Processing data...' : 'No athletes to display yet.'}
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+</div>
 
                                  {/* Summary and Final Button */}
                                  <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
