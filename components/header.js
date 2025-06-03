@@ -1,8 +1,10 @@
 // /components/header.js
+"use client"; // <-- IMPORTANT: Add this to make it a Client Component
+
 import React from "react";
 import Link from 'next/link';
 import Image from "next/image";
-
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"; // <-- Import Clerk components
 
 /**
  * Header component for the application.
@@ -11,36 +13,57 @@ import Image from "next/image";
  * @param {object} props - Component props.
  * @param {string | null | undefined} [props.eventName] - The name of the event to display.
  */
-// Add eventName prop
 export default function Header({ eventName = null }) {
     const logoSize = 90;
 
-
     return (
-        <div className="navbar bg-primary text-primary-content shadow-sm"> {/* Ensure text color contrasts */}
-            <div className="flex-1 flex items-center"> {/* Use flex to align items */}
-                <Link href="/admin">
-                   <Image src="/assets/goggles_borderless.png" alt="Goggles Logo"  width={logoSize} height={logoSize} className="ml-5 rounded-full cursor-pointer" priority/>
+        <div className="navbar bg-primary text-primary-content shadow-sm">
+            {/* Left Side: Logo and Optional Event Name */}
+            <div className="flex-1 flex items-center">
+                <Link href="/admin" className="cursor-pointer"> {/* Added cursor-pointer class to Link */}
+                   <Image
+                        src="/assets/goggles_borderless.png"
+                        alt="Goggles Logo"
+                        width={logoSize}
+                        height={logoSize}
+                        className="ml-5 rounded-full" // Removed cursor-pointer from Image, Link handles it
+                        priority
+                    />
                 </Link>
-                {/* Display event name if provided */}
                 {eventName && (
-                    <span className="ml-4 text-xl font-semibold hidden sm:inline"> {/* Hide on extra small screens */}
+                    <span className="ml-4 text-xl font-semibold hidden sm:inline">
                         {eventName}
                     </span>
                 )}
             </div>
-            <div className="flex-none gap-2 mr-4">
-                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content">
+
+            {/* Right Side: Navigation Links and Auth Button */}
+            <div className="flex-none flex items-center gap-2 mr-4"> {/* Ensure items-center for vertical alignment */}
+                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content hover:bg-primary-focus">
                     Athletes
                  </Link>
-                 <Link href="/admin/events" className="btn btn-ghost text-primary-content">
+                 <Link href="/admin/events" className="btn btn-ghost text-primary-content hover:bg-primary-focus">
                     Events
                  </Link>
-                 {/* <button className="btn btn-ghost btn-circle avatar">
-                    <div className="w-8 rounded-full">
-                       <Image src="/assets/admin_logo.png" alt="Admin Menu" />
-                     </div>
-                 </button> */}
+
+                {/* Clerk Authentication Section */}
+                <SignedIn>
+                    {/* User is signed in - UserButton includes profile & sign out */}
+                    <div className="ml-2"> {/* Add some margin if needed */}
+                        <UserButton afterSignOutUrl="/" appearance={{
+                            elements: {
+                                userButtonAvatarBox: "w-10 h-10", // Example: Make avatar slightly larger
+                                userButtonPopoverCard: "bg-base-100 text-base-content" // Example: Style popover
+                            }
+                        }}/>
+                    </div>
+                </SignedIn>
+                <SignedOut>
+                    {/* User is signed out - Show Log In button */}
+                    <Link href="/sign-in" className="btn btn-accent hover:btn-accent-focus ml-2"> {/* Or your preferred login button style */}
+                        Log In
+                    </Link>
+                </SignedOut>
             </div>
         </div>
     );
