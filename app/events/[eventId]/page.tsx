@@ -67,6 +67,7 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
 
           <JudgeEventSpecificSection
             judges = {event.judges}
+            event_id = event
           />
 
         </div>

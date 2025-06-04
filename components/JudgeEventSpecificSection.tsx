@@ -23,14 +23,20 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
     const [isEditionMode, setIsEditionMode] = useState(false);
     const [confirmJudgeToRemove, setConfirmJudgeToRemove] = useState<Judge | null>(null);
     const [confirmJudgeToAdd, setConfirmJudgeToAdd] = useState<string>('');
-    const [openRemoveJudge, setOpenRemoveJudge] = useState(false)
-    const [openAddJudge, setOpenAddJudge] = useState(false)
+    const [openRemoveJudge, setOpenRemoveJudge] = useState(false);
+    const [openAddJudge, setOpenAddJudge] = useState(false);
+    const [openCreateNewJudge, setCreateNewJudge] = useState(false);
+
+    // New Judge Properties (ss_event_judges)
+    const [newJudgeHeader, setNewJudgeHeader] = useState<String>("")
+    const [newJudgerName, setNewJudgeName] = useState<String>("")
+    // new personnel_id would be a sequence
+    // how to get the event id if this is an external component from the event page???
 
     function handleSelectJudgeToRemove(judge: Judge) {
         setConfirmJudgeToRemove(judge);
         setOpenRemoveJudge(true);
     }
-
 
     const handleRemove = async (judge: Judge) => {
         try {
@@ -116,7 +122,6 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
                                             height={40}
                                             className="block mx-auto mb-3"
                                             />
-                                        
                                         Confirm Delete
                                         </h3>
                                         <p className=" text-gray-500 mt-2">
@@ -142,10 +147,13 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
 
 
                             {/* ADD NEW JUDGE */}
-                            <button className="btn  mt-4 p-2 border-green-400 border-solid border-2 font-bold w-25" onClick={() => setOpenAddJudge(true)}>
+                            <button 
+                            className="btn  mt-4 p-2 border-green-400 border-solid border-2 font-bold w-25" 
+                            onClick={() => setOpenAddJudge(true)}>
                                 Add +
                             </button>
 
+                            {/* ADD NEW JUDGE FROM LIST */}
                                 <Modal open={openAddJudge} onClose={() => setOpenAddJudge(false)}>
                                     <div className="text-center">
                                     <div className="mx-auto my-4 w-48">
@@ -195,7 +203,25 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
                                         Cancel
                                         </button>
                                     </div>
+                                    <div>
+                                        <button
+                                        className="btn bg-green-600 mt-2 w-full border-green-700"
+                                        onClick={() => {
+                                            setOpenAddJudge(false);
+                                            setCreateNewJudge(true)}}>
+                                                Create New
+                                        </button>
                                     </div>
+                                    </div>
+                                </Modal>
+
+
+                            {/* CREATE AND ADD NEW JUDGE */}
+                                <Modal open={openCreateNewJudge} onClose={() => setCreateNewJudge(false)}>
+                                    <div>
+                                            aaaaa
+                                    </div>
+
                                 </Modal>
 
                     </div>
