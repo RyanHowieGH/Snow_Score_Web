@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks/clerk(.*)',
+  '/events/(.*)',
 ]);
 
 // Ensure this is the correct URL PATH for your admin page
