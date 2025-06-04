@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
 
 
@@ -27,27 +27,40 @@ export default function AddNewJudgeSection({
     const [openCreateNewJudge, setCreateNewJudge] = useState(false);
 
     // New Judge Properties (ss_event_judges)
-    const [newJudgeHeader, setNewJudgeHeader] = useState<String>("")
-    const [newJudgerName, setNewJudgeName] = useState<String>("")
+    const [newJudgeHeader, setNewJudgeHeader] = useState("");
+    const [newJudgeName, setNewJudgeName] = useState("");
     // new personnel_id would be a sequence
     // how to get the event id if this is an external component from the event page???
 
-
-    const handleAdd = async (judge: Judge) => {
-        try {
-            // PENDING: create the function and fix tls error...
-            // await addJudgeFromEvent(judge.event_id, judge.personnel_id);
+    const handleSubmitNewJudge = (e: FormEvent<HTMLFormElement>) =>{
+        e.preventDefault();
+        try{
+            // write in the database the next number in the sequence for personnel_id, new header, new name, event_id > async
             // useEffect to fetch the judge list
+            // implement regex (prevent SQL injection here or any undesired thing)
         } catch (error) {
-            console.error('Failed to add judge', error);
+            console.error('Failed to add new judge', error);
         }
-        setOpenAddJudge(false);
+        finally{
+            setCreateNewJudge(false);
+        }
     };
 
+    function handleAdd(judge: Judge) {
+        try{
+            // take judge value from the selected item from dropdown and write into database > async
+            // useEffect to fetch the judge list
+        } catch (error) {
+            console.error('Failed to add new judge', error);
+        }
+        finally{
+            setOpenAddJudge(false);
+        }
+    };
 
     return(
         <div>
-                    {/* ADD NEW JUDGE */}
+            {/* ADD NEW JUDGE */}
             <button 
             className="btn  mt-2 p-2 border-green-400 border-solid border-2 font-bold w-25" 
             onClick={() => setOpenAddJudge(true)}>
@@ -118,11 +131,58 @@ export default function AddNewJudgeSection({
 
 
             {/* CREATE AND ADD NEW JUDGE */}
-                <Modal open={openCreateNewJudge} onClose={() => setCreateNewJudge(false)}>
-                    <div>
-                            aaaaa
-                    </div>
+                <Modal open={openCreateNewJudge} onClose={() => {
+                    setCreateNewJudge(false); 
+                    setNewJudgeHeader(""); 
+                    setNewJudgeName("")}}>
+                    <form onSubmit={(e) => handleSubmitNewJudge(e)}>
+                        <div>
+                            <h3 
+                            className='text-black font-bold text-xl text-center mb-5'>
+                                New Judge
+                            </h3>
+                            <div
+                            className='flex-col flex'>
+                                <div
+                                className='inline-flex'>
+                                    <span 
+                                    className=' text-black mt-1'>                                
+                                    Header:
+                                    </span>
+                                    <input
+                                    id="judge_header"
+                                    type="text"
+                                    value={newJudgeHeader}
+                                    onChange={e => setNewJudgeHeader(e.target.value.trim())}
+                                    className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
+                                    placeholder="Enter header"/>
+                                </div>
 
+                                <div
+                                className='inline-flex mt-2'>
+                                    <span 
+                                    className=' text-black mt-1 mx-1'>                                
+                                    Name:
+                                    </span>
+                                    <input
+                                    id="judge_name"
+                                    type="text"
+                                    value={newJudgeName}
+                                    onChange={e => setNewJudgeName(e.target.value.trim())}
+                                    className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
+                                    placeholder="Enter name"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                        type="submit"
+                        disabled={!newJudgeHeader.trim() && !newJudgeName.trim()}
+                        className="block mx-auto w-25 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 mt-5"
+                        >
+                        Save
+                        </button>
+                    </form>
                 </Modal>
         </div>
     )
