@@ -28,7 +28,7 @@ export async function getAuthenticatedUserWithRole(): Promise<AppUserWithRole | 
         return null;
     }
     if (!clerkUser) {
-         console.warn(`getAuthenticatedUserWithRole: userId ${userId} exists, but currentUser() returned null.`);
+        console.warn(`getAuthenticatedUserWithRole: userId ${userId} exists, but currentUser() returned null.`);
          return null; // Treat as incomplete data / potential issue
     }
 

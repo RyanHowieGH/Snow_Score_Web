@@ -66,7 +66,7 @@ export async function checkAthletesAgainstDb(
     if (!user) return { success: false, error: "Authentication required." };
     const allowedCheckRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
     if (!allowedCheckRoles.includes(user.roleName)) {
-         return { success: false, error: "Permission denied to check athletes." };
+        return { success: false, error: "Permission denied to check athletes." };
     }
 
     console.log(`Server Action: checkAthletesAgainstDb by ${user.email} for event ${eventId}`);
