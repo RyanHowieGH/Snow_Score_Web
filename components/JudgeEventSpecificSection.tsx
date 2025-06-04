@@ -21,18 +21,20 @@ export interface JudgesProps {
 
 export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
     const [isEditionMode, setIsEditionMode] = useState(false);
-    const [confirmJudge, setConfirmJudge] = useState<Judge | null>(null);
+    const [confirmJudgeToRemove, setConfirmJudgeToRemove] = useState<Judge | null>(null);
+    const [confirmJudgeToAdd, setConfirmJudgeToAdd] = useState<string>('');
     const [openRemoveJudge, setOpenRemoveJudge] = useState(false)
+    const [openAddJudge, setOpenAddJudge] = useState(false)
 
     function handleSelectJudgeToRemove(judge: Judge) {
-        setConfirmJudge(judge);
+        setConfirmJudgeToRemove(judge);
         setOpenRemoveJudge(true);
     }
 
 
     const handleRemove = async (judge: Judge) => {
         try {
-            // PENDING:
+            // PENDING: review the function and fix tls error...
             // await deleteJudgeFromEvent(judge.event_id, judge.personnel_id);
             // useEffect to fetch the judge list
         } catch (error) {
@@ -40,6 +42,18 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
         }
         setOpenRemoveJudge(false);
     };
+
+        const handleAdd = async (judge: Judge) => {
+        try {
+            // PENDING: implement the function and fix tls error...
+            // await addJudgeFromEvent(judge.event_id, judge.personnel_id);
+            // useEffect to fetch the judge list
+        } catch (error) {
+            console.error('Failed to add judge', error);
+        }
+        setOpenRemoveJudge(false);
+    };
+
 
     return (
         <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12 w-full border-t pt-8 border-blackl">
@@ -80,6 +94,7 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
                                     {judge.name ?? judge.header}
                                 </div>
 
+                                {/* REMOVE JUDGE */}
                                 <button className="btn btn-danger" onClick={() => handleSelectJudgeToRemove(judge)}>
                                     <Image
                                     src="/assets/icons/trash.png"
@@ -124,8 +139,67 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
                                 </Modal>
                             </div>
                         ))}
+
+
+                            {/* ADD NEW JUDGE */}
+                            <button className="mt-4 p-2 border-green-400 border-solid border-2 font-bold" onClick={() => setOpenAddJudge(true)}>
+                                Add +
+                            </button>
+
+                                <Modal open={openAddJudge} onClose={() => setOpenAddJudge(false)}>
+                                    <div className="text-center">
+                                    <div className="mx-auto my-4 w-48">
+                                        <h3 className="text-lg font-black text-gray-800 text-center">                                                                            
+                                        Add Judge
+                                        </h3>
+                                        {/* <p className=" text-gray-500 mt-2">
+                                            DO WE WANT TO HAVE ANYTHING AS A SUBTITLE? 
+                                        </p> */}
+                                    </div>
+                                          <select
+                                                id="selectedJudgeToAdd"
+                                                value={confirmJudgeToAdd}
+                                                onChange={e => setConfirmJudgeToAdd(e.target.value)}
+                                                className="border border-gray-300 rounded px-2 py-1 w-full text-black">
+                                                    <option 
+                                                        value="" 
+                                                        disabled>
+                                                            Registered Judges
+                                                    </option>
+
+                                                {judges?.map((judge) => (
+                                                <option 
+                                                    key={judge.personnel_id} 
+                                                    value={judge.personnel_id}>
+                                                        {judge.name ?? judge.header}
+                                                </option>
+                                                ))}
+                                            </select>
+
+                                    <div className="flex gap-4 mt-5">
+                                        <button 
+                                        className="btn btn-danger w-[50%] ml-[-5]"
+                                        onClick={() => {
+                                            const selectedJudge = judges?.find(
+                                                j => j.personnel_id === confirmJudgeToAdd) ?? null;
+                                            if (selectedJudge) 
+                                                {
+                                                    handleAdd(selectedJudge);
+                                                }
+                                        }}
+                                        >Add</button>
+                                        <button
+                                        className="btn btn-danger w-[50%] ml-[-5]"
+                                        onClick={() => setOpenAddJudge(false)}>
+                                        Cancel
+                                        </button>
+                                    </div>
+                                    </div>
+                                </Modal>
+
                     </div>
                 )}
+
             </div>
         </div>
     );
