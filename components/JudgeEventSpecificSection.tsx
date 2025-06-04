@@ -45,13 +45,13 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
 
         const handleAdd = async (judge: Judge) => {
         try {
-            // PENDING: implement the function and fix tls error...
+            // PENDING: create the function and fix tls error...
             // await addJudgeFromEvent(judge.event_id, judge.personnel_id);
             // useEffect to fetch the judge list
         } catch (error) {
             console.error('Failed to add judge', error);
         }
-        setOpenRemoveJudge(false);
+        setOpenAddJudge(false);
     };
 
 
@@ -142,7 +142,7 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
 
 
                             {/* ADD NEW JUDGE */}
-                            <button className="mt-4 p-2 border-green-400 border-solid border-2 font-bold" onClick={() => setOpenAddJudge(true)}>
+                            <button className="btn  mt-4 p-2 border-green-400 border-solid border-2 font-bold w-25" onClick={() => setOpenAddJudge(true)}>
                                 Add +
                             </button>
 
@@ -186,6 +186,7 @@ export default function JudgeEventSpecificSection({ judges }: JudgesProps) {
                                                 {
                                                     handleAdd(selectedJudge);
                                                 }
+                                            setOpenAddJudge(false);
                                         }}
                                         >Add</button>
                                         <button
