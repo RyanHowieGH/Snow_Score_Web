@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 
 export default function ScoreInput() {
@@ -17,6 +18,8 @@ export default function ScoreInput() {
   ] as const;
 
   const [score, setScore] = useState("");
+  const [runNum, setRunNum] = useState<number | null>(null);
+  const [roundHeatId, setRoundHeatId] = useState<number | null>(null);
 
   const handleClick = (value: string) => {
     if (value === "CLEAR") {
@@ -26,25 +29,84 @@ export default function ScoreInput() {
     }
   };
 
-  const handleSubmit = () => {
-    // Submit the score - currently just logs it
-    console.log("Submitted score:", score);
+  const handleSubmit = async () => {
+    // Temporary mock data
+    const personnel_id = 1;
+    const event_id = 10;
+
+    if (!roundHeatId || !runNum || !score) return;
+
+    const response = await fetch("/api/scores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        personnel_id,
+        event_id,
+        round_heat_id: roundHeatId,
+        run_num: runNum,
+        score: parseFloat(score),
+      }),
+    });
+
+    const data = await response.json();
+    console.log("Score submission response:", data);
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 max-w-xs mx-auto">
+    <div className="flex flex-col items-center gap-4 p-4 max-w-md mx-auto">
+      {/* Score Display */}
       <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem]">
         {score}
       </div>
 
+      {/* Submit Button */}
       <button
         onClick={handleSubmit}
-        className="btn bg-orange-600 text-white w-full"
+        disabled={!roundHeatId || !runNum || !score}
+        className="btn bg-orange-600 text-white w-full disabled:opacity-50"
       >
         SUBMIT
       </button>
 
-      <div className="grid grid-cols-3 gap-2 w-full">
+      {/* Mock Athlete Run Grid */}
+      <div className="w-full">
+        <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
+          <div>BIB</div>
+          {[1, 2, 3, 4, 5].map((run) => (
+            <div key={run}>Run {run}</div>
+          ))}
+        </div>
+
+        {/* Replace with dynamic data from server */}
+        {[
+          { bib: 24, roundHeatId: 1001 },
+          { bib: 31, roundHeatId: 1002 },
+          { bib: 38, roundHeatId: 1003 },
+        ].map(({ bib, roundHeatId: rhid }) => (
+          <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
+            <div className="bg-gray-100 p-1">{bib}</div>
+            {[1, 2, 3, 4, 5].map((rNum) => (
+              <button
+                key={rNum}
+                onClick={() => {
+                  setRoundHeatId(rhid);
+                  setRunNum(rNum);
+                }}
+                className={`p-1 border border-gray-300 hover:bg-blue-100 ${
+                  roundHeatId === rhid && runNum === rNum
+                    ? "bg-blue-300"
+                    : "bg-white"
+                }`}
+              >
+                +
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Number Pad */}
+      <div className="grid grid-cols-3 gap-2 w-full mt-4">
         {keys.map((key) => (
           <button
             key={key}
