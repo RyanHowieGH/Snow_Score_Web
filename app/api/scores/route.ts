@@ -10,18 +10,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       personnel_id,
-      event_id,
-      round_heat_id,
-      run_num,
+      run_result_id,
       score
     } = body;
 
     // Validate input (lightweight)
     if (
       typeof personnel_id !== "number" ||
-      typeof event_id !== "number" ||
-      typeof round_heat_id !== "number" ||
-      typeof run_num !== "number" ||
+      typeof run_result_id !== "number" ||
       typeof score !== "number"
     ) {
       console.error("Invalid input in POST /api/scores:", body);
@@ -30,18 +26,15 @@ export async function POST(req: NextRequest) {
 
     client = await pool.connect();
 
-    const query = `
-      INSERT INTO ss_run_scores (personnel_id, event_id, round_heat_id, run_num, score)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (personnel_id, event_id, round_heat_id, run_num)
-      DO UPDATE SET score = EXCLUDED.score;
-    `;
+    // Temporary scores are inserted into ss_run_scores table, then with a join the final calculated score is updated in ss_run_results
+    // This is done by AI not me (Working off it).
+    const query = 
+    `INSERT INTO ss_run_scores (personnel_id, run_result_id, score) 
+    VALUES ('${personnel_id}', '${run_result_id}', '${score}');`;
 
     await client.query(query, [
       personnel_id,
-      event_id,
-      round_heat_id,
-      run_num,
+      run_result_id,
       score,
     ]);
 
