@@ -20,10 +20,11 @@ export async function POST(req: Request) {
     const run_result_id = result.rows[0].run_result_id;
 
     // Step 2: Insert into ss_run_scores
+    //I changed the order of the parameters to match the database schema
     await pool.query(
-      `INSERT INTO ss_run_scores (run_result_id, personnel_id, score)
+      `INSERT INTO ss_run_scores (personnel_id, run_result_id, score)
        VALUES ($1, $2, $3)`,
-      [run_result_id, personnel_id, score]
+      [personnel_id, run_result_id, score]
     );
 
     return NextResponse.json({ success: true });
