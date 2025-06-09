@@ -31,6 +31,16 @@ export interface RegisteredAthlete {
     bib_num: string | null;
 }
 
+export interface HeadJudge {
+    event_id: number;
+    user_id: number;
+    event_role: string;
+    first_name: string;
+    email: string;
+    last_name: string;
+    role_id: number;
+}
+
 // This is the main detailed type for an event, used on detail/management pages
 export interface EventDetails extends SnowEvent {
     status: string;
@@ -39,6 +49,9 @@ export interface EventDetails extends SnowEvent {
     divisions: Division[];
     athletes: RegisteredAthlete[];
     judges: Judge[];
+    headJudge: HeadJudge[]; // ideally it would only have one, but this will allow
+                            // allow the system to receive more than one, so the user
+                            // can notice the error and later address it.
 }
 
 export interface Discipline {
@@ -58,6 +71,8 @@ export interface Athlete { // For the ss_athletes table
     stance: string | null;
     fis_num: string | null;
 }
+
+const HEAD_JUDGE_EVENT_ROLE = 'Head Judge';
 
 // --- Data Fetching Functions ---
 
@@ -121,10 +136,18 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             ORDER BY ej.header;
         `;
 
-        const [divisionResult, athleteResult, judgeResult] = await Promise.all([
+        const headJudgeQuery = `
+            SELECT ej.event_id, ej.user_id, ej.event_role, u.first_name, u.last_name, u.role_id, u.email
+            FROM ss_event_personnel ej
+            JOIN ss_users u ON ej.user_id = u.user_id
+            WHERE ej.event_id = $1 AND u.role_id = $2;
+        `;
+
+        const [divisionResult, athleteResult, judgeResult, headJudgeResult] = await Promise.all([
             client.query<Division>(divisionQuery, [eventId]),
             client.query<RegisteredAthlete>(athleteQuery, [eventId]),
-            client.query<Judge>(judgeQuery, [eventId])
+            client.query<Judge>(judgeQuery, [eventId]),
+            client.query<HeadJudge>(headJudgeQuery, [eventId, HEAD_JUDGE_EVENT_ROLE])
         ]);
 
         const eventDetails: EventDetails = {
@@ -139,6 +162,7 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             divisions: divisionResult.rows,
             athletes: athleteResult.rows,
             judges: judgeResult.rows,
+            headJudge: headJudgeResult.rows,
         };
         return eventDetails;
 
