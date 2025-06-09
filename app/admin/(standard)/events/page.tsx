@@ -25,7 +25,7 @@ export default async function AdminEventsListPage() {
 
     return (
         <div className="min-h-screen bg-base-300">
-            <AdminHeader />
+            {/* <AdminHeader /> */}
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 {/* Admin Page Title and Create Button */}
                 <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
