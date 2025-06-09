@@ -1,113 +1,52 @@
-// src/app/admin/events/[eventId]/page.tsx
-import { fetchEventById, formatDateRange, Division, RegisteredAthlete } from "@/lib/data";
-import { notFound } from 'next/navigation';
+// /app/admin/events/page.tsx
+import React from 'react';
 import Link from 'next/link';
+import EventList from '@/components/EventList'; // Ensure this is shared or admin specific as needed
+import { fetchEvents } from '@/lib/data';
+import type { SnowEvent } from '@/lib/definitions';
+// REMOVE AdminHeader import from here if it's in the layout:
+// import AdminHeader from '@/components/admin/AdminHeader';
+import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Using your specified path
+import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 
-interface EventDashboardPageProps {
-    params: Promise<{
-        eventId: string;
-    }>;
-}
+export const metadata: Metadata = {
+  title: 'Manage Events - Admin Panel | SnowScore',
+};
 
-export default async function EventDashboardPage(props: EventDashboardPageProps) {
-    const params = await props.params;
-    const eventId = parseInt(params.eventId, 10);
-    if (isNaN(eventId)) {
-       console.error("Invalid event ID in URL:", params.eventId);
-       notFound();
+export default async function AdminEventsListPage() {
+    const user = await getAuthenticatedUserWithRole();
+    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
+    if (!user || !allowedRoles.includes(user.roleName)) {
+        redirect('/sign-in?redirectUrl=/admin/events');
     }
 
-    const eventDetails = await fetchEventById(eventId);
-
-    if (!eventDetails) {
-        notFound();
-    }
-
-    const formattedDateRange = formatDateRange(eventDetails.start_date, eventDetails.end_date);
+    const events = await fetchEvents();
 
     return (
-        <div className="space-y-6"> {/* This div is the direct child passed to the layout */}
-            <h2 className="text-3xl font-bold">{eventDetails.name}</h2>
-
-            {/* Event Info Card */}
-            <div className="card bg-base-100 shadow-md">
-                <div className="card-body">
-                    <h3 className="card-title text-lg">Event Details</h3>
-                    <p><span className="font-semibold">Dates:</span> {formattedDateRange}</p>
-                    <p><span className="font-semibold">Location:</span> {eventDetails.location}</p>
-                </div>
+        // The outer div and AdminHeader are now provided by app/admin/layout.tsx
+        // This component now only returns its specific content.
+        <div className="space-y-6"> {/* Add a wrapper for spacing if needed */}
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
+                <h1 className="text-2xl md:text-3xl font-bold text-base-content"> {/* Changed from h2 to h1 for page title semantics */}
+                    Event Management Dashboard
+                </h1>
+                <Link href="/admin/events/create" className="btn btn-primary mt-3 sm:mt-0">
+                    Create New Event
+                </Link>
             </div>
 
-            {/* Divisions Card */}
-            <div className="card bg-base-100 shadow-md">
-                <div className="card-body">
-                    <h3 className="card-title text-lg">Divisions</h3>
-                    {eventDetails.divisions.length > 0 ? (
-                        <ul className="list-disc list-inside space-y-2">
-                            {eventDetails.divisions.map((division: Division) => (
-                                <li key={division.division_id}>
-                                    <Link
-                                        href={`/admin/events/${eventId}/divisions/${encodeURIComponent(division.division_id)}`}
-                                        className="link link-hover link-primary"
-                                    >
-                                        {division.division_name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-gray-500 italic">No divisions have been assigned to this event yet.</p>
-                    )}
-                     <div className="card-actions justify-end mt-4">
-                        <Link href={`/admin/events/${eventId}/manage-divisions`} className="btn btn-sm btn-outline">
-                            Manage Event Divisions
-                        </Link>
-                     </div>
-                </div>
-            </div>
-
-{/* --- Registered Athletes Card --- */}
-<div className="card bg-base-100 shadow-md">
-                <div className="card-body">
-                    <h3 className="card-title text-lg">Registered Athletes</h3>
-                    {eventDetails.athletes.length > 0 ? (
-                        <ul className="list-none space-y-2"> {/* Using list-none for less indentation */}
-                            {eventDetails.athletes.map((athlete: RegisteredAthlete) => (
-                                <li key={athlete.athlete_id} className="flex justify-between items-center">
-                                        <span>{athlete.first_name} {athlete.last_name}</span>
-                                    {athlete.bib_num && (
-                                        <span className="badge badge-ghost badge-sm">
-                                            Bib: {athlete.bib_num}
-                                        </span>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-gray-500 italic">No athletes registered for this event yet.</p>
-                    )}
-                     <div className="card-actions justify-end mt-4">
-                        <Link href={`/admin/events/${eventId}/manage-athletes`} className="btn btn-sm btn-outline">
-                            Manage Athletes
-                        </Link>
-                     </div>
-                </div>
-            </div>
+            <EventList
+                events={events}
+                title="" // Title is handled above in this page component
+                showCreateButton={false} // Create button handled above
+                baseUrl="/admin/events"
+                linkActionText="Manage"
+                noEventsMessage="No events found. Click 'Create New Event' to get started."
+                className="space-y-6" // Keep this if EventList applies its own spacing
+                itemGridCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                titleTextColor="text-base-content"
+            />
         </div>
     );
-}
-
-export async function generateMetadata(props: EventDashboardPageProps) {
-    const params = await props.params;
-    const eventId = parseInt(params.eventId, 10);
-    if (isNaN(eventId)) {
-       return { title: 'Invalid Event' };
-    }
-    const eventDetails = await fetchEventById(eventId);
-    if (!eventDetails) {
-      return { title: 'Event Not Found' };
-    }
-    return {
-      title: `Dashboard - ${eventDetails.name}`,
-    };
 }

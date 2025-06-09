@@ -1,59 +1,62 @@
-// src/components/eventListItem.tsx
+// src/components/EventListItem.tsx
 import React from "react";
 import Link from 'next/link';
-import { formatDateRange } from '@/lib/data'; // Import from lib/data.ts
-
-// SnowEvent interface defined in lib/data.ts is re-exported there,
-// but also defined here for clarity if this component needs it independently.
-// Best practice would be to import it from lib/data.ts if it's the single source of truth.
-// import type { SnowEvent } from '@/lib/data';
-// For now, assuming the local definition is used or you manage the import.
-export interface SnowEvent {
-    event_id: number;
-    name: string;
-    start_date: Date; // Expect this to be a Date object
-    end_date: Date;   // Expect this to be a Date object
-    location: string;
-}
+import { formatDateRange } from '@/lib/utils'; // Assuming formatDateRange is moved to lib/utils.ts
+import type { SnowEvent } from '@/lib/definitions'; // Import from centralized definitions
 
 interface EventListItemProps {
     event: SnowEvent;
     isUpcoming: boolean;
+    /** Base URL for the link, e.g., '/events' or '/admin/events'. Defaults to '/events'. */
+    baseUrl?: string;
+    /** Text for the action button/link, e.g., 'View Details' or 'Manage'. Defaults to 'View Details'. */
+    linkActionText?: string;
+    /** Optional suffix for the URL, e.g., '/edit'. Defaults to empty string. */
+    linkActionSuffix?: string;
 }
 
-const EventListItem: React.FC<EventListItemProps> = ({ event, isUpcoming }) => {
-    // Assuming event.start_date and event.end_date are already Date objects
-    // as fetchEvents in lib/data.ts converts them.
-    const formattedDate = formatDateRange(event.start_date, event.end_date);
-    const eventUrl = `/events/${event.event_id}`;
+const EventListItem: React.FC<EventListItemProps> = ({
+    event,
+    isUpcoming,
+    baseUrl = '/events', // Default to public event view path
+    linkActionText = 'View Details',
+    linkActionSuffix = '' // Default to no suffix
+}) => {
+    // Ensure dates are Date objects for formatDateRange.
+    // This should ideally be handled when data is fetched and mapped to SnowEvent type.
+    const startDate = typeof event.start_date === 'string' ? new Date(event.start_date) : event.start_date;
+    const endDate = typeof event.end_date === 'string' ? new Date(event.end_date) : event.end_date;
+    const formattedDate = formatDateRange(startDate, endDate);
+
+    const eventUrl = `${baseUrl}/${event.event_id}${linkActionSuffix}`;
 
     return (
-        <li>
+        <li className="bg-base-100 shadow-md rounded-lg transition-shadow hover:shadow-lg">
             <Link
                 href={eventUrl}
-                className="flex justify-between items-center w-full p-4 hover:bg-base-200 focus:bg-base-300 focus:outline-none rounded-lg transition-colors duration-150 cursor-pointer"
-                aria-label={`View details for ${event.name}`}
+                className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full p-4 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
+                aria-label={`${linkActionText} for ${event.name}`}
             >
-                <div className="flex-grow mr-4">
-                    <div className="text-lg font-medium">{event.name}</div>
-                    <div className="text-sm text-gray-600">{event.location}</div>
-                    <div className="text-sm uppercase font-semibold opacity-70 mt-1 flex items-center flex-wrap">
+                <div className="flex-grow mr-4 mb-3 sm:mb-0">
+                    <div className="text-lg font-semibold text-primary">{event.name}</div>
+                    <div className="text-sm text-base-content opacity-70">{event.location}</div>
+                    <div className="text-xs uppercase font-medium text-base-content opacity-60 mt-1">
                         <span>{formattedDate}</span>
-                        {isUpcoming && (
-                            <div className="badge badge-info badge-outline badge-sm ml-2 mt-1 sm:mt-0">
-                                UPCOMING
-                            </div>
-                        )}
-                        {!isUpcoming && (
-                            <div className="badge badge-ghost badge-outline badge-sm ml-2 mt-1 sm:mt-0">
-                                PAST
-                            </div>
-                        )}
                     </div>
                 </div>
-                <div className="flex-shrink-0">
-                    <span className="btn btn-sm btn-outline btn-primary">
-                        Go To Event
+                <div className="flex-shrink-0 flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    {isUpcoming && (
+                        <div className="badge badge-info badge-outline badge-sm w-full justify-center sm:w-auto">
+                            UPCOMING
+                        </div>
+                    )}
+                    {!isUpcoming && (
+                        <div className="badge badge-ghost badge-outline badge-sm w-full justify-center sm:w-auto">
+                            PAST
+                        </div>
+                    )}
+                    <span className="btn btn-sm btn-primary btn-outline w-full sm:w-auto mt-2 sm:mt-0">
+                        {linkActionText}
                     </span>
                 </div>
             </Link>
