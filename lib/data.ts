@@ -72,8 +72,6 @@ export interface Athlete { // For the ss_athletes table
     fis_num: string | null;
 }
 
-const HEAD_JUDGE_EVENT_ROLE = 'Head Judge';
-
 // --- Data Fetching Functions ---
 
 export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
@@ -140,14 +138,14 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             SELECT ej.event_id, ej.user_id, ej.event_role, u.first_name, u.last_name, u.role_id, u.email
             FROM ss_event_personnel ej
             JOIN ss_users u ON ej.user_id = u.user_id
-            WHERE ej.event_id = $1 AND u.role_id = $2;
+            WHERE ej.event_id = $1 AND u.role_id = '2';
         `;
 
         const [divisionResult, athleteResult, judgeResult, headJudgeResult] = await Promise.all([
             client.query<Division>(divisionQuery, [eventId]),
             client.query<RegisteredAthlete>(athleteQuery, [eventId]),
             client.query<Judge>(judgeQuery, [eventId]),
-            client.query<HeadJudge>(headJudgeQuery, [eventId, HEAD_JUDGE_EVENT_ROLE])
+            client.query<HeadJudge>(headJudgeQuery, [eventId])
         ]);
 
         const eventDetails: EventDetails = {
