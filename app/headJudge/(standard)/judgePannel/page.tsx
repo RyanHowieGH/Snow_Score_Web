@@ -30,22 +30,27 @@ export default function ScoreInput() {
   };
 
   const handleSubmit = async () => {
-    // Temporary mock data
     const personnel_id = 1;
-    //const event_id = 10;
 
-    if (!roundHeatId || !runNum || !score) return;
+    console.log("SUBMITTING:", {
+      roundHeatId,
+      runNum,
+      personnel_id,
+      score,
+    });
 
-    // Assuming run_result_id should be derived from roundHeatId and runNum
-    //const run_result_id = roundHeatId && runNum ? `${roundHeatId}_${runNum}` : null;
-    const run_result_id = 10; // Replace with actual logic to get run_result_id
+    if (!roundHeatId || !runNum || !score) {
+      alert("Missing fields");
+      return;
+    }
 
     const response = await fetch("/api/scores", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        round_heat_id: roundHeatId,
+        run_num: runNum,
         personnel_id,
-        run_result_id,
         score: parseFloat(score),
       }),
     });
