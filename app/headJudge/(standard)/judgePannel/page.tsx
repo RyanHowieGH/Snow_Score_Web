@@ -84,11 +84,12 @@ export default function ScoreInput() {
           ))}
         </div>
 
-        {/* Replace with dynamic data from server */}
+        {/* Replace with dynamic data from server 
+        Also -> make sure that the bib number is being pulled as all of the roundheatId are selected when set to 1001*/}
         {[
           { bib: 24, roundHeatId: 1001 },
-          { bib: 31, roundHeatId: 1001 },
-          { bib: 38, roundHeatId: 1001 },
+          { bib: 31, roundHeatId: 1002 },
+          { bib: 38, roundHeatId: 1003 },
         ].map(({ bib, roundHeatId: rhid }) => (
           <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
             <div className="bg-gray-100 p-1">{bib}</div>
