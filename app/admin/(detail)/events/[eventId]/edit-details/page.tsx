@@ -4,7 +4,7 @@ import { fetchEventById, fetchDisciplines, fetchAllDivisions } from '@/lib/data'
 import type { EventDetails, Discipline, Division } from '@/lib/definitions';
 import { notFound, redirect } from 'next/navigation';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-import Header from '@/components/header'; // Your admin header
+// import Header from '@/components/header'; // Your admin header
 import EventEditForm from './EventEditForm'; // We will create this client component
 import type { Metadata } from 'next';
 
@@ -61,7 +61,7 @@ export default async function EditEventDetailsPage({ params: paramsProp }: EditE
 
     return (
         <div>
-            <Header eventName={`Edit: ${eventData.name}`} /> {/* Pass event name to admin header if it supports it */}
+            {/* <Header eventName={`Edit: ${eventData.name}`} /> Pass event name to admin header if it supports it */}
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-3xl font-bold">Edit Event: {eventData.name}</h1>
