@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
 
   return (
     <div className={`${baseClasses} ${widthClasses}`}>
-      <nav className={`flex flex-col space-y-2 p-4 flex-grow transition-opacity duration-200 ease-in-out delay-150 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <nav className={`text-lg flex flex-col space-y-2 p-4 flex-grow transition-opacity duration-200 ease-in-out delay-150 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {isOpen && (
           <>
             {/* Standard Links */}
