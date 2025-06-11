@@ -60,6 +60,7 @@ export default async function EventDetailsPage(props: PageSegmentProps) {
                       {division.division_name}
                     </li>
                   ))}
+                  
                 </ul>
               </div>
             </div>

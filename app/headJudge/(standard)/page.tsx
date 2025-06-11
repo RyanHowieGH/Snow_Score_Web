@@ -20,7 +20,7 @@ const HeadJudgePage = () => {
             </tr>
           </thead>
           <tbody>
-            {/* Replace with dynamic data */}
+            
             <tr className="hover:bg-base-100">
               <td className="px-4 py-2 border-t border-base-300">John Doe</td>
               <td className="px-4 py-2 border-t border-base-300">Head Judge</td>
