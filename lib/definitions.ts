@@ -24,6 +24,7 @@ export interface EventDetails extends SnowEvent {
 export interface Division {
     division_id: number;
     division_name: string;
+    num_rounds: number; // Number of rounds for this division
 }
 
 export interface Judge {

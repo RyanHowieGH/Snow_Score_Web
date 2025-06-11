@@ -45,11 +45,16 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
          }
          const eventData = eventResult.rows[0];
 
-         const divisionQuery = `
-             SELECT d.division_id, d.division_name
-             FROM ss_division d JOIN ss_event_divisions ed ON d.division_id = ed.division_id
-             WHERE ed.event_id = $1 ORDER BY d.division_name ASC;
-         `;
+        const divisionQuery = `
+            SELECT
+                d.division_id,
+                d.division_name,
+                ed.num_rounds  -- <<< FETCH num_rounds FROM ss_event_divisions
+            FROM ss_division d
+            JOIN ss_event_divisions ed ON d.division_id = ed.division_id
+            WHERE ed.event_id = $1
+            ORDER BY d.division_name ASC;
+        `; // This query now fetches num_rounds
          const athleteQuery = `
              SELECT a.athlete_id, a.first_name, a.last_name, r.bib_num
              FROM ss_athletes a JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
