@@ -1,6 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type AthleteRun = {
+  athlete_id: number;
+  bib: number;
+  round_heat_id: number;
+  runs: number[];
+};
 
 export default function ScoreInput() {
   const keys = [
@@ -17,11 +24,30 @@ export default function ScoreInput() {
     "CLEAR",
   ] as const;
 
+  const [athletes, setAthletes] = useState<AthleteRun[]>([]);
   const [score, setScore] = useState("");
   const [runNum, setRunNum] = useState<number | null>(null);
   const [roundHeatId, setRoundHeatId] = useState<number | null>(null);
-  const [selected, setSelected] = useState<{ bib: number; run: number } | null>(null);
+  const [selected, setSelected] = useState<{ bib: number; run: number } | null>(
+    null
+  );
 
+  useEffect(() => {
+    fetch("/api/athletes")
+      .then((res) => res.json())
+      .then((data) => {
+        const cleanData = data.filter(
+          (a: { bib: null | undefined }) =>
+            a.bib !== null && a.bib !== undefined
+        );
+        setAthletes(cleanData);
+      })
+
+      .catch((err) => {
+        console.error("Failed to load athletes", err);
+        setAthletes([]);
+      });
+  }, []);
 
   const handleClick = (value: string) => {
     if (value === "CLEAR") {
@@ -77,7 +103,7 @@ export default function ScoreInput() {
         SUBMIT
       </button>
 
-      {/* Mock Athlete Run Grid */}
+      {/* Dynamic Athlete Run Grid */}
       <div className="w-full">
         <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
           <div>BIB</div>
@@ -86,35 +112,37 @@ export default function ScoreInput() {
           ))}
         </div>
 
-        {/* Replace with dynamic data from server 
-        Also -> make sure that the bib number is being pulled as all of the roundheatId are selected when set to 1001*/}
-        {[
-  { bib: 24, roundHeatId: 1001 },
-  { bib: 31, roundHeatId: 1001 },
-  { bib: 38, roundHeatId: 1001 },
-].map(({ bib, roundHeatId: rhid }) => (
-  <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
-    <div className="bg-gray-100 p-1">{bib}</div>
-    {[1, 2, 3, 4, 5].map((rNum) => (
-      <button
-        key={rNum}
-        onClick={() => {
-          setRoundHeatId(rhid);
-          setRunNum(rNum);
-          setSelected({ bib, run: rNum }); // track selection
-        }}
-        className={`p-1 border border-gray-300 hover:bg-blue-100 ${
-          selected?.bib === bib && selected?.run === rNum
-            ? "bg-blue-300"
-            : "bg-white"
-        }`}
-      >
-        +
-      </button>
-    ))}
-  </div>
-))}
-
+        {athletes.map(({ bib, round_heat_id: rhid, runs }) => (
+          <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
+            <div className="bg-gray-100 p-1">{bib}</div>
+            {[1, 2, 3, 4, 5].map((rNum) => {
+              const enabled = runs.includes(rNum);
+              return (
+                <button
+                  key={rNum}
+                  disabled={!enabled}
+                  onClick={() => {
+                    if (!enabled) return;
+                    setRoundHeatId(rhid);
+                    setRunNum(rNum);
+                    setSelected({ bib, run: rNum });
+                  }}
+                  className={`p-1 border border-gray-300 ${
+                    selected?.bib === bib && selected?.run === rNum
+                      ? "bg-blue-300"
+                      : "bg-white"
+                  } ${
+                    !enabled
+                      ? "opacity-30 cursor-not-allowed"
+                      : "hover:bg-blue-100"
+                  }`}
+                >
+                  +
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {/* Number Pad */}
