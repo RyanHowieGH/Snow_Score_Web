@@ -1,7 +1,8 @@
 // app/admin/(standard)/events/create/page.tsx
 import React from 'react';
 import Link from 'next/link';
-import { fetchDisciplines, fetchAllDivisions, Discipline } from '@/lib/data';
+import { fetchDisciplines, fetchAllDivisions } from '@/lib/data';
+import { Discipline } from '@/lib/definitions';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
 import EventCreateForm from './EventCreateForm';

@@ -8,7 +8,7 @@ import { useFormStatus } from 'react-dom';
 // Ensure this action name matches the one in your ./actions.ts file
 // that saves as draft and redirects to athlete management.
 import { saveDraftAndGoToManageAthletesAction, CreateEventFormState } from './actions';
-import type { Discipline, Division } from '@/lib/data';
+import type { Discipline, Division } from '@/lib/definitions';
 
 interface EventCreateFormProps {
     disciplines: Discipline[];
