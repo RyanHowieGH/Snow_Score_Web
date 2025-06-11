@@ -38,7 +38,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    '/(api|trpc)(.*)',
+    '/((?!_next/static|_next/image|favicon.ico|assets/|images/|static/).*)', // Add known static folders
+    '/(api|trpc)(.*)', // Keep this if your API routes need middleware
   ],
 };
