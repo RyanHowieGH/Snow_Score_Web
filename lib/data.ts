@@ -129,10 +129,32 @@ export async function fetchDisciplines(): Promise<Discipline[]> {
      let client: PoolClient | null = null;
      try {
          client = await pool.connect();
-         const result = await client.query<Discipline>(
+         // The type hint <Discipline> assumes the DB returns columns matching the Discipline type directly.
+         // If discipline_id from DB might be null but your type says string, you might need to handle it.
+         const result = await client.query<Omit<Discipline, 'discipline_id'> & { discipline_id: string | null }>( // More flexible raw type
              'SELECT discipline_id, category_name, subcategory_name, discipline_name FROM ss_disciplines ORDER BY category_name, subcategory_name, discipline_name'
          );
-         return result.rows.map(d => ({...d, discipline_id: Number(d.discipline_id)})); // Assuming discipline_id is number in type
+
+         const processedDisciplines: Discipline[] = [];
+         for (const row of result.rows) {
+             if (row.discipline_id === null || row.discipline_id === undefined || row.discipline_id.trim() === '') {
+                 // If ID is null, undefined, or an empty string, it's problematic for a key if not unique.
+                 // Best to skip or log, unless you have a guaranteed unique fallback.
+                 console.warn(`Skipping discipline due to invalid or empty ID:`, row);
+                 continue; // Skip this discipline
+             }
+             // No Number() conversion needed if discipline_id is already a string.
+             // Just ensure it matches the Discipline type.
+             processedDisciplines.push({
+                 discipline_id: row.discipline_id, // Already a string (or should be)
+                 category_name: row.category_name,
+                 subcategory_name: row.subcategory_name,
+                 discipline_name: row.discipline_name,
+             });
+         }
+         console.log(`Fetched and processed ${processedDisciplines.length} disciplines.`);
+         return processedDisciplines;
+
      } catch (error) {
          console.error("Error fetching disciplines:", error);
          return [];

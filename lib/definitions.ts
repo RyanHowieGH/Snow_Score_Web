@@ -51,7 +51,7 @@ export interface HeadJudge {
 }
 
 export interface Discipline {
-    discipline_id: number; // Changed to number, assuming integer PK
+    discipline_id: string;
     category_name: string;
     subcategory_name: string;
     discipline_name: string;
