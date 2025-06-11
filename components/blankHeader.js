@@ -7,7 +7,7 @@ import Link from "next/link";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"; // Clerk components
 
 export default function BlankHeader() {
-  const imageSize = 90;
+  const imageSize = 140;
 
   return (
     <div className="navbar bg-primary shadow-sm">
@@ -32,7 +32,7 @@ export default function BlankHeader() {
         </SignedIn>
         <SignedOut>
           {/* User is signed out, show sign-in button */}
-          <Link href="/sign-in" className="btn bg-blue-300 hover:bg-blue-400 border-blue-300 hover:border-blue-400 text-black-800 mr-5">
+          <Link href="/sign-in" className="btn bg-blue-300 hover:bg-blue-400 border-blue-300 hover:border-blue-400 text-black-800 mr-5 text-lg">
             Log In
           </Link>
         </SignedOut>

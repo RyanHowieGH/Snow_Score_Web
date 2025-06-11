@@ -21,13 +21,13 @@ export default async function HomePage() {
       <BlankHeader /> {/* Use your generic public header for the homepage */}
 
       {/* Hero Section */}
-      <div className="py-12 md:py-16 bg-base-100 text-base-content"> {/* Outer container for background and vertical padding */}
-        <div className="container mx-auto px-4"> {/* Centering content */}
+      <div className="py-12 md:py-16 bg-base-100 text-base-content text-center flex justify-center"> {/* Outer container for background and vertical padding */}
+        <div className="container mx-auto px-4 text-center justify-center flex"> {/* Centering content */}
           <div className="text-center md:text-left max-w-3xl mx-auto md:mx-0"> {/* Max width for text block & centering on small screens */}
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4 animate-fade-in-down">
+            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4 animate-fade-in-down text-center">
               Welcome to SnowScore
             </h1>
-            <p className="text-md sm:text-lg opacity-80 animate-fade-in-up animation-delay-300">
+            <p className="text-md sm:text-lg opacity-80 animate-fade-in-up animation-delay-300 text-center">
               The ultimate platform for tracking, managing, and following snowboarding and skiing competitions.
               Real-time scores, detailed event breakdowns, and seamless organization.
             </p>

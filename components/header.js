@@ -14,12 +14,12 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"; // <-- Import C
  * @param {string | null | undefined} [props.eventName] - The name of the event to display.
  */
 export default function Header({ eventName = null }) {
-    const logoSize = 90;
+    const logoSize = 140;
 
     return (
         <div className="navbar bg-primary text-primary-content shadow-sm">
             {/* Left Side: Logo and Optional Event Name */}
-            <div className="flex-1 flex items-center">
+            <div className="flex-1 flex items-center h-20">
                 <Link href="/admin" className="cursor-pointer"> {/* Added cursor-pointer class to Link */}
                    <Image
                         src="/assets/goggles_borderless.png"
@@ -38,11 +38,11 @@ export default function Header({ eventName = null }) {
             </div>
 
             {/* Right Side: Navigation Links and Auth Button */}
-            <div className="flex-none flex items-center gap-2 mr-4"> {/* Ensure items-center for vertical alignment */}
-                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content hover:bg-primary-focus">
+            <div className="flex-none flex items-center gap-8 mr-4"> {/* Ensure items-center for vertical alignment */}
+                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content hover:bg-primary-focus text-xl">
                     Athletes
                  </Link>
-                 <Link href="/admin/events" className="btn btn-ghost text-primary-content hover:bg-primary-focus">
+                 <Link href="/admin/events" className="btn btn-ghost text-primary-content hover:bg-primary-focus text-xl mr-2">
                     Events
                  </Link>
 
