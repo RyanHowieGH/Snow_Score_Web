@@ -20,6 +20,8 @@ export default function ScoreInput() {
   const [score, setScore] = useState("");
   const [runNum, setRunNum] = useState<number | null>(null);
   const [roundHeatId, setRoundHeatId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<{ bib: number; run: number } | null>(null);
+
 
   const handleClick = (value: string) => {
     if (value === "CLEAR") {
@@ -87,30 +89,32 @@ export default function ScoreInput() {
         {/* Replace with dynamic data from server 
         Also -> make sure that the bib number is being pulled as all of the roundheatId are selected when set to 1001*/}
         {[
-          { bib: 24, roundHeatId: 9 },
-          { bib: 31, roundHeatId: 10 },
-          { bib: 38, roundHeatId: 11 },
-        ].map(({ bib, roundHeatId: rhid }) => (
-          <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
-            <div className="bg-gray-100 p-1">{bib}</div>
-            {[1, 2, 3, 4, 5].map((rNum) => (
-              <button
-                key={rNum}
-                onClick={() => {
-                  setRoundHeatId(rhid);
-                  setRunNum(rNum);
-                }}
-                className={`p-1 border border-gray-300 hover:bg-blue-100 ${
-                  roundHeatId === rhid && runNum === rNum
-                    ? "bg-blue-300"
-                    : "bg-white"
-                }`}
-              >
-                +
-              </button>
-            ))}
-          </div>
-        ))}
+  { bib: 24, roundHeatId: 1001 },
+  { bib: 31, roundHeatId: 1001 },
+  { bib: 38, roundHeatId: 1001 },
+].map(({ bib, roundHeatId: rhid }) => (
+  <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
+    <div className="bg-gray-100 p-1">{bib}</div>
+    {[1, 2, 3, 4, 5].map((rNum) => (
+      <button
+        key={rNum}
+        onClick={() => {
+          setRoundHeatId(rhid);
+          setRunNum(rNum);
+          setSelected({ bib, run: rNum }); // track selection
+        }}
+        className={`p-1 border border-gray-300 hover:bg-blue-100 ${
+          selected?.bib === bib && selected?.run === rNum
+            ? "bg-blue-300"
+            : "bg-white"
+        }`}
+      >
+        +
+      </button>
+    ))}
+  </div>
+))}
+
       </div>
 
       {/* Number Pad */}
