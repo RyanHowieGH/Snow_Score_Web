@@ -69,4 +69,15 @@ export interface Athlete {
     fis_num: string | null; // Can be string if it contains non-numeric, or number if purely numeric
 }
 
+export interface JudgingPanelPerEvent {
+    event_id: number;
+    division_id: number;
+    division_name: string;
+    round_id: number;
+    round_heat_id: number;
+    personnel_id: number;
+    name: string;
+    // 'name' stands for the event's name
+}
+
 // Add other shared types here as your application grows
