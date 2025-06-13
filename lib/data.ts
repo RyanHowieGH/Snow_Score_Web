@@ -10,7 +10,8 @@ import type {
     HeadJudge,
     EventDetails,
     Discipline,
-    Athlete
+    Athlete,
+    JudgingPanelPerEvent
 } from './definitions';
 // Note: formatDate and formatDateRange should be imported from lib/utils.ts where they are used, not usually from here.
 
@@ -320,4 +321,55 @@ export async function deleteJudgeFromEvent(
     } finally {
         if (client) client.release();
     }
+}
+
+export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<JudgingPanelPerEvent | null> {
+     console.log(`Fetching judging panel details.`);
+     if (isNaN(eventId)) {
+         console.error("Failed to retrieve judging panel data per event.");
+         return null;
+     }
+
+     const pool = getDbPool();
+     let client: PoolClient | null = null;
+
+     try {
+         client = await pool.connect();
+
+         const judgingPanelPerEventQuery = `
+            SELECT rd.event_id, rd.division_id, d.division_name, rd.round_id, hd.round_heat_id, ej.personnel_id, e.name
+            FROM ss_round_details rd JOIN ss_heat_details hd ON rd.round_id = hd.round_id
+            JOIN ss_heat_results hr ON hr.round_heat_id = hd.round_heat_id
+            JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
+            JOIN ss_event_judges ej ON rd.event_id = ej.event_id
+            JOIN ss_events e ON e.event_id = rd.event_id
+            JOIN ss_division d ON ed.division_id = d.division_id
+            WHERE ej.event_id = $1;
+         `;
+
+         const judgingPanelRetrieved = await client.query(judgingPanelPerEventQuery, [eventId]);
+
+         if (judgingPanelRetrieved.rows.length === 0) {
+             console.log(`Event not found.`);
+             return null;
+         }
+         const judgingPanelData = judgingPanelRetrieved.rows[0];
+
+         const judgingPanel: JudgingPanelPerEvent = {
+             event_id: judgingPanelData.event_id,
+             division_id: judgingPanelData.division_id,
+             division_name: judgingPanelData.division_name,
+             round_id: judgingPanelData.round_id,
+             round_heat_id: judgingPanelData.round_heat_id,
+             personnel_id: judgingPanelData.personnel_id,
+             name: judgingPanelData.name,
+         };
+         return judgingPanel;
+
+     } catch (error) {
+         console.error(`Database error in retrieving judging panel data`, error);
+         return null;
+     } finally {
+         if (client) client.release();
+     }
 }

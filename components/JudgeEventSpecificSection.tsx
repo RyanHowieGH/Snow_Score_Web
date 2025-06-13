@@ -1,5 +1,4 @@
 'use client';
-import { EventDetails } from "@/lib/data";
 import JudgeQRCode from "./JudgeQRCode";
 import { useState } from 'react';
 import { deleteJudgeFromEvent } from "@/lib/data";
