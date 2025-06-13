@@ -103,7 +103,9 @@ export default function ScoreInput() {
         SUBMIT
       </button>
 
-      {/* Dynamic Athlete Run Grid */}
+      {/* Dynamic Athlete Run Grid 
+      TODO: Make runs dynamic by fetching no. of runs from ss_heat_details -> num_runs
+      Change enabled / disabled - don't show non-existant runs*/}
       <div className="w-full">
         <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
           <div>BIB</div>
