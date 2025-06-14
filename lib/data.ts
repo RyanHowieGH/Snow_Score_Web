@@ -337,23 +337,26 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
          client = await pool.connect();
 
          const judgingPanelPerEventQuery = `
-SELECT DISTINCT
-       rd.event_id,
-       rd.division_id,
-       d.division_name,
-       rd.round_id,
-       hd.round_heat_id,
-       ej.personnel_id,
-       e.name,
-       rd.round_name
-FROM   ss_round_details   rd
-JOIN   ss_heat_details    hd ON rd.round_id      = hd.round_id
-JOIN   ss_heat_results    hr ON hr.round_heat_id = hd.round_heat_id
-JOIN   ss_event_divisions ed ON ed.division_id   = rd.division_id            
-JOIN   ss_event_judges    ej ON rd.event_id      = ej.event_id
-JOIN   ss_events          e  ON e.event_id       = rd.event_id
-JOIN   ss_division        d  ON ed.division_id   = d.division_id
-WHERE  ej.event_id = $1;
+            SELECT DISTINCT
+                rd.event_id,
+                rd.division_id,
+                d.division_name,
+                rd.round_id,
+                hd.heat_num,
+                hd.round_heat_id,
+                ej.personnel_id,
+                ej.header AS judge_header,
+                ej.name AS judge_name,
+                e.name,
+                rd.round_name
+            FROM   ss_round_details   rd
+            JOIN   ss_heat_details    hd ON rd.round_id      = hd.round_id
+            JOIN   ss_heat_results    hr ON hr.round_heat_id = hd.round_heat_id
+            JOIN   ss_event_divisions ed ON ed.division_id   = rd.division_id            
+            JOIN   ss_event_judges    ej ON rd.event_id      = ej.event_id
+            JOIN   ss_events          e  ON e.event_id       = rd.event_id
+            JOIN   ss_division        d  ON ed.division_id   = d.division_id
+            WHERE  ej.event_id = $1;
          `;
 
          const judgingPanelRetrieved = await client.query(judgingPanelPerEventQuery, [eventId]);
@@ -369,6 +372,9 @@ WHERE  ej.event_id = $1;
              division_name: row.division_name,
              round_id: row.round_id,
              round_heat_id: row.round_heat_id,
+             judge_header: row.judge_header,
+             judge_name: row.judge_name,
+             heat_num: row.heat_num,
              personnel_id: row.personnel_id,
              name: row.name,
              round_name: row.round_name,

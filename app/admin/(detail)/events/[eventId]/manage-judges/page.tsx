@@ -14,6 +14,33 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
     };
 }
 
+// Interfaces for the nested Maps
+interface DivisionMap {
+    [divisionId: string]: {
+        divisionName: string
+        rounds:       RoundMap
+    }
+}
+    interface RoundMap {
+        [roundId: string]: {
+            roundName: string
+            heats:     HeatMap
+        }
+    }
+        interface HeatMap {
+            [roundHeatId: string]: {
+                heatNumber: number
+                personnels: PersonnelMap
+            }
+        }
+            interface PersonnelMap {
+                [personnelId: string]: {
+                    judgeName:   string
+                    judgeHeader: string
+                    personnelId: number
+                }
+            }
+
 export default async function ManageJudingPanelsPage({ params } : { params: any}) {
 
     const {
@@ -22,30 +49,95 @@ export default async function ManageJudingPanelsPage({ params } : { params: any}
 
     const panels: JudgingPanelPerEvent [] | null = await fetchJudgingPanelDataByEventId(eventId);
 
-    return (
-        <div className="text-black">
-            aaa
-            <ul>
-                {panels?.map(panel => {
-                    const compositeKey = [
-                        panel.division_id,
-                        panel.round_id,
-                        panel.round_heat_id,
-                        panel.personnel_id,
-                    ].join('-');
+    if (!panels || panels.length === 0) {
+        return (
+            // TOCONSIDER: we can be more specific about why there is no judging panel available (?)
+            <div
+            className='text-black'>
+                No judging panel found for this event.
+            </div>
+        )
+    }
 
-                    return (
-                        <li 
-                        key={compositeKey}
-                        className="mb-10">
-                            <h1>Division: {panel.division_name}</h1>
-                            <h2>Round: {panel.round_name}</h2>
-                            <div>Heat: {panel.round_heat_id}</div>
-                            <div>Personnel: {panel.personnel_id}</div>
-                        </li>
-                    )
-                })}
-            </ul>
-        </div>
-    );
+    // First level of the map
+    const panelsMap: DivisionMap = {}
+
+    // Place each panel into the maps
+    panels.forEach(panel => {
+        const divisionKey  = String(panel.division_id)
+        const roundKey     = String(panel.round_id)
+        const heatKey      = String(panel.round_heat_id)
+        const personnelKey = String(panel.personnel_id)
+
+        // Allocate the panel data into Divisions
+        if (!panelsMap[divisionKey]) {
+        panelsMap[divisionKey] = {
+            divisionName: panel.division_name,
+            rounds: {},
+        }
+        }
+        const divisionGroup = panelsMap[divisionKey]
+
+        // Allocate the panel data into Rounds
+        if (!divisionGroup.rounds[roundKey]) {
+        divisionGroup.rounds[roundKey] = {
+            roundName: panel.round_name,
+            heats: {},
+        }
+        }
+        const roundGroup = divisionGroup.rounds[roundKey]
+
+        // Allocate the panel data into Heats
+        if (!roundGroup.heats[heatKey]) {
+        roundGroup.heats[heatKey] = {
+            heatNumber: panel.heat_num,
+            personnels: {},
+        }
+        }
+        const heatGroup = roundGroup.heats[heatKey]
+
+        // Allocate the panel data into Personnel
+        if (!heatGroup.personnels[personnelKey]) {
+        heatGroup.personnels[personnelKey] = {
+            judgeHeader: panel.judge_header,
+            judgeName: panel.judge_name,
+            personnelId: panel.personnel_id,
+        }
+        }
+    })
+
+    return (
+    <div className="text-black p-4">
+        {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
+            <div key={divisionId} className="mb-8">
+                <h1 className="text-2xl font-bold">Division: {divisionName}</h1>
+                <div className="pl-4">
+                    {Object.entries(rounds).map(([roundId, { roundName, heats }]) => (
+                    <div key={roundId} className="mb-6">
+                        <h2 className="text-xl font-semibold">Round: {roundName}</h2>
+                        <div className="pl-4">
+                        {Object.entries(heats).map(
+                            ([heatId, { heatNumber, personnels }]) => (
+                            <div key={heatId} className="mb-4">
+                                <h3 className="text-lg font-medium">
+                                Heat: {heatNumber}
+                                </h3>
+                                <ul className="pl-4 list-disc">
+                                {Object.values(personnels).map((personnel, index) => (
+                                    <li key={index}>
+                                    Judge (ID {personnel.personnelId}): {personnel.judgeName || personnel.judgeHeader || "The name of this judge is unknown. Please edit it to assign a name or header."}
+                                    </li>
+                                ))}
+                                </ul>
+                            </div>
+                            )
+                        )}
+                        </div>
+                    </div>
+                    ))}
+                </div>
+            </div>
+        ))}
+    </div>
+  )
 }
