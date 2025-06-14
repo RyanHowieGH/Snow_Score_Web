@@ -75,8 +75,12 @@ export interface JudgingPanelPerEvent {
     division_name: string;
     round_id: number;
     round_heat_id: number;
+    heat_num: number;
     personnel_id: number;
     name: string;
+    round_name: string;
+    judge_name: string;
+    judge_header: string;
     // 'name' stands for the event's name
 }
 
