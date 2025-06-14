@@ -2,6 +2,7 @@
 import { fetchJudgingPanelDataByEventId } from '@/lib/data';
 import type { Metadata } from 'next';
 import type { JudgingPanelPerEvent } from '@/lib/definitions';
+import JudgeQRCode from '../../../../../../components/JudgeQRCode';
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const eventIdString = params?.eventId;
@@ -122,13 +123,25 @@ export default async function ManageJudingPanelsPage({ params } : { params: any}
                                 <h3 className="text-lg font-medium">
                                 Heat: {heatNumber}
                                 </h3>
-                                <ul className="pl-4 list-disc">
+                                <div className="pl-4 list-disc flex gap-5 mt-5">
                                 {Object.values(personnels).map((personnel, index) => (
-                                    <li key={index}>
-                                    Judge (ID {personnel.personnelId}): {personnel.judgeName || personnel.judgeHeader || "The name of this judge is unknown. Please edit it to assign a name or header."}
-                                    </li>
+                                    <div 
+                                    key={index}
+                                    className='text-center text-xl font-bold'>
+                                        {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
+                                        <div
+                                        className='mt-5'>
+                                            {JudgeQRCode(
+                                            eventId,
+                                            divisionId,
+                                            roundId,
+                                            heatId,
+                                            String(personnel.personnelId)
+                                             )}
+                                        </div>
+                                    </div>
                                 ))}
-                                </ul>
+                                </div>
                             </div>
                             )
                         )}
