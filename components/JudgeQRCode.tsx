@@ -1,11 +1,16 @@
 // npm install qrcode
 import { toDataURL } from 'qrcode';
 
-export default async function JudgeQRCode(eventId: string, judgeId: string) {
+export default async function JudgeQRCode(
+  eventId: string, 
+  divisionId: string, 
+  roundId: string,
+  roundHeatId: string,
+  personnelId: string) {
 
-  const urlToken = `https://snow-score-web.vercel.app/${eventId}${judgeId}`;
-  const dataUrl = await toDataURL(urlToken);
-
+  const baseUrl = "http://localhost:3000/events";
+  const url = `${baseUrl}/${eventId}/${divisionId}/${roundId}/${roundHeatId}/${personnelId}`;
+  const dataUrl = await toDataURL(url);
   return (
     <main>
       <img
@@ -17,3 +22,12 @@ export default async function JudgeQRCode(eventId: string, judgeId: string) {
     </main>
   );
 }
+
+/* e.g.
+  events/7/3/1/1001/1
+  event_id: 7 
+  division_id: 3 
+  round_id: 1 
+  round_heat_id: 1001 
+  personnel_id: 1
+*/
