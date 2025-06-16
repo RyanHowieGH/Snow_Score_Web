@@ -6,12 +6,13 @@ export async function GET() {
   const pool = getDbPool();
 
   try {
+    // TODO: Grab personnel_id
     const { rows } = await pool.query(`
       SELECT
         rr.athlete_id,
         reg.bib_num AS bib,
         rr.round_heat_id,
-        rr.run_num AS runs
+        array_agg(rr.run_num ORDER BY rr.run_num) AS runs
       FROM ss_run_results rr
       JOIN ss_event_registrations reg ON rr.athlete_id = reg.athlete_id
       GROUP BY rr.athlete_id, reg.bib_num, rr.round_heat_id

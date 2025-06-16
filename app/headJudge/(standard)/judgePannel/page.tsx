@@ -122,21 +122,19 @@ export default function ScoreInput() {
       </div>
 
       <div className="flex-1/2 p-4 space-y-4 ">   
-        {/* Dynamic Athlete Run Grid 
-        TODO: Make runs dynamic by fetching no. of runs from ss_heat_details -> num_runs
-        Change enabled / disabled - don't show non-existant runs*/}
+        {/* Athlete List */}
         <div className="w-full">
           <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
             <div>BIB</div>
-            {athletes.map((athlete) => (
-              <div key={athlete.bib}>Run {athlete.runs}</div>
+            {athletes.length > 0 && athletes[0].runs.map((runNum) => (
+              <div key={runNum}>Run {runNum}</div>
             ))}
           </div>
 
           {athletes.map(({ bib, round_heat_id: rhid, runs }) => (
             <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
               <div className="bg-gray-100 p-1">{bib}</div>
-              {[1, 2, 3, 4, 5].map((rNum) => {
+              {runs.map((rNum) => {
                 const enabled = runs.includes(rNum);
                 return (
                   <button
