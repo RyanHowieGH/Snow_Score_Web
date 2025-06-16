@@ -11,7 +11,7 @@ export async function GET() {
         rr.athlete_id,
         reg.bib_num AS bib,
         rr.round_heat_id,
-        array_agg(rr.run_num ORDER BY rr.run_num) AS runs
+        rr.run_num AS runs
       FROM ss_run_results rr
       JOIN ss_event_registrations reg ON rr.athlete_id = reg.athlete_id
       GROUP BY rr.athlete_id, reg.bib_num, rr.round_heat_id

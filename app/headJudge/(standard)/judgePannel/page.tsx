@@ -57,6 +57,8 @@ export default function ScoreInput() {
     }
   };
 
+  //Make personnel_id dynamic
+  // For now, hardcoded to 1
   const handleSubmit = async () => {
     const personnel_id = 1;
 
@@ -88,79 +90,82 @@ export default function ScoreInput() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 max-w-md mx-auto">
-      {/* Score Display */}
-      <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem]">
-        {score}
-      </div>
-
-      {/* Submit Button */}
-      <button
-        onClick={handleSubmit}
-        disabled={!roundHeatId || !runNum || !score}
-        className="btn bg-orange-600 text-white w-full disabled:opacity-50"
-      >
-        SUBMIT
-      </button>
-
-      {/* Dynamic Athlete Run Grid 
-      TODO: Make runs dynamic by fetching no. of runs from ss_heat_details -> num_runs
-      Change enabled / disabled - don't show non-existant runs*/}
-      <div className="w-full">
-        <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
-          <div>BIB</div>
-          {[1, 2, 3, 4, 5].map((run) => (
-            <div key={run}>Run {run}</div>
-          ))}
+    <div className="flex flex-row-reverse width-full h-screen ">
+      <div className=" flex-1/2 p-4 space-y-4">
+        {/* Score Display */}
+        <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem]">
+          {score}
         </div>
 
-        {athletes.map(({ bib, round_heat_id: rhid, runs }) => (
-          <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
-            <div className="bg-gray-100 p-1">{bib}</div>
-            {[1, 2, 3, 4, 5].map((rNum) => {
-              const enabled = runs.includes(rNum);
-              return (
-                <button
-                  key={rNum}
-                  disabled={!enabled}
-                  onClick={() => {
-                    if (!enabled) return;
-                    setRoundHeatId(rhid);
-                    setRunNum(rNum);
-                    setSelected({ bib, run: rNum });
-                  }}
-                  className={`p-1 border border-gray-300 ${
-                    selected?.bib === bib && selected?.run === rNum
-                      ? "bg-blue-300"
-                      : "bg-white"
-                  } ${
-                    !enabled
-                      ? "opacity-30 cursor-not-allowed"
-                      : "hover:bg-blue-100"
-                  }`}
-                >
-                  +
-                </button>
-              );
-            })}
-          </div>
-        ))}
+        {/* Submit Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={!roundHeatId || !runNum || !score}
+          className="btn bg-orange-600 text-white w-full disabled:opacity-50"
+        >
+          SUBMIT
+        </button>
+        {/* Number Pad */}
+        <div className="grid grid-cols-3 gap-2 w-full mt-4">
+          {keys.map((key) => (
+            <button
+              key={key}
+              onClick={() => handleClick(key)}
+              className={`btn text-lg ${
+                key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
+              }`}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Number Pad */}
-      <div className="grid grid-cols-3 gap-2 w-full mt-4">
-        {keys.map((key) => (
-          <button
-            key={key}
-            onClick={() => handleClick(key)}
-            className={`btn text-lg ${
-              key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
-            }`}
-          >
-            {key}
-          </button>
-        ))}
-      </div>
+      <div className="flex-1/2 p-4 space-y-4 ">   
+        {/* Dynamic Athlete Run Grid 
+        TODO: Make runs dynamic by fetching no. of runs from ss_heat_details -> num_runs
+        Change enabled / disabled - don't show non-existant runs*/}
+        <div className="w-full">
+          <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
+            <div>BIB</div>
+            {athletes.map((athlete) => (
+              <div key={athlete.bib}>Run {athlete.runs}</div>
+            ))}
+          </div>
+
+          {athletes.map(({ bib, round_heat_id: rhid, runs }) => (
+            <div key={bib} className="grid grid-cols-6 gap-1 text-center mb-1">
+              <div className="bg-gray-100 p-1">{bib}</div>
+              {[1, 2, 3, 4, 5].map((rNum) => {
+                const enabled = runs.includes(rNum);
+                return (
+                  <button
+                    key={rNum}
+                    disabled={!enabled}
+                    onClick={() => {
+                      if (!enabled) return;
+                      setRoundHeatId(rhid);
+                      setRunNum(rNum);
+                      setSelected({ bib, run: rNum });
+                    }}
+                    className={`p-1 border border-gray-300 ${
+                      selected?.bib === bib && selected?.run === rNum
+                        ? "bg-blue-300"
+                        : "bg-white"
+                    } ${
+                      !enabled
+                        ? "opacity-30 cursor-not-allowed"
+                        : "hover:bg-blue-100"
+                    }`}
+                  >
+                    +
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>      
     </div>
   );
 }
