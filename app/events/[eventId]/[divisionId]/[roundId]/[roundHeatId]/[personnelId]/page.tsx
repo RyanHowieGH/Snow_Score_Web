@@ -39,8 +39,8 @@ export async function generateMetadata({params} : JudgingPanelPageProps ): Promi
     const judgingPanels = await fetchJudgingPanelDataByEventId(event_id);
     if (!judgingPanels) return { title: 'Event Not Found - Admin | SnowScore' };
     return {
-        title: `Judging Panel: ${judgingPanels.name} | Admin | SnowScore`,
-        description: `Administrative dashboard for the event: ${judgingPanels.name}.`,
+        title: `Judging Panel: ${judgingPanels[0].name} | Admin | SnowScore`,
+        description: `Administrative dashboard for the event: ${judgingPanels[0].name}.`,
     };
 }
 
@@ -60,12 +60,19 @@ export default async function JudgingPanelPage({params} : JudgingPanelPageProps 
    const personnel_id  = Number(personnelId);
 
     return (
-      <div>
-        <div>{event_id}</div>
-        <div>{division_id}</div>
-        <div>{round_id}</div>
-        <div>{round_heat_id}</div>
-        <div>{personnel_id}</div>
+      <div
+      className='ml-10'>
+        <h1
+        className='text-2xl font-bold mt-10 mb-5'>Data required to make the panel unique:</h1>
+        <div
+        className="text-xl">
+          <div>event_id: {event_id}</div>
+          <div>division_id: {division_id}</div>
+          <div>round_id: {round_id}</div>
+          <div>round_heat_id: {round_heat_id}</div>
+          <div>personnel_id: {personnel_id}</div>
+        </div>
+
       </div>
   );
 }

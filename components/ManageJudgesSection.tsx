@@ -2,6 +2,7 @@ import React from 'react'
 import JudgeQRCode from '@/components/JudgeQRCode'
 import { fetchJudgingPanelDataByEventId } from '@/lib/data'
 import type { JudgingPanelPerEvent } from '@/lib/definitions'
+import CopyUrlButton from './CopyURLButton';
 
 // Interfaces for the nested Maps
 export interface PersonnelMap {
@@ -90,7 +91,7 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
     return (
     <div className="text-black p-4">
         {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
-            <div key={divisionId} className="mb-8">
+            <div key={divisionId} className="mb-8  border-blue-100 border-solid border-5 p-5">
                 <h1 className="text-2xl font-bold">Division: {divisionName}</h1>
                 <div className="pl-4">
                     {Object.entries(rounds).map(([roundId, { roundName, heats }]) => (

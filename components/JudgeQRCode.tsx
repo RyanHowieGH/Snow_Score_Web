@@ -1,5 +1,6 @@
 // npm install qrcode
 import { toDataURL } from 'qrcode';
+import CopyUrlButton from './CopyURLButton';
 
 export default async function JudgeQRCode(
   eventId: string, 
@@ -12,14 +13,16 @@ export default async function JudgeQRCode(
   const url = `${baseUrl}/${eventId}/${divisionId}/${roundId}/${roundHeatId}/${personnelId}`;
   const dataUrl = await toDataURL(url);
   return (
-    <main>
-      <img
-        src={dataUrl}
-        alt={'QR code for judging panel.'}
-        width={200}
-        height={200}
-      />
-    </main>
+    <div className="flex flex-col items-center">
+        <img
+          src={dataUrl}
+          alt={'QR code for judging panel.'}
+          width={200}
+          height={200}
+        />
+        <CopyUrlButton 
+        url={url} />
+    </div>    
   );
 }
 
