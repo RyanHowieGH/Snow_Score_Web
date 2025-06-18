@@ -68,14 +68,15 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
          const headJudgeQuery = `
              SELECT ej.event_id, ej.user_id, ej.event_role, u.first_name, u.last_name, u.role_id, u.email
              FROM ss_event_personnel ej JOIN ss_users u ON ej.user_id = u.user_id
-             WHERE ej.event_id = $1 AND u.role_id = 2;
+             WHERE ej.event_id = $1 AND u.role_id = 5 AND (LOWER(ej.event_role) = 'head judge' OR LOWER(ej.event_role) = 'headjudge');
          `;
 
          const judgingPanelQuery = `
             SELECT rd.event_id, rd.division_id, rd.division_name, rd.round_id, hd.round_heat_id, ej.personnel_id
             FROM ss_round_details rd JOIN ss_heat_details hd ON rd.round_id = hd.round_id
             JOIN ss_heats_results hr ON hr.round_heat_id = hd.round_heat_id
-            JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            JOIN ss_event_judges ej ON rd.event_id = ej.event_id
+            JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
+            JOIN ss_event_judges ej ON rd.event_id = ej.event_id
             WHERE ej.event_id = $1;
          `;
          // TO FINISH

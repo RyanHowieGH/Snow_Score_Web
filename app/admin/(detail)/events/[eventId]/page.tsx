@@ -103,7 +103,7 @@ export default async function AdminEventDetailPage({ params }: AdminEventDetailP
                         <p><strong className="font-medium text-base-content/70">Registered Athletes:</strong> {event.athletes?.length || 0}</p>
                         <p><strong className="font-medium text-base-content/70">Assigned Judges:</strong> {event.judges?.length || 0}</p>
                         {event.headJudge && event.headJudge.length > 0 && (
-                             <p><strong className="font-medium text-base-content/70">Head Judge(s):</strong> {event.headJudge.map(hj => `${hj.first_name} ${hj.last_name}`).join(', ')}</p>
+                             <p><strong className="font-medium text-base-content/70">Head Judge:</strong> {event.headJudge.map(hj => `${hj.first_name} ${hj.last_name}`).join(', ')}</p>
                         )}
                     </div>
                 </div>
