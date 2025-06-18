@@ -89,7 +89,7 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
   return (
     <div className="space-y-6">
       {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
-        <div key={divisionId} className="card bg-base-100 shadow-md">
+        <div key={divisionId} className="card mb-10">
           <div className="card-body space-y-4">
             <h2 className="card-title text-4xl font-bold text-primary">DIVISION: {divisionName}</h2>
             {Object.entries(rounds).map(([roundId, { roundName, heats }]) => (
@@ -97,11 +97,11 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
                 <h3 className="font-semibold text-secondary text-2xl mt-5">ROUND: {roundName}</h3>
                 {Object.entries(heats).map(([heatId, { heatNumber, personnels }]) => (
                   <div key={heatId} className="space-y-2">
-                    <h4 className="font-medium text-xl">HEAT: {heatNumber}</h4>
+                    <h4 className="text-xl font-bold">HEAT: {heatNumber}</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                       {Object.values(personnels).map((personnel, index) => (
                         <div key={index} className="text-center space-y-2">
-                          <span className="font-semibold text-base-content">
+                          <span className="font-semibold text-base-content text-xl">
                             {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
                           </span>
                           <div className="mt-1">
