@@ -2,7 +2,6 @@ import React from 'react'
 import JudgeQRCode from '@/components/JudgeQRCode'
 import { fetchJudgingPanelDataByEventId } from '@/lib/data'
 import type { JudgingPanelPerEvent } from '@/lib/definitions'
-import CopyUrlButton from './CopyURLButton';
 
 // Interfaces for the nested Maps
 export interface PersonnelMap {
@@ -36,8 +35,7 @@ interface DisplayProps {
 }
 
 export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayProps) {
-  
-    const panels: JudgingPanelPerEvent[] | null = await fetchJudgingPanelDataByEventId(Number(eventId))
+  const panels: JudgingPanelPerEvent[] | null = await fetchJudgingPanelDataByEventId(Number(eventId))
 
   if (!panels || panels.length === 0) {
     return (
@@ -88,50 +86,43 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
     }
   })
 
-    return (
-    <div className="text-black p-4">
-        {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
-            <div key={divisionId} className="mb-8  border-blue-100 border-solid border-5 p-5">
-                <h1 className="text-2xl font-bold">Division: {divisionName}</h1>
-                <div className="pl-4">
-                    {Object.entries(rounds).map(([roundId, { roundName, heats }]) => (
-                    <div key={roundId} className="mb-6">
-                        <h2 className="text-xl font-semibold">Round: {roundName}</h2>
-                        <div className="pl-4">
-                        {Object.entries(heats).map(
-                            ([heatId, { heatNumber, personnels }]) => (
-                            <div key={heatId} className="mb-4">
-                                <h3 className="text-lg font-medium">
-                                Heat: {heatNumber}
-                                </h3>
-                                <div className="pl-4 list-disc flex gap-5 mt-5">
-                                {Object.values(personnels).map((personnel, index) => (
-                                    <div 
-                                    key={index}
-                                    className='text-center text-xl font-bold'>
-                                        {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
-                                        <div
-                                        className='mt-5'>
-                                            {JudgeQRCode(
-                                            eventId,
-                                            divisionId,
-                                            roundId,
-                                            heatId,
-                                            String(personnel.personnelId)
-                                             )}
-                                        </div>
-                                    </div>
-                                ))}
-                                </div>
-                            </div>
-                            )
-                        )}
+  return (
+    <div className="space-y-6">
+      {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
+        <div key={divisionId} className="card bg-base-100 shadow-md">
+          <div className="card-body space-y-4">
+            <h2 className="card-title text-4xl font-bold text-primary">DIVISION: {divisionName}</h2>
+            {Object.entries(rounds).map(([roundId, { roundName, heats }]) => (
+              <div key={roundId} className="space-y-3">
+                <h3 className="font-semibold text-secondary text-2xl mt-5">ROUND: {roundName}</h3>
+                {Object.entries(heats).map(([heatId, { heatNumber, personnels }]) => (
+                  <div key={heatId} className="space-y-2">
+                    <h4 className="font-medium text-xl">HEAT: {heatNumber}</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {Object.values(personnels).map((personnel, index) => (
+                        <div key={index} className="text-center space-y-2">
+                          <span className="font-semibold text-base-content">
+                            {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
+                          </span>
+                          <div className="mt-1">
+                            {JudgeQRCode(
+                              eventId,
+                              divisionId,
+                              roundId,
+                              heatId,
+                              String(personnel.personnelId)
+                            )}
+                          </div>
                         </div>
+                      ))}
                     </div>
-                    ))}
-                </div>
-            </div>
-        ))}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
