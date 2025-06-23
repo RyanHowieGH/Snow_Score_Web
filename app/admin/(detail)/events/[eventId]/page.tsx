@@ -8,6 +8,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Your auth helper
 import type { AppUserWithRole } from '@/lib/auth/user';
 import type { Metadata } from 'next';
+import EditHeadJudgeButton from '@/components/EditHeadJudgesButton';
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
 // For now, this page assumes AdminHeader is rendered by the layout.
@@ -102,9 +103,13 @@ export default async function AdminEventDetailPage({ params }: AdminEventDetailP
                         <p><strong className="font-medium text-base-content/70">Divisions:</strong> {event.divisions?.map(d => d.division_name).join(', ') || 'None'}</p>
                         <p><strong className="font-medium text-base-content/70">Registered Athletes:</strong> {event.athletes?.length || 0}</p>
                         <p><strong className="font-medium text-base-content/70">Assigned Judges:</strong> {event.judges?.length || 0}</p>
-                        {event.headJudge && event.headJudge.length > 0 && (
-                             <p><strong className="font-medium text-base-content/70">Head Judge:</strong> {event.headJudge.map(hj => `${hj.first_name} ${hj.last_name}`).join(', ')}</p>
-                        )}
+                        <div className="flex items-center gap-2">
+                            <strong className="font-medium text-base-content/70">Head Judge:</strong>
+                            {event.headJudge && event.headJudge.length > 0 ?
+                                event.headJudge.map(hj => `${hj.first_name} ${hj.last_name}`).join(', ')
+                                : 'None'}
+                            <EditHeadJudgeButton eventId={eventId} userRoleId={user.roleId} />
+                        </div>
                     </div>
                 </div>
             </div>

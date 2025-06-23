@@ -9,6 +9,7 @@ import ManageJudgingPanelsDisplay from '../../../../../../components/ManageJudge
 import type { Metadata } from 'next'
 import { fetchJudgingPanelDataByEventId, fetchEventById } from '@/lib/data'
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'
+import JudgeEventSepecificSection from "components/JudgeEventSpecificSection"
 
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const eventIdString = params?.eventId;
@@ -47,6 +48,9 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
             </div>
 
             <div className="card bg-base-100 shadow-md">
+                <JudgeEventSepecificSection
+                    judges={eventDetails.judges} 
+                    event_id={eventId}/>
                 <div className="card-body">
                     <ManageJudgingPanelsDisplay eventId={String(eventId)} />
                 </div>

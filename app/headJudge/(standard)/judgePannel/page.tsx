@@ -60,7 +60,7 @@ export default function ScoreInput() {
   //Make personnel_id dynamic
   // For now, hardcoded to 1
   const handleSubmit = async () => {
-    const personnel_id = 1;
+    const personnel_id = 123;
 
     console.log("SUBMITTING:", {
       roundHeatId,
