@@ -54,6 +54,8 @@ export default function ScoreInput() {
       });
   }, []);
 
+  //New addition - not sure if needed as personnel ID is fetched in the route
+  // but keeping it here for clarity and future reference
   // Fetch personnel ID from the server
   useEffect(() => {
     const fetchPersonnelId = async () => {
@@ -69,7 +71,9 @@ export default function ScoreInput() {
     fetchPersonnelId();
   }, []);
 
-  // Set event, division, and round IDs from URL params
+  // Set event, division, and round IDs from URL params - this is used to filter or identify the context of the scores
+  // This is important for the head judge to know which event, division, and round they
+  // are judging, and it allows the system to filter athletes accordingly.
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     setEventId(Number(urlParams.get("eventId")));
@@ -104,7 +108,7 @@ export default function ScoreInput() {
       return;
     }
 
-    // Validate score input
+    // Validate score input (between 0 and 100, 1-3 digits, numeric)
     if (isNaN(Number(score))) {
       alert("Score must be a number");
       return;
@@ -149,6 +153,7 @@ export default function ScoreInput() {
         </button>
 
         {/* Number Pad */}
+        {/* Display the selected athlete's bib number */}
         <div className="grid grid-cols-3 gap-2 w-full mt-4">
           <div>{selected?.bib}</div>
           {keys.map((key) => (
