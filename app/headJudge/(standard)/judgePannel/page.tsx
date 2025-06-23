@@ -139,6 +139,8 @@ export default function ScoreInput() {
     <div className="flex flex-row-reverse width-full h-screen ">
       <div className=" flex-1/2 p-4 space-y-4">
         {/* Score Display */}
+        {/* Display the selected athlete's bib number */}
+        <div>{selected?.bib}</div>
         <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem]">
           {score}
         </div>
@@ -152,10 +154,8 @@ export default function ScoreInput() {
           SUBMIT
         </button>
 
-        {/* Number Pad */}
-        {/* Display the selected athlete's bib number */}
+        {/* Number Pad */}        
         <div className="grid grid-cols-3 gap-2 w-full mt-4">
-          <div>{selected?.bib}</div>
           {keys.map((key) => (
             <button
               key={key}
