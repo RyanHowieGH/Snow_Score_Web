@@ -1,3 +1,5 @@
+// app\admin\(detail)\events\[eventId]\page.tsx
+
 import React from 'react';
 import Link from 'next/link';
 import { fetchEventById } from '@/lib/data';
