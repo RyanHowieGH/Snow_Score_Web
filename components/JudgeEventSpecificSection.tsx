@@ -22,7 +22,7 @@ export interface JudgesProps {
 
 export default function JudgeEventSpecificSection({ judges, event_id }: JudgesProps) {
     const [isEditionMode, setIsEditionMode] = useState(false);
-    const [confirmJudgeToRemove, setConfirmJudgeToRemove] = useState<Judge | null>(null);
+    const [confirmJudgeToRemove, setConfirmJudgeToRemove] = useState<Judge>();
     const [openRemoveJudge, setOpenRemoveJudge] = useState(false);
 
     function handleSelectJudgeToRemove(judge: Judge) {
@@ -32,7 +32,7 @@ export default function JudgeEventSpecificSection({ judges, event_id }: JudgesPr
 
 async function deleteJudge(eventId: number, personnelId: string) {
   try {
-    const response = await fetch('/api/delete-judge-from-event', {
+    const result = await fetch('/api/delete-judge-from-event', {
       method: 'DELETE',
       body: JSON.stringify({
         eventId,
@@ -47,15 +47,29 @@ async function deleteJudge(eventId: number, personnelId: string) {
 }
 
 
-
+async function deleteJudgeNullScores(eventId: number, personnelId: string) {
+  try {
+        const result = await fetch('/api/delete-null-scores-from-a-judge', {
+        method: 'DELETE',
+        body: JSON.stringify({
+            eventId,
+            personnelId,
+        }),
+        });
+    console.log('Delete successful:');
+  } catch (err) {
+    console.error('API call failed:', err);
+    return null;
+  }
+}
 
 
 
 
     const handleRemove = async (judge: Judge) => {
         try {
-            deleteJudge(judge.event_id, judge.personnel_id);
-            // useEffect to fetch the judge list
+            await deleteJudgeNullScores(judge.event_id, judge.personnel_id);
+            await deleteJudge(judge.event_id, judge.personnel_id);
         } catch (error) {
             console.error('Failed to remove judge', error);
         }
@@ -133,7 +147,7 @@ async function deleteJudge(eventId: number, personnelId: string) {
                                     <div className="flex gap-4">
                                         <button 
                                         className="btn btn-danger w-[50%] ml-[-5]"
-                                        onClick={() => handleRemove(judge)}
+                                        onClick={() => confirmJudgeToRemove && handleRemove(confirmJudgeToRemove)}
                                         >Delete</button>
                                         <button
                                         className="btn btn-light w-[50%]"
