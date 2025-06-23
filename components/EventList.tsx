@@ -16,6 +16,7 @@ interface EventListProps {
     itemGridCols?: string;
     // NEW PROP: For title text color
     titleTextColor?: string;
+    isAdminView?: boolean; // Optional prop to indicate if this is an admin view
 }
 
 const EventList: React.FC<EventListProps> = ({
@@ -28,7 +29,8 @@ const EventList: React.FC<EventListProps> = ({
     noEventsMessage,
     className = "space-y-8",
     itemGridCols = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-    titleTextColor = "text-base-content" // Default to base content color (usually dark on light bg)
+    titleTextColor = "text-base-content", // Default to base content color (usually dark on light bg)
+    isAdminView = false, // Default to false
 }) => {
     const now = new Date();
     const upcomingEvents = events.filter(event => event.end_date >= now);
@@ -83,6 +85,7 @@ const EventList: React.FC<EventListProps> = ({
                                 baseUrl={baseUrl}
                                 linkActionText={linkActionText}
                                 linkActionSuffix={linkActionSuffix}
+                                isAdminView={isAdminView}
                             />
                         ))}
                     </ul>
@@ -102,6 +105,7 @@ const EventList: React.FC<EventListProps> = ({
                                 baseUrl={baseUrl}
                                 linkActionText={linkActionText}
                                 linkActionSuffix={linkActionSuffix}
+                                isAdminView={isAdminView}
                             />
                         ))}
                     </ul>

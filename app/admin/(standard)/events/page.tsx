@@ -1,4 +1,4 @@
-// /app/admin/events/page.tsx
+// /app/admin/(standard)/events/page.tsx
 import React from 'react';
 import Link from 'next/link';
 import EventList from '@/components/EventList'; // Ensure correct path
@@ -47,6 +47,7 @@ export default async function AdminEventsListPage() {
                     className="space-y-6"
                     itemGridCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" // Or your preferred admin list layout
                     titleTextColor="text-base-content" // Or specific admin theme color
+                    isAdminView={true} // <<< CRUCIAL: Indicates this is an admin view
                 />
             </div>
         </div>
