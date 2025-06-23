@@ -6,7 +6,6 @@ export async function GET() {
   const pool = getDbPool();
 
   try {
-    // TODO: Grab personnel_id
     const { rows } = await pool.query(`
       SELECT
         rr.athlete_id,

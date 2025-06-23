@@ -24,6 +24,9 @@ export default function ScoreInput() {
     "CLEAR",
   ] as const;
 
+  const [eventId, setEventId] = useState<number | null>(null);
+  const [divisionId, setDivisionId] = useState<number | null>(null);
+  const [roundId, setRoundId] = useState<number | null>(null);
   const [athletes, setAthletes] = useState<AthleteRun[]>([]);
   const [score, setScore] = useState("");
   const [runNum, setRunNum] = useState<number | null>(null);
@@ -31,7 +34,9 @@ export default function ScoreInput() {
   const [selected, setSelected] = useState<{ bib: number; run: number } | null>(
     null
   );
+  const [personnelId, setPersonnelId] = useState<number | null>(null);
 
+  // Fetch athletes data from the server
   useEffect(() => {
     fetch("/api/athletes")
       .then((res) => res.json())
@@ -49,6 +54,29 @@ export default function ScoreInput() {
       });
   }, []);
 
+  // Fetch personnel ID from the server
+  useEffect(() => {
+    const fetchPersonnelId = async () => {
+      try {
+        const response = await fetch("/api/personnel");
+        const data = await response.json();
+        setPersonnelId(data.personnel_id);
+      } catch (error) {
+        console.error("Failed to fetch personnel ID", error);
+      }
+    };
+
+    fetchPersonnelId();
+  }, []);
+
+  // Set event, division, and round IDs from URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setEventId(Number(urlParams.get("eventId")));
+    setDivisionId(Number(urlParams.get("divisionId")));
+    setRoundId(Number(urlParams.get("roundId")));
+  }, []);
+
   const handleClick = (value: string) => {
     if (value === "CLEAR") {
       setScore("");
@@ -57,10 +85,8 @@ export default function ScoreInput() {
     }
   };
 
-  //Make personnel_id dynamic
-  // For now, hardcoded to 1
   const handleSubmit = async () => {
-    const personnel_id = 1;
+    const personnel_id = personnelId;
 
     console.log("SUBMITTING:", {
       roundHeatId,
@@ -71,6 +97,22 @@ export default function ScoreInput() {
 
     if (!roundHeatId || !runNum || !score) {
       alert("Missing fields");
+      return;
+    }
+    if (!personnel_id) {
+      alert("Personnel ID is not set");
+      return;
+    }
+
+    // Validate score input
+    if (isNaN(Number(score))) {
+      alert("Score must be a number");
+      return;
+    } else if (score.length < 1 || score.length > 3) {
+      alert("Score must be between 1 and 3 digits");
+      return;
+    } else if (Number(score) < 0 || Number(score) > 100) {
+      alert("Score must be between 0 and 100");
       return;
     }
 
@@ -105,8 +147,10 @@ export default function ScoreInput() {
         >
           SUBMIT
         </button>
+
         {/* Number Pad */}
         <div className="grid grid-cols-3 gap-2 w-full mt-4">
+          <div>{selected?.bib}</div>
           {keys.map((key) => (
             <button
               key={key}
