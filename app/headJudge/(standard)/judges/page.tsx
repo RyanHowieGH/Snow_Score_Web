@@ -10,6 +10,7 @@ type HeatData = {
   run1: number | string;
   run2: number | string;
   runs: (number | string)[];
+  best: number | string;
   round_heat_id: number;
 };
 
@@ -37,6 +38,7 @@ const Page = () => {
             athlete: heat.athlete,
             run1: heat.runs[0] || "DNI",
             run2: heat.runs[1] || "DNI",
+            best: heat.runs[0] > heat.runs[1] ? heat.runs[0] : heat.runs[1],
             round_heat_id: heat.round_heat_id,
           }))
         );
@@ -73,6 +75,7 @@ const Page = () => {
               rank: index + 1,
               run1: heat.run1,
               run2: heat.run2,
+              best: heat.best,
             }))}
         />
         <HeatTable

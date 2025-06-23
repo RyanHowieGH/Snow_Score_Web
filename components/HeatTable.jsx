@@ -39,9 +39,7 @@ const HeatTable = ({ title, data }) => (
                 : row.run2}
             </td>
 
-            <td className="p-2 font-semibold">
-              {row.run1 > row.run2 ? row.run1 : row.run2}
-            </td>
+            <td className="p-2 font-semibold">{row.best}</td>
           </tr>
         ))}
       </tbody>
