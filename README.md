@@ -27,7 +27,7 @@ To build the Docker image:
 docker build -t snow_score .
 ```
 
-To run the container:
+To run the container in production mode:
 
 ```bash
 docker run -p 3000:3000 snow_score
