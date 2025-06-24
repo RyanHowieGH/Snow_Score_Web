@@ -115,6 +115,12 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
 
 export async function fetchEvents(): Promise<SnowEvent[]> {
     console.log("Fetching all events...");
+    const placeholderUrl = "postgres://user:pass@localhost:5432/db";
+    if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL === placeholderUrl) {
+        console.warn("fetchEvents: database is not configured, returning empty list.");
+        return [];
+    }
+
     const pool = getDbPool();
     let client: PoolClient | null = null;
     try {

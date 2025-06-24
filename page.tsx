@@ -1,6 +1,6 @@
 'use client'
-import HeatTable from "../../../../components/HeatTable";
-import Standing from "../../../../components/Standings";
+import HeatTable from "./HeatTable";
+import Standing from "./Standings";
 
 const page = () => {
   return (
@@ -53,3 +53,4 @@ const page = () => {
 };
 
 export default page;
+

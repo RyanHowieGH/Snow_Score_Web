@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link'; // For the "Get Started" button
 import BlankHeader from "@/components/blankHeader";
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: "SnowScore - Ski & Snowboard Competition Management",
     description: "The new way to track, manage, and follow snowboarding and skiing events. Score tracking, live updates, and more.",

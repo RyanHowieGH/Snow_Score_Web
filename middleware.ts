@@ -2,6 +2,14 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const placeholderPublishable = 'pk_test_12345678901234567890';
+const placeholderSecret = 'sk_test_dummy';
+const clerkConfigured =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== placeholderPublishable &&
+  process.env.CLERK_SECRET_KEY &&
+  process.env.CLERK_SECRET_KEY !== placeholderSecret;
+
 const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
@@ -13,7 +21,7 @@ const isPublicRoute = createRouteMatcher([
 // Ensure this is the correct URL PATH for your admin page
 const ADMIN_DASHBOARD_PATH = '/admin';
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
+const clerkMw = clerkMiddleware(async (auth, req: NextRequest) => {
   // MUST AWAIT here because TypeScript says auth() returns a Promise
   const authResult = await auth();
   const { userId } = authResult; // Destructure from the awaited result
@@ -35,6 +43,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     }
   }
 }, { debug: process.env.NODE_ENV === 'development' });
+
+const noopMiddleware = () => NextResponse.next();
+
+export default clerkConfigured ? clerkMw : noopMiddleware;
 
 export const config = {
   matcher: [
