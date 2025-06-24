@@ -5,7 +5,8 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-import type { Division } from '@/lib/data';
+// import type { Division } from '@/lib/data';
+import { Division } from '@/lib/definitions'
 
 // --- Zod Schema for CSV Athlete Data ---
 const AthleteCsvSchema = z.object({

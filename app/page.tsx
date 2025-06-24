@@ -3,7 +3,7 @@
 import EventList from "@/components/EventList";     // Assuming EventList is in components/shared/
 import { fetchEvents } from "@/lib/data";
 import type { Metadata } from 'next';
-import Link from 'next/link'; // For the "Get Started" button
+// import Link from 'next/link'; // For the "Get Started" button
 import BlankHeader from "@/components/blankHeader";
 
 export const metadata: Metadata = {

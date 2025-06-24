@@ -1,5 +1,7 @@
 'use client';
-import { useState, FormEvent, ChangeEvent } from 'react';
+// import { useState, FormEvent, ChangeEvent } from 'react';
+import { useState, FormEvent } from 'react';
+
 import Modal from "./PopUpModal";
 
 
@@ -14,13 +16,13 @@ import Modal from "./PopUpModal";
     // JudgesProps Interface
     export interface EventJudgesProps {
         judges: Judge[] | null;
-        event_id: Number;
+        event_id: number;
     }
 
 
 export default function AddNewJudgeSection({
     judges,
-    event_id
+    // event_id
 } : EventJudgesProps) {
     const [confirmJudgeToAdd, setConfirmJudgeToAdd] = useState<string>('');
     const [openAddJudge, setOpenAddJudge] = useState(false);
@@ -45,8 +47,9 @@ export default function AddNewJudgeSection({
             setCreateNewJudge(false);
         }
     };
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
     function handleAdd(judge: Judge) {
+        
         try{
             // take judge value from the selected item from dropdown and write into database > async
             // useEffect to fetch the judge list

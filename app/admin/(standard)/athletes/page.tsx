@@ -2,7 +2,9 @@
 import React from 'react';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
-import { fetchAllAthletes, Athlete } from '@/lib/data';
+// import { fetchAllAthletes, Athlete } from '@/lib/data';
+import { fetchAllAthletes } from '@/lib/data';
+import type { Athlete } from '@/lib/definitions'; // Ensure this import matches your Athlete type definition
 import AthleteList from '@/components/AthleteList';
 import type { Metadata } from 'next';
 

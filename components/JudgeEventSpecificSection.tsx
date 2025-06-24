@@ -1,5 +1,5 @@
 'use client';
-import JudgeQRCode from "./JudgeQRCode";
+// import JudgeQRCode from "./JudgeQRCode";
 import { useState } from 'react';
 import Modal from "./PopUpModal";
 import Image from 'next/image';
@@ -17,7 +17,7 @@ export interface Judge {
 // JudgesProps Interface
 export interface JudgesProps {
     judges: Judge[] | null;
-    event_id: Number;
+    event_id: number;
 }
 
 export default function JudgeEventSpecificSection({ judges, event_id }: JudgesProps) {
@@ -32,6 +32,7 @@ export default function JudgeEventSpecificSection({ judges, event_id }: JudgesPr
 
 async function deleteJudge(eventId: number, personnelId: string) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result = await fetch('/api/delete-judge-from-event', {
       method: 'DELETE',
       body: JSON.stringify({
@@ -49,6 +50,7 @@ async function deleteJudge(eventId: number, personnelId: string) {
 
 async function deleteJudgeNullScores(eventId: number, personnelId: string) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const result = await fetch('/api/delete-null-scores-from-a-judge', {
         method: 'DELETE',
         body: JSON.stringify({

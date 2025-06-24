@@ -5,7 +5,8 @@
 import React from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import { updateEventDivisionsAction, UpdateDivisionsFormState } from '@/app/admin/(detail)/events/[eventId]/manage-divisions/actions';
-import type { Division } from '@/lib/data';
+// import type { Division } from '@/lib/data';
+import type { Division } from '@/lib/definitions'; // Adjust import based on your project structure
 
 // Props for the form component
 interface ManageDivisionsFormProps {

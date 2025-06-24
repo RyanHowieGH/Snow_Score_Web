@@ -26,7 +26,9 @@ export async function DELETE(req: NextRequest) {
     );
     console.log(`Judge deleted.`);
     return NextResponse.json(result, { status: 200 });
-  } catch (error: any) {
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any 
+  catch (error: any) {
     console.error(`Error deleting judge from event:`, error);
     return NextResponse.json(
       { error: error.message, customError: true },

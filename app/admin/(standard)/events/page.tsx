@@ -3,8 +3,8 @@ import React from 'react';
 import Link from 'next/link';
 import EventList from '@/components/EventList'; // Ensure correct path
 import { fetchEvents } from '@/lib/data';
-import type { SnowEvent } from '@/lib/definitions';
-import AdminHeader from '@/components/header'; // Your admin header
+// import type { SnowEvent } from '@/lib/definitions';
+// import AdminHeader from '@/components/header'; // Your admin header
 // import { getAuthenticatedUserWithRole } from '@/lib/auth'; // Assuming auth utilities
 import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';

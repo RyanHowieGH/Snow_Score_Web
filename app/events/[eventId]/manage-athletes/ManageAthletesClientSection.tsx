@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import type { RegisteredAthlete } from '@/lib/data';
+// import type { RegisteredAthlete } from '@/lib/data';
+import type { RegisteredAthlete } from '@/lib/definitions'; // Adjust the import path as necessary
 import {
     getEventAthletesAction,
     removeAthleteFromEventAction,
@@ -20,6 +21,7 @@ export default function ManageAthletesClientSection({ eventId, initialAthletes }
     const [athletes, setAthletes] = useState<RegisteredAthlete[]>(initialAthletes || []);
     const [csvFile, setCsvFile] = useState<File | null>(null);
     const [isProcessing, startTransition] = useTransition(); // Renamed from isPending for clarity
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string; errors?: any[] } | null>(null);
 
     useEffect(() => {

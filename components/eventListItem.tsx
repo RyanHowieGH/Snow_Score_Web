@@ -6,7 +6,7 @@ import { formatDateRange } from '@/lib/utils';
 import type { SnowEvent } from '@/lib/definitions';
 import { deleteEventAction } from '@/app/admin/(detail)/events/actions'; // Adjust path if your action is elsewhere
 import { TrashIcon, PencilIcon } from '@heroicons/react/24/outline'; // Example icons
-import { useRouter } from "next/navigation"; // For re-fetching data
+// import { useRouter } from "next/navigation"; // For re-fetching data
 
 interface EventListItemProps {
     event: SnowEvent;
@@ -25,7 +25,7 @@ const EventListItem: React.FC<EventListItemProps> = ({
     linkActionSuffix = '',
     isAdminView = false // Default to false
 }) => {
-    const router = useRouter();
+    // const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isDeletePending, startDeleteTransition] = useTransition();

@@ -2,7 +2,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { Athlete } from '@/lib/data';
+// import type { Athlete } from '@/lib/data';\
+import type { Athlete } from '@/lib/definitions'; // Ensure this import matches your Athlete type definition
 import DeleteAthleteButton from './DeleteAthleteButton';
 
 interface AthleteListProps {

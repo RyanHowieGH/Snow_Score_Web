@@ -71,14 +71,14 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
              WHERE ej.event_id = $1 AND u.role_id = 5 AND (LOWER(ej.event_role) = 'head judge' OR LOWER(ej.event_role) = 'headjudge');
          `;
 
-         const judgingPanelQuery = `
-            SELECT rd.event_id, rd.division_id, rd.division_name, rd.round_id, hd.round_heat_id, ej.personnel_id
-            FROM ss_round_details rd JOIN ss_heat_details hd ON rd.round_id = hd.round_id
-            JOIN ss_heats_results hr ON hr.round_heat_id = hd.round_heat_id
-            JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
-            JOIN ss_event_judges ej ON rd.event_id = ej.event_id
-            WHERE ej.event_id = $1;
-         `;
+        //  const judgingPanelQuery = `
+        //     SELECT rd.event_id, rd.division_id, rd.division_name, rd.round_id, hd.round_heat_id, ej.personnel_id
+        //     FROM ss_round_details rd JOIN ss_heat_details hd ON rd.round_id = hd.round_id
+        //     JOIN ss_heats_results hr ON hr.round_heat_id = hd.round_heat_id
+        //     JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
+        //     JOIN ss_event_judges ej ON rd.event_id = ej.event_id
+        //     WHERE ej.event_id = $1;
+        //  `;
          // TO FINISH
          // judgingPanelQuery + judgeQuery to create the Judging Panel and to create the QRCodes > then map it to create the pages, can we create the pages from a mapping function?
 
@@ -296,7 +296,9 @@ export async function fetchRegisteredAthletesForEvent(eventId: number): Promise<
 export async function deleteJudgeFromEvent(
     eventId: number,
     personnel_id: string
-): Promise<import('pg').QueryResult<any> | { rowCount: number; command: string; error: string; customError: true }> { // More specific return type
+): 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+Promise<import('pg').QueryResult<any> | { rowCount: number; command: string; error: string; customError: true }> { // More specific return type
     console.log(`Attempting to delete judge ${personnel_id} from event ${eventId}...`);
     if (isNaN(eventId) || !personnel_id) {
         console.error("deleteJudgeFromEvent: Invalid parameters for deleting judge.");

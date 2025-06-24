@@ -1,14 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
-import { fetchEventById } from '@/lib/data'; // Your main data fetching function
-import { formatDate, formatDateRange } from '@/lib/utils'; // Date utilities
-import type { EventDetails } from '@/lib/definitions'; // Centralized type definitions
+import { fetchEventById } from '@/lib/data';
+import { formatDate, formatDateRange } from '@/lib/utils';
+import type { EventDetails } from '@/lib/definitions';
 import { notFound } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server'; // Clerk's server-side auth helper
-import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Your function to get DB role
-import type { AppUserWithRole } from '@/lib/auth/user'; // Type for your app user with role
+import { auth } from '@clerk/nextjs/server';
+import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
+import type { AppUserWithRole } from '@/lib/auth/user';
 import type { Metadata } from 'next';
-import BlankHeader from '@/components/blankHeader'; // Your public-facing header component
+import BlankHeader from '@/components/blankHeader';
 import {
     CalendarDaysIcon,
     MapPinIcon,
@@ -20,14 +20,22 @@ import {
     ArrowUturnLeftIcon
 } from '@heroicons/react/24/outline';
 
-// Props type for the page component
-type PublicEventDetailPageProps = {
-    params: { eventId: string };
-};
+// Define the shape of the resolved params object
+interface ResolvedPublicEventParams {
+    eventId: string;
+}
 
-// Function to generate dynamic metadata for SEO and browser tab
-export async function generateMetadata({ params: paramsProp }: PublicEventDetailPageProps): Promise<Metadata> {
-    const params = await paramsProp;
+// VVV --- THIS IS THE KEY CHANGE FOR THE TYPE ERROR --- VVV
+type PublicEventDetailPageProps = {
+    params: Promise<ResolvedPublicEventParams>; // params is a Promise
+    // searchParams?: Promise<{ [key: string]: string | string[] | undefined }>; // If you use searchParams
+};
+// ^^^ --- THIS IS THE KEY CHANGE FOR THE TYPE ERROR --- ^^^
+
+export async function generateMetadata(
+    { params: paramsPromise }: PublicEventDetailPageProps // Renamed prop for clarity
+): Promise<Metadata> {
+    const params = await paramsPromise; // Await the promise
     const eventId = Number(params.eventId);
 
     if (isNaN(eventId)) {
@@ -40,10 +48,9 @@ export async function generateMetadata({ params: paramsProp }: PublicEventDetail
         return { title: 'Event Not Found | SnowScore' };
     }
 
-    // Ensure dates are valid for formatting in description
     const startDateForDesc = event.start_date instanceof Date ? event.start_date : new Date(event.start_date);
     const endDateForDesc = event.end_date instanceof Date ? event.end_date : new Date(event.end_date);
-    const formattedStartDate = formatDate(startDateForDesc); // Use your formatDate utility
+    const formattedStartDate = formatDate(startDateForDesc);
     const formattedEndDate = formatDate(endDateForDesc);
 
     return {
@@ -52,15 +59,15 @@ export async function generateMetadata({ params: paramsProp }: PublicEventDetail
         openGraph: {
             title: `${event.name} | SnowScore Event`,
             description: `Join or view details for ${event.name}, located at ${event.location}.`,
-            type: 'article', // or 'event' if more appropriate for schema.org via Next.js
-            // images: [ { url: event.imageUrl || '/default-event-image.jpg' } ], // Optional: Add an event image
+            type: 'article',
         },
     };
 }
 
-// The main page component
-export default async function PublicEventDetailPage({ params: paramsProp }: PublicEventDetailPageProps) {
-    const params = await paramsProp;
+export default async function PublicEventDetailPage(
+    { params: paramsPromise }: PublicEventDetailPageProps // Renamed prop for clarity
+) {
+    const params = await paramsPromise; // Await the promise
     const eventId = Number(params.eventId);
 
     if (isNaN(eventId)) {
@@ -68,7 +75,6 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
         notFound();
     }
 
-    // Fetch all event details using your comprehensive fetchEventById
     const event: EventDetails | null = await fetchEventById(eventId);
 
     if (!event) {
@@ -76,39 +82,27 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
         notFound();
     }
 
-    // --- ADMIN CHECK USING DATABASE ROLE ---
-    // This part determines if an "Admin: Manage Event" button should be shown
-    const authResult = await auth(); // Clerk's auth() returns a Promise of AuthObject
+    const authResult = await auth();
     const clerkUserId = authResult.userId;
-
     let isAdmin = false;
     if (clerkUserId) {
-        // Assuming getAuthenticatedUserWithRole internally uses clerkUserId or fetches based on current session
         const appUser: AppUserWithRole | null = await getAuthenticatedUserWithRole();
         if (appUser) {
-            // console.log(`PublicEventDetailPage: Fetched app user: ${appUser.email}, DB Role: ${appUser.roleName}`);
-            const adminRoles = ['admin', 'Executive Director', 'Administrator', 'Chief of Competition']; // Define your admin roles
+            const adminRoles = ['admin', 'Executive Director', 'Administrator', 'Chief of Competition'];
             isAdmin = adminRoles.includes(appUser.roleName);
-        } else {
-            // console.warn(`PublicEventDetailPage: User ${clerkUserId} authenticated with Clerk but no corresponding user/role found in application database.`);
         }
     }
-    // --- END ADMIN CHECK ---
 
-    // Ensure dates are Date objects for formatting
     const startDate = event.start_date instanceof Date ? event.start_date : new Date(event.start_date);
     const endDate = event.end_date instanceof Date ? event.end_date : new Date(event.end_date);
 
     return (
         <main className="bg-base-200 min-h-screen">
-            <BlankHeader /> {/* Your public header component */}
-
+            <BlankHeader />
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <div className="bg-base-100 p-6 md:p-10 rounded-2xl shadow-xl">
-                    {/* Event Card Header */}
                     <div className="border-b border-base-300 pb-6 mb-8">
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                            {/* Left side: Event Name and Location */}
                             <div className="flex-grow">
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight leading-tight">
                                     {event.name}
@@ -118,21 +112,18 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                     {event.location}
                                 </p>
                             </div>
-
-                            {/* Right side: Buttons */}
                             <div className="flex flex-col sm:flex-row sm:items-center gap-3 mt-2 sm:mt-0 self-start sm:self-auto">
                                 <Link
-                                    href="/" // Link to the homepage (or /events if that's your main event list)
+                                    href="/"
                                     className="btn btn-outline btn-sm whitespace-nowrap"
                                     title="Return to events list"
                                 >
                                     <ArrowUturnLeftIcon className="h-4 w-4 mr-1.5" />
                                     All Events
                                 </Link>
-
                                 {isAdmin && (
-                                    <a // Using <a> for a full page navigation to the admin section
-                                        href={`/admin/events/${eventId}`} // Link to admin dashboard for this event
+                                    <a
+                                        href={`/admin/events/${eventId}`}
                                         className="btn btn-accent btn-sm whitespace-nowrap"
                                         title="Manage this event in the admin panel"
                                     >
@@ -143,8 +134,6 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         </div>
                     </div>
-
-                    {/* Core Event Info Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                         <InfoCard icon={<CalendarDaysIcon className="h-6 w-6 text-secondary" />} title="Dates" value={formatDateRange(startDate, endDate)} />
                         <InfoCard
@@ -161,8 +150,6 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                         />
                         <InfoCard icon={<TrophyIcon className="h-6 w-6 text-secondary" />} title="Discipline" value={event.discipline_name || 'Not Specified'} />
                     </div>
-
-                    {/* Divisions Section */}
                     {event.divisions && event.divisions.length > 0 && (
                         <Section title="Event Divisions">
                             <div className="flex flex-wrap gap-3">
@@ -174,8 +161,6 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         </Section>
                     )}
-
-                    {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">
                         {event.athletes && event.athletes.length > 0 ? (
                             <div className="overflow-x-auto bg-base-200/30 p-4 rounded-lg shadow-inner">
@@ -198,16 +183,12 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         )}
                     </Section>
-                    {/* You could add more sections here: Schedule, Results (if completed), etc. */}
                 </div>
             </div>
         </main>
     );
 }
 
-// --- Helper Components (defined in the same file for simplicity of this example) ---
-
-// Helper component for consistent info card styling
 const InfoCard: React.FC<{ icon: React.ReactNode; title: string; value: string; isBadge?: boolean; badgeClass?: string }> = ({ icon, title, value, isBadge, badgeClass }) => (
     <div className="bg-base-200/40 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
         <div className="flex items-center mb-1.5">
@@ -224,7 +205,6 @@ const InfoCard: React.FC<{ icon: React.ReactNode; title: string; value: string; 
     </div>
 );
 
-// Helper component for consistent section styling
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="mb-8 md:mb-10">
         <h2 className="text-2xl font-semibold mb-4 text-secondary border-b border-base-300 pb-2">

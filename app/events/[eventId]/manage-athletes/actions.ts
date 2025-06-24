@@ -1,3 +1,5 @@
+// app\events\[eventId]\manage-athletes\actions.ts
+
 'use server';
 
 import { z } from 'zod';
@@ -5,8 +7,11 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-import { fetchRegisteredAthletesForEvent, type RegisteredAthlete, type Athlete } from '@/lib/data';
+// import { fetchRegisteredAthletesForEvent, type RegisteredAthlete, type Athlete } from '@/lib/data';
+import { fetchRegisteredAthletesForEvent } from '@/lib/data';
+
 import Papa from 'papaparse';
+import { Athlete, RegisteredAthlete } from '@/lib/definitions'; // Adjust import based on your Athlete type definition
 
 // --- Types for Action Results ---
 interface ActionResult {
@@ -24,6 +29,7 @@ interface ImportAthletesActionResult extends ActionResult {
     skippedCount?: number;
     createdCount?: number;
     updatedCount?: number; // Count of athletes whose registration was updated (e.g., bib_num)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     errors?: Array<{ row: number; message: string; data?: any }>;
 }
 
@@ -123,6 +129,7 @@ export async function importAthletesFromCsvAction(formData: FormData): Promise<I
     }
 
     const fileContent = await csvFile.text();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsedCsvData: any[];
 
     try {
@@ -146,6 +153,7 @@ export async function importAthletesFromCsvAction(formData: FormData): Promise<I
     let createdCount = 0;
     let updatedCount = 0;
     let skippedCount = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const importErrors: Array<{ row: number; message: string; data?: any }> = [];
 
     try {

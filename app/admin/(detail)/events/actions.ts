@@ -4,7 +4,7 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Your auth helper
-import { redirect } from 'next/navigation'; // If you need to redirect after deletion
+// import { redirect } from 'next/navigation'; // If you need to redirect after deletion
 
 interface DeleteEventResult {
     success: boolean;
