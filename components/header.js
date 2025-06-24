@@ -6,6 +6,10 @@ import Link from 'next/link';
 import Image from "next/image";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"; // <-- Import Clerk components
 
+const placeholderKey = 'pk_test_12345678901234567890';
+const authEnabled = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== placeholderKey;
+
 /**
  * Header component for the application.
  * Can optionally display an event name.
@@ -47,23 +51,26 @@ export default function Header({ eventName = null }) {
                  </Link>
 
                 {/* Clerk Authentication Section */}
-                <SignedIn>
-                    {/* User is signed in - UserButton includes profile & sign out */}
-                    <div className="ml-2"> {/* Add some margin if needed */}
-                        <UserButton afterSignOutUrl="/" appearance={{
-                            elements: {
-                                userButtonAvatarBox: "w-10 h-10", // Example: Make avatar slightly larger
-                                userButtonPopoverCard: "bg-base-100 text-base-content" // Example: Style popover
-                            }
-                        }}/>
-                    </div>
-                </SignedIn>
-                <SignedOut>
-                    {/* User is signed out - Show Log In button */}
-                    <Link href="/sign-in" className="btn btn-accent hover:btn-accent-focus ml-2"> {/* Or your preferred login button style */}
-                        Log In
-                    </Link>
-                </SignedOut>
+                {authEnabled && (
+                    <>
+                        <SignedIn>
+                            {/* User is signed in - UserButton includes profile & sign out */}
+                            <div className="ml-2">
+                                <UserButton afterSignOutUrl="/" appearance={{
+                                    elements: {
+                                        userButtonAvatarBox: "w-10 h-10",
+                                        userButtonPopoverCard: "bg-base-100 text-base-content"
+                                    }
+                                }}/>
+                            </div>
+                        </SignedIn>
+                        <SignedOut>
+                            <Link href="/sign-in" className="btn btn-accent hover:btn-accent-focus ml-2">
+                                Log In
+                            </Link>
+                        </SignedOut>
+                    </>
+                )}
             </div>
         </div>
     );

@@ -10,6 +10,8 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Adjusted import path for user role auth
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Manage Events - Admin Panel | SnowScore',
 };

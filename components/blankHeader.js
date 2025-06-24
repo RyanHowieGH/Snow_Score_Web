@@ -6,6 +6,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"; // Clerk components
 
+const placeholderKey = 'pk_test_12345678901234567890';
+const authEnabled = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY !== placeholderKey;
+
 export default function BlankHeader() {
   const imageSize = 140;
 
@@ -24,18 +28,20 @@ export default function BlankHeader() {
         </Link>
       </div>
       <div className="navbar-end">
-        <SignedIn>
-          {/* User is signed in, UserButton provides profile access AND a Sign Out option */}
-          <div className="mr-5">
-            <UserButton afterSignOutUrl="/" /> {/* Redirect to homepage after sign out */}
-          </div>
-        </SignedIn>
-        <SignedOut>
-          {/* User is signed out, show sign-in button */}
-          <Link href="/sign-in" className="btn bg-blue-300 hover:bg-blue-400 border-blue-300 hover:border-blue-400 text-black-800 mr-5 text-lg">
-            Log In
-          </Link>
-        </SignedOut>
+        {authEnabled && (
+          <>
+            <SignedIn>
+              <div className="mr-5">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </SignedIn>
+            <SignedOut>
+              <Link href="/sign-in" className="btn bg-blue-300 hover:bg-blue-400 border-blue-300 hover:border-blue-400 text-black-800 mr-5 text-lg">
+                Log In
+              </Link>
+            </SignedOut>
+          </>
+        )}
       </div>
     </div>
   );
