@@ -1,16 +1,21 @@
-# .github/workflows/main_my-react-clerk-app.yml (your filename may be different)
+# .github/workflows/main_SAITSnowScore.yml (or similar name)
 
 name: Build and deploy Next.js app to Azure Web App
 
 on:
   push:
     branches:
-      - Azure-Branch
+      - Azure-Branch  # <-- CHANGED: Triggers on your specific branch
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    env:
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      # Add your Clerk Secret Key here if needed for build steps
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }} 
 
     steps:
       - name: 'Checkout GitHub Action'
@@ -19,7 +24,7 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x' # Match the version in your Azure App Service
+          node-version: '18.x'
 
       - name: npm install, build
         run: |
@@ -55,6 +60,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'SAITSnowScore' # <-- IMPORTANT: Change this to your actual App Service name
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_YOURSECRETCODE }} # <-- This secret is added automatically by Azure
+          app-name: 'SAITSnowScore' # <-- CHANGED: Targets your specific App Service
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_YOURSECRETCODE }} # <-- CHECK THIS IN STEP 2
           package: .
