@@ -1,56 +1,119 @@
-'use client';
-import React from "react";
-import Link from "next/link";
+"use client";
+import HeatTable from "../../../components/HeatTable";
+import Standing from "../../../components/Standings";
+import { useEffect, useState } from "react";
 
-const HeadJudgePage = () => {
+type HeatData = {
+  bib: number;
+  athlete: string;
+  rank: number;
+  run1: number | string;
+  run2: number | string;
+  runs: (number | string)[];
+  best: number | string;
+  round_heat_id: number;
+};
+
+type StandingData = {
+  athlete: string;
+  runs: (number | string)[];
+  round_heat_id: number;
+};
+
+const Page = () => {
+  const [heats, setHeats] = useState<HeatData[]>([]);
+  const [standings, setStandings] = useState<StandingData[]>([]);
+
+  useEffect(() => {
+    const fetchHeats = async () => {
+      try {
+        const response = await fetch("/api/Heats");
+        if (!response.ok) {
+          throw new Error("Failed to fetch heats");
+        }
+        const data = await response.json();
+        setHeats(
+          data.map((heat: HeatData) => ({
+            bib: heat.bib,
+            athlete: heat.athlete,
+            run1: heat.runs[0] || "DNI",
+            run2: heat.runs[1] || "DNI",
+            best: heat.runs[0] > heat.runs[1] ? heat.runs[0] : heat.runs[1],
+            round_heat_id: heat.round_heat_id,
+          }))
+        );
+        setStandings(
+          data.map((standings: StandingData) => ({
+            athlete: standings.athlete,
+            runs:
+              standings.runs[0] > standings.runs[1]
+                ? standings.runs[0]
+                : standings.runs[1],
+            round_heat_id: standings.round_heat_id,
+          }))
+        );
+      } catch (err) {
+        console.error("Error fetching heats:", err);
+        setHeats([]);
+        setStandings([]);
+      }
+    };
+
+    fetchHeats();
+  }, []);
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center text-primary">
-        Head Judge Dashboard
-      </h1>
+    <div className="flex min-h-screen">
+      <main className="flex-1 p-6 bg-gray-100 grid grid-cols-1 gap-6">
+        <HeatTable
+          title="Heat 1 Judge Scores"
+          data={heats
+            .filter((heat) => heat.round_heat_id === 1)
+            .map((heat, index) => ({
+              bib: heat.bib,
+              athlete: heat.athlete,
+              rank: index + 1,
+              run1: heat.run1,
+              run2: heat.run2,
+              best: heat.best,
+            }))}
+        />
+        <HeatTable
+          title="Heat 2 Judge Scores"
+          data={heats
+            .filter((heat: HeatData) => heat.round_heat_id === 2)
+            .map((heat: HeatData, index: number) => ({
+              bib: heat.bib,
+              athlete: heat.athlete,
+              rank: index + 1,
+              run1: heat.run1,
+              run2: heat.run2,
+            }))}
+        />
+      </main>
 
-      <div className="overflow-x-auto mb-8">
-        <table className="min-w-full border border-base-300 bg-base-100 shadow-md rounded-lg">
-          <thead className="bg-base-200 text-base-content uppercase text-sm font-semibold">
-            <tr>
-              <th className="px-4 py-3 border-b border-base-300 text-left">Judge Name</th>
-              <th className="px-4 py-3 border-b border-base-300 text-left">Judge Type</th>
-              <th className="px-4 py-3 border-b border-base-300 text-left">Judge Status</th>
-              <th className="px-4 py-3 border-b border-base-300 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Replace with dynamic data */}
-            <tr className="hover:bg-base-100">
-              <td className="px-4 py-2 border-t border-base-300">John Doe</td>
-              <td className="px-4 py-2 border-t border-base-300">Head Judge</td>
-              <td className="px-4 py-2 border-t border-base-300">Active</td>
-              <td className="px-4 py-2 border-t border-base-300">
-                <Link href="/admin/judges/edit" className="text-blue-600 hover:underline">
-                  Edit
-                </Link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/headJudge/addJudge" className="btn btn-primary w-full">
-          Add Judge
-        </Link>
-        <Link href="/headJudge/judges" className="btn btn-secondary w-full">
-          Monitor Judges
-        </Link>
-        <Link href="/headJudge/events" className="btn btn-accent w-full">
-          Monitor Events
-        </Link>
-        <Link href="/headJudge/judgePannel" className="btn btn-info w-full">
-          View Scorecard
-        </Link>
-      </div>
+      <aside className="w-96 p-6 bg-white space-y-6">
+        <Standing
+          title="Heat 1 Standings"
+          data={standings
+            .filter((s: StandingData) => s.round_heat_id === 1)
+            .map((s: StandingData) => ({
+              athlete: s.athlete,
+              best: s.runs,
+            }))}
+        />
+        <Standing
+          title="Heat 2 Standings"
+          data={standings
+            .filter((s: StandingData) => s.round_heat_id === 2)
+            .map((s: StandingData) => ({
+              athlete: s.athlete,
+              best: s.runs,
+            }))}
+        />
+      </aside>
     </div>
   );
 };
 
-export default HeadJudgePage;
+export default Page;
