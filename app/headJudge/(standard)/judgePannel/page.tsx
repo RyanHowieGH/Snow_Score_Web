@@ -91,9 +91,12 @@ export default function ScoreInput() {
 
   return (
     <div className="flex flex-row-reverse width-full h-screen ">
-      <div className=" flex-1/2 p-4 space-y-4">
+      <div className=" flex-1/2 p-4 space-y-1">
         {/* Score Display */}
-        <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem]">
+        <div className="text-lg font-semibold bg-green-100 rounded p-2 text-center">
+          {selected?.bib}
+        </div>
+        <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem] mb-4">
           {score}
         </div>
 
