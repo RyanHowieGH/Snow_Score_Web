@@ -32,7 +32,7 @@ export default function EventSidebar({ isOpen, toggleSidebar, eventId }) {
              <Link href={`${eventBaseUrl}/reports`} className="hover:bg-primary-focus p-2 rounded block">
               Reports
             </Link>
-            <Link href="/headJudge" className="hover:bg-primary-focus p-2 rounded block">
+            <Link href="/headJudge/events" className="hover:bg-primary-focus p-2 rounded block">
               Head Judge
             </Link>
              <Link href={`${eventBaseUrl}/links`} className="hover:bg-primary-focus p-2 rounded block">

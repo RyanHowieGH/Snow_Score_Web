@@ -1,76 +1,57 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
-//This is just for testing purposes, to be removed later or replaced
-interface RunResult {
-  run_result_id: number;
-  round_heat_id: number;
-  event_id: number;
-  division_id: number;
-  athlete_id: number;
-  run_num: number;
-  calc_score: number;
-}
-
-export default function EventsPage() {
-  const [runResults, setRunResults] = useState<RunResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchRunResults = async () => {
-      try {
-        const response = await fetch("/api/personnel");
-        if (!response.ok) throw new Error("Failed to fetch run results");
-
-        const data = await response.json();
-        console.log("Fetched run results:", data);
-        setRunResults(data);
-      } catch (err) {
-        console.error("Error fetching run results:", err);
-        setError("Failed to load run results");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRunResults();
-  }, []);
-
+'use client';
+import React from "react";
+import Link from "next/link";
+ 
+const HeadJudgePage = () => {
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Run Results</h1>
-
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-      <table className="w-full table-auto border-collapse border border-gray-300">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="border p-2">Run Result ID</th>
-            <th className="border p-2">Round Heat ID</th>
-            <th className="border p-2">Event ID</th>
-            <th className="border p-2">Division ID</th>
-            <th className="border p-2">Athlete ID</th>
-            <th className="border p-2">Run #</th>
-            <th className="border p-2">Calc Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {runResults.map((result) => (
-            <tr key={result.run_result_id} className="text-center">
-              <td className="border p-2">{result.run_result_id}</td>
-              <td className="border p-2">{result.round_heat_id}</td>
-              <td className="border p-2">{result.event_id}</td>
-              <td className="border p-2">{result.division_id}</td>
-              <td className="border p-2">{result.athlete_id}</td>
-              <td className="border p-2">{result.run_num}</td>
-              <td className="border p-2">{result.calc_score}</td>
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center text-primary">
+        Head Judge Dashboard
+      </h1>
+ 
+      <div className="overflow-x-auto mb-8">
+        <table className="min-w-full border border-base-300 bg-base-100 shadow-md rounded-lg">
+          <thead className="bg-base-200 text-base-content uppercase text-sm font-semibold">
+            <tr>
+              <th className="px-4 py-3 border-b border-base-300 text-left">Judge Name</th>
+              <th className="px-4 py-3 border-b border-base-300 text-left">Judge Type</th>
+              <th className="px-4 py-3 border-b border-base-300 text-left">Judge Status</th>
+              <th className="px-4 py-3 border-b border-base-300 text-left">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {/* Replace with dynamic data */}
+            <tr className="hover:bg-base-100">
+              <td className="px-4 py-2 border-t border-base-300">John Doe</td>
+              <td className="px-4 py-2 border-t border-base-300">Head Judge</td>
+              <td className="px-4 py-2 border-t border-base-300">Active</td>
+              <td className="px-4 py-2 border-t border-base-300">
+                <Link href="/admin/judges/edit" className="text-blue-600 hover:underline">
+                  Edit
+                </Link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+ 
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link href="/headJudge/addJudge" className="btn btn-primary w-full">
+          Add Judge
+        </Link>
+        <Link href="/headJudge/judges" className="btn btn-secondary w-full">
+          Monitor Judges
+        </Link>
+        <Link href="/headJudge/events" className="btn btn-accent w-full">
+          Monitor Events
+        </Link>
+        <Link href="/headJudge/judgePannel" className="btn btn-info w-full">
+          View Scorecard
+        </Link>
+      </div>
     </div>
   );
-}
+};
+ 
+export default HeadJudgePage;
+ 
