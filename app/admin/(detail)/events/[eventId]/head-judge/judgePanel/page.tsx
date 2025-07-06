@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 type AthleteRun = {
   athlete_id: number;
@@ -10,6 +11,8 @@ type AthleteRun = {
 };
 
 export default function ScoreInput() {
+    const { eventId } = useParams();
+  const parsedEventId = eventId ? parseInt(eventId as string, 10) : null;
   const keys = [
     "1",
     "2",
@@ -37,20 +40,20 @@ export default function ScoreInput() {
   >({});
 
   useEffect(() => {
-    fetch("/api/athletes")
+    if (!parsedEventId) return;
+
+    fetch(`/api/athletes?event_id=${parsedEventId}`)
       .then((res) => res.json())
       .then((data) => {
-        setAthletes(data);
-        if (data.length > 0) {
-          setEventIsFinished(data[0].event_status === "completed");
-        }
+        console.log("API athletes data:", data);
+        setAthletes(data.athletes);
+        setEventIsFinished(data.event.status === "completed");
       })
-
       .catch((err) => {
-        console.error("Failed to load athletes", err);
+        console.error("Failed to load athletes or event", err);
         setAthletes([]);
       });
-  }, []);
+  }, [parsedEventId]);
 
   const handleClick = (value: string) => {
     if (value === "CLEAR") {
