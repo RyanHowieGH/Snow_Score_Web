@@ -9,13 +9,15 @@ export async function GET() {
     // TODO: Grab personnel_id
     const { rows } = await pool.query(`
       SELECT
-        reg.athlete_id,
+        rr.athlete_id,
         reg.bib_num AS bib,
-        MIN(rr.round_heat_id) AS round_heat_id,
-        array_agg(DISTINCT rr.run_num ORDER BY rr.run_num) AS runs
+        array_agg(DISTINCT rr.run_num ORDER BY rr.run_num) AS runs,
+        e.status AS event_status
       FROM ss_run_results rr
       JOIN ss_event_registrations reg ON rr.athlete_id = reg.athlete_id
-      GROUP BY reg.athlete_id, reg.bib_num
+      JOIN ss_events e ON rr.event_id = e.event_id
+      WHERE e.status != 'completed'
+      GROUP BY rr.athlete_id, reg.bib_num, e.status
       ORDER BY reg.bib_num
     `);
 
