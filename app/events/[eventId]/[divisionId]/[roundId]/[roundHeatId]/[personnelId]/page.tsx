@@ -39,7 +39,7 @@ export default async function JudgingPanelPage({ params }: JudgingPanelPageProps
 
   return (
     <JudgingPanelClient
-      judgingPanelPasscode={String(judgePasscode)}
+      judgingPanelPasscode={judgePasscode}
       eventId={event_id}
       divisionId={division_id}
       roundId={round_id}
