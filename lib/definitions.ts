@@ -81,6 +81,7 @@ export interface JudgingPanelPerEvent {
     round_name: string;
     judge_name: string;
     judge_header: string;
+    passcode: number;
     // 'name' stands for the event's name
 }
 
