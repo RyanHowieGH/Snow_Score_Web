@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import Image from 'next/image';
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -75,33 +75,69 @@ export default function JudgingPanelClient({
       });
   }, [eventId, roundId, divisionId]);
 
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = e.target.value.replace(/\D/g, '');
+    setInputCode(sanitized);
+  };
+
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputCode === String(judgingPanelPasscode)) {
+
+    const sanitizedCode = inputCode.replace(/\D/g, '');
+
+    if (sanitizedCode === String(judgingPanelPasscode)) {
       setVerified(true);
     } else {
-      alert('Invalid passcode');
+      alert('Invalid access code');
+      setInputCode('');
     }
   };
 
   if (!verified) {
     return (
-      <form onSubmit={handlePasscodeSubmit} className="p-4 max-w-md mx-auto">
-        <label className="block mb-2 text-lg font-semibold">
-          Enter Passcode:
-        </label>
-        <input
-          type="password"
-          value={inputCode}
-          onChange={(e) => setInputCode(e.target.value)}
-          className="border px-3 py-2 w-full rounded"
-        />
-        <button type="submit" className="mt-3 bg-blue-600 text-white px-4 py-2 rounded">
-          Verify
-        </button>
-      </form>
-    );
-  }
+    <div className=" min-h-screen flex flex-col justify-center py-12 px-4">
+      <div className="max-w-xl w-full mx-auto bg-white border border-gray-200 rounded-lg shadow-md">
+        <div className="p-8 flex flex-col items-center">
+          <Image
+            src="/assets/goggles_borderless.png"
+            alt="SnowScore Logo"
+            width={240}
+            height={240}
+            className="mb-6"
+            priority
+          />
+
+          <h1 className="text-3xl font-extrabold text-gray-800 mb-12">
+            Judging Panel
+          </h1>
+
+          <form onSubmit={handlePasscodeSubmit} className="w-">
+            <label className="block text-lg font-medium text-gray-700 mb-2">
+              Validate access
+            </label>
+
+            <input
+              type="password"
+              value={inputCode}
+              onChange={handleCodeChange}
+              inputMode="numeric"
+              pattern="\d*"
+              className="block w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Access code"
+            />
+
+            <button
+              type="submit"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors duration-200"
+            >
+              Verify
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   const handleClearButtonClick = (value: string) => {
     if (value === "CLEAR") {
@@ -155,19 +191,6 @@ export default function JudgingPanelClient({
 
   return (
     <div>
-    <div className="ml-10">
-      <h1 className="text-2xl font-bold mt-10 mb-5">
-        Data required to make the panel unique:
-      </h1>
-      <div className="text-xl">
-        <div>event_id: {eventId}</div>
-        <div>division_id: {divisionId}</div>
-        <div>round_id: {roundId}</div>
-        <div>round_heat_id: {roundHeatId}</div>
-        <div>personnel_id: {personnelId}</div>
-      </div>
-    </div>
-
      <div className="flex flex-row-reverse width-full h-screen ">
       <div className=" flex-1/2 p-4 space-y-1">
         {/* Score Display */}

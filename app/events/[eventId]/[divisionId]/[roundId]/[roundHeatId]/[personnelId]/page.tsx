@@ -38,13 +38,13 @@ export default async function JudgingPanelPage({ params }: JudgingPanelPageProps
   
 
   return (
-    <JudgingPanelClient
-      judgingPanelPasscode={judgePasscode}
-      eventId={event_id}
-      divisionId={division_id}
-      roundId={round_id}
-      roundHeatId={round_heat_id}
-      personnelId={personnel_id}
-    />
+        <JudgingPanelClient
+          judgingPanelPasscode={judgePasscode}
+          eventId={event_id}
+          divisionId={division_id}
+          roundId={round_id}
+          roundHeatId={round_heat_id}
+          personnelId={personnel_id}
+        />
   );
 }
