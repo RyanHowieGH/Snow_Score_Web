@@ -1,70 +1,77 @@
-// In: app/admin/(detail)/events/[eventId]/manage-schedule/actions.ts
 'use server';
 
-import getDbPool from '@/lib/db';
+import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
+import getDbPool from '@/lib/db';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 
-export interface ScheduleFormState {
+export interface ScheduleActionResult {
   success: boolean;
   message: string;
 }
 
-export async function updateHeatScheduleAction(
-  eventId: number,
-  prevState: ScheduleFormState | null,
-  formData: FormData
-): Promise<ScheduleFormState> {
-  // Authorization check
+async function authorizeAction(): Promise<void> {
   const user = await getAuthenticatedUserWithRole();
   if (!user || !['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.roleName)) {
-    return { success: false, message: "Unauthorized." };
+    throw new Error("Unauthorized: You do not have permission to modify schedules.");
   }
+}
 
-  const pool = getDbPool();
-  const client = await pool.connect();
-  const updates: { round_heat_id: number; start_time: string | null; end_time: string | null; }[] = [];
-
-  // Collect all updates from the form data
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith('start_time_')) {
-      const round_heat_id = parseInt(key.split('_')[2], 10);
-      const startTime = value.toString() || null;
-      const endTime = formData.get(`end_time_${round_heat_id}`)?.toString() || null;
-      updates.push({ round_heat_id, start_time: startTime, end_time: endTime });
-    }
-  }
-
-  if (updates.length === 0) {
-    return { success: false, message: 'No schedule data to update.' };
-  }
-
+/**
+ * This is the new core action. It saves the time for a specific heat
+ * AND then re-calculates the sequence for ALL heats in the event based on time.
+ * This ensures the order is always correct and persistent.
+ */
+export async function saveHeatTimeAndResequenceAction(
+  eventId: number,
+  heatId: number,
+  startTime: string | null,
+  endTime: string | null
+): Promise<ScheduleActionResult> {
+  const client: PoolClient = await getDbPool().connect();
   try {
-    await client.query('BEGIN'); // Start transaction
+    await authorizeAction();
+    await client.query('BEGIN'); // Start transaction for data integrity
 
-    for (const update of updates) {
-      const query = `
-        UPDATE ss_heat_details
-        SET start_time = $1, end_time = $2
-        WHERE round_heat_id = $3;
-      `;
-      // Convert empty strings to null for the database
-      const startTimeValue = update.start_time ? update.start_time : null;
-      const endTimeValue = update.end_time ? update.end_time : null;
+    // Step 1: Update the specific heat's times
+    const startTimeValue = startTime && !isNaN(new Date(startTime).getTime()) ? startTime : null;
+    const endTimeValue = endTime && !isNaN(new Date(endTime).getTime()) ? endTime : null;
+    await client.query(
+      'UPDATE ss_heat_details SET start_time = $1, end_time = $2 WHERE round_heat_id = $3',
+      [startTimeValue, endTimeValue, heatId]
+    );
 
-      await client.query(query, [startTimeValue, endTimeValue, update.round_heat_id]);
+    // Step 2: Fetch ALL heats for the event, now sorted by the newly updated times
+    const sortedHeatsResult = await client.query(`
+      SELECT hd.round_heat_id
+      FROM ss_heat_details hd
+      JOIN ss_round_details rd ON hd.round_id = rd.round_id
+      WHERE rd.event_id = $1
+      ORDER BY hd.start_time ASC NULLS LAST, rd.round_name ASC, hd.heat_num ASC;
+    `, [eventId]);
+    
+    // Step 3: Loop through the sorted results and update their sequence
+    for (let i = 0; i < sortedHeatsResult.rows.length; i++) {
+      const currentHeatId = sortedHeatsResult.rows[i].round_heat_id;
+      const newSequence = i;
+      await client.query(
+        'UPDATE ss_heat_details SET schedule_sequence = $1 WHERE round_heat_id = $2',
+        [newSequence, currentHeatId]
+      );
     }
-
-    await client.query('COMMIT'); // Commit transaction
-
+    
+    await client.query('COMMIT'); // Commit all changes
     revalidatePath(`/admin/events/${eventId}/manage-schedule`);
-    return { success: true, message: 'Schedule updated successfully!' };
-
+    return { success: true, message: 'Schedule updated and re-sorted.' };
   } catch (error) {
-    await client.query('ROLLBACK'); // Rollback on error
-    console.error('Database Error updating schedule:', error);
-    return { success: false, message: 'Failed to update schedule.' };
+    await client.query('ROLLBACK'); // Abort on any error
+    console.error('Error in saveHeatTimeAndResequenceAction:', error);
+    const message = error instanceof Error ? error.message : "Failed to update schedule.";
+    return { success: false, message };
   } finally {
     client.release();
   }
 }
+
+// Add/Delete actions for rounds/heats can remain here if needed for other UI elements.
+// They would be called from a separate "Add Heat" modal, for example.
