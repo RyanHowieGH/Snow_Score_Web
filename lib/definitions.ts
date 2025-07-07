@@ -84,4 +84,13 @@ export interface JudgingPanelPerEvent {
     // 'name' stands for the event's name
 }
 
+export type HeatForSchedule = {
+  round_heat_id: number;
+  heat_num: number;
+  start_time: string | null; // Timestamps can be returned as strings
+  end_time: string | null;
+  round_name: string;
+  division_name: string;
+};
+
 // Add other shared types here as your application grows
