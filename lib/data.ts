@@ -382,6 +382,7 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
                 ej.header AS judge_header,
                 ej.name AS judge_name,
                 e.name,
+                ej.passcode,
                 rd.round_name
             FROM   ss_round_details   rd
             JOIN   ss_heat_details    hd ON rd.round_id      = hd.round_id
@@ -412,6 +413,7 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
              personnel_id: row.personnel_id,
              name: row.name,
              round_name: row.round_name,
+             passcode: row.passcode,
          }));
          return judgingPanel;
 
@@ -421,6 +423,37 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
      } finally {
          if (client) client.release();
      }
+}
 
-     
+     export async function fetchJudgingPanelPasscode(personnel_id: number): Promise< number | null> {
+     if (isNaN(personnel_id)) {
+         console.error("Failed to retrieve judge data.");
+         return null;
+     }
+
+     const pool = getDbPool();
+     let client: PoolClient | null = null;
+
+     try {
+         client = await pool.connect();
+
+         const judgePasscodeQuery = `
+            SELECT passcode
+            FROM   ss_event_judges
+            WHERE  personnel_id = $1;
+         `;
+
+         const judgingPasscodeRetrieved = await client.query(judgePasscodeQuery, [personnel_id]);
+
+         if (judgingPasscodeRetrieved.rows.length === 0) {
+             return null;
+         }
+         return judgingPasscodeRetrieved.rows[0].passcode;
+
+     } catch (error) {
+         console.error(`Database error in retrieving judge data`, error);
+         return null;
+     } finally {
+         if (client) client.release();
+     }
 }
