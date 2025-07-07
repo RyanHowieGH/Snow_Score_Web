@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 type JudgingPanelClientProps = {
-  judgingPanelPasscode: string;
+  judgingPanelPasscode: number;
   eventId: number;
   divisionId: number;
   roundId: number;
@@ -49,7 +49,6 @@ export default function JudgingPanelClient({
   const [athletes, setAthletes] = useState<AthleteRun[]>([]);
   const [score, setScore] = useState("");
   const [runNum, setRunNum] = useState<number | null>(null);
-  const [specificRoundHeatId, setSpecificRoundHeatId] = useState<number | null>(null);
   const [selected, setSelected] = useState<{
     bib: number;
     run: number;
@@ -63,23 +62,22 @@ export default function JudgingPanelClient({
   useEffect(() => {
     if (!eventId) return;
 
-    fetch(`/api/athletes?event_id=${eventId}`)
+    fetch(`/api/athletes?event_id=${eventId}&round_id=${roundId}&division_id=${divisionId}&round_heat_id=${roundHeatId}`)
       .then((res) => res.json())
       .then((data) => {
         console.log("API athletes data:", data);
         setAthletes(data.athletes);
-        setEventIsFinished(data.event.status === "completed");
+        setEventIsFinished(data.event.status === "COMPLETE");
       })
       .catch((err) => {
         console.error("Failed to load athletes or event", err);
         setAthletes([]);
       });
-  }, [eventId]);
+  }, [eventId, roundId, divisionId]);
 
-  // PASSCODE VERIFICATION: START
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputCode === judgingPanelPasscode) {
+    if (inputCode === String(judgingPanelPasscode)) {
       setVerified(true);
     } else {
       alert('Invalid passcode');
@@ -105,7 +103,7 @@ export default function JudgingPanelClient({
     );
   }
 
-  const handleClick = (value: string) => {
+  const handleClearButtonClick = (value: string) => {
     if (value === "CLEAR") {
       setScore("");
     } else {
@@ -113,15 +111,12 @@ export default function JudgingPanelClient({
     }
   };
 
-  //Make personnel_id dynamic
-  // For now, hardcoded to 281
   const handleScoreSubmit = async () => {
-    const personnel_id = 281; // Replace with actual personnel_id logic
 
     console.log("SUBMITTING:", {
-      specificRoundHeatId,
+      roundHeatId,
       runNum,
-      personnel_id,
+      personnelId,
       score,
     });
 
@@ -129,9 +124,9 @@ export default function JudgingPanelClient({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        round_heat_id: specificRoundHeatId,
+        round_heat_id: roundHeatId,
         run_num: runNum,
-        personnel_id,
+        personnelId,
         score: parseFloat(score),
       }),
     });
@@ -151,13 +146,12 @@ export default function JudgingPanelClient({
       alert("Event is finished, cannot submit scores.");
       return;
     }
-    if (!specificRoundHeatId || !runNum || !score) {
+    if (!roundHeatId || !runNum || !score) {
       alert("Please select an athlete and enter a score.");
       return;
     }
   };
 
-  // JUDGE PANEL CREATION: END
 
   return (
     <div>
@@ -189,7 +183,7 @@ export default function JudgingPanelClient({
         {/* Submit Button */}
         <button
           onClick={handleScoreSubmit}
-          disabled={!specificRoundHeatId || !runNum || !score || eventIsFinished}
+          disabled={!roundHeatId || !runNum || !score || eventIsFinished}
           className="btn bg-orange-600 text-white w-full disabled:opacity-50"
         >
           {eventIsFinished ? "Event Finished" : "SUBMIT"}
@@ -200,7 +194,7 @@ export default function JudgingPanelClient({
           {keys.map((key) => (
             <button
               key={key}
-              onClick={() => !eventIsFinished && handleClick(key)}
+              onClick={() => !eventIsFinished && handleClearButtonClick(key)}
               className={`btn text-lg ${
                 key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
               } ${eventIsFinished ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -229,16 +223,15 @@ export default function JudgingPanelClient({
               className="grid grid-cols-6 gap-1 text-center mb-1"
             >
               <div className="bg-gray-100 p-1">{bib}</div>
-              {runs.map(({ run_num, round_heat_id }) => {
+              {runs.map(({ run_num }) => {
                 const key = `${athlete_id}-${run_num}`;
                 return (
                   <button
                     key={key}
                     onClick={() => {
                       console.log(
-                        `Selected athlete: ${bib}, run: ${run_num}, round_heat_id: ${round_heat_id}`
+                        `Selected athlete: ${bib}, run: ${run_num}`
                       );
-                      setSpecificRoundHeatId(round_heat_id);
                       setRunNum(run_num);
                       setSelected({ bib, run: run_num, athlete_id });
                     }}

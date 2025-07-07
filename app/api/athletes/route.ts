@@ -9,12 +9,39 @@ export async function GET(req: NextRequest) {
     const eventIdParam = req.nextUrl.searchParams.get("event_id");
     if (!eventIdParam) {
       return NextResponse.json(
-        { error: "Missing event_id" },
+        { error: "Missing the event identifier" },
+        { status: 400 }
+      );
+    }
+
+    const roundIdParam = req.nextUrl.searchParams.get("round_id");
+    if (!roundIdParam) {
+      return NextResponse.json(
+        { error: "Missing the round identifier" },
+        { status: 400 }
+      );
+    }
+
+    const divisionIdParam = req.nextUrl.searchParams.get("division_id");
+    if (!divisionIdParam) {
+      return NextResponse.json(
+        { error: "Missing the division identifier" },
+        { status: 400 }
+      );
+    }
+
+    const roundHeatIdParam = req.nextUrl.searchParams.get("round_heat_id");
+    if (!roundHeatIdParam) {
+      return NextResponse.json(
+        { error: "Missing round-heat identifier" },
         { status: 400 }
       );
     }
 
     const eventId = parseInt(eventIdParam, 10);
+    const roundId = parseInt(roundIdParam);
+    const divisionId = parseInt(divisionIdParam);
+    const roundHeatId = parseInt(roundHeatIdParam);
 
     // Fetch the specific event by ID
     const eventResult = await pool.query(
@@ -36,23 +63,43 @@ export async function GET(req: NextRequest) {
         { status: 404 }
       );
     }
-
+      // SELECT DISTINCT ON (rr.athlete_id, rr.run_num)
+      //   rr.athlete_id,
+      //   reg.bib_num AS bib,
+      //   rr.run_num,
+      //   hd.round_id,
+      //   hr.division_id
+      // FROM ss_run_results rr
+      // JOIN ss_event_registrations reg ON rr.athlete_id = reg.athlete_id
+      // JOIN ss_heat_results hr ON reg.event_id = hr.event_id
+      // JOIN ss_heat_details hd ON hr.round_heat_id = hd.round_heat_id 
+      // WHERE rr.event_id = $1 
+      //   AND hd.round_id = $2       
+      //   AND hr.division_id = $3
+      //   AND hr.round_heat_id = $4
+      // ORDER BY rr.athlete_id, rr.run_num
     const event = eventResult.rows[0];
 
     // Fetch unique runs for each athlete (one row per athlete_id + run_num)
     const athletesResult = await pool.query(
       `
+
       SELECT DISTINCT ON (rr.athlete_id, rr.run_num)
         rr.athlete_id,
         reg.bib_num AS bib,
         rr.run_num,
-        rr.round_heat_id
+        hr.round_heat_id,
+        hr.division_id
       FROM ss_run_results rr
-      JOIN ss_event_registrations reg ON rr.athlete_id = reg.athlete_id
+      JOIN ss_heat_results hr ON rr.round_heat_id = hr.round_heat_id
+      JOIN ss_event_registrations reg ON hr.event_id = reg.event_id 
+        AND hr.division_id = reg.division_id
+        AND rr.athlete_id  = reg.athlete_id
       WHERE rr.event_id = $1
+        AND rr.round_heat_id = $2
       ORDER BY rr.athlete_id, rr.run_num, rr.round_heat_id
       `,
-      [eventId]
+      [eventId, roundHeatId]
     );
 
     // Build unique athlete -> runs map
