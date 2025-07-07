@@ -119,7 +119,7 @@ export default async function AdminEventDetailPage(
             </div>
 
             {/* Management Actions Grid - "Management Sections" header removed */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2"> {/* Removed margin-top that was for the header */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2"> {/* Removed margin-top that was for the header */}
                 <ManagementActionCard
                     title="Manage Schedule"
                     description="Set and adjust start and end times for all heats in the event."
