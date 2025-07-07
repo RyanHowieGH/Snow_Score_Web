@@ -10,6 +10,7 @@ import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import type { AppUserWithRole } from '@/lib/auth/user';
 import type { Metadata } from 'next';
 import EditHeadJudgeButton from '@/components/EditHeadJudgesButton';
+
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
 // For now, this page assumes AdminHeader is rendered by the layout.
@@ -19,6 +20,7 @@ import {
     UsersIcon,
     UserGroupIcon,
     WrenchScrewdriverIcon,
+    ClockIcon,
 } from '@heroicons/react/24/outline';
 
 type AdminEventDetailPageProps = {
@@ -117,7 +119,13 @@ export default async function AdminEventDetailPage(
             </div>
 
             {/* Management Actions Grid - "Management Sections" header removed */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2"> {/* Removed margin-top that was for the header */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2"> {/* Removed margin-top that was for the header */}
+                <ManagementActionCard
+                    title="Manage Schedule"
+                    description="Set and adjust start and end times for all heats in the event."
+                    linkHref={`/admin/events/${eventId}/manage-schedule`}
+                    icon={<ClockIcon className="h-7 w-7 text-info" />}
+                />
                 <ManagementActionCard
                     title="Event Setup"
                     description="Modify core details, dates, location, discipline, status, and assigned divisions."

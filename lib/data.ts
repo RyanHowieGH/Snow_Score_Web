@@ -1,6 +1,7 @@
 // lib/data.ts
 import getDbPool from './db';
 import { PoolClient } from 'pg';
+import { HeatForSchedule } from './definitions'; // You will create this type next
 // Import types from the centralized definitions file
 import type {
     SnowEvent,
@@ -115,6 +116,12 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
 
 export async function fetchEvents(): Promise<SnowEvent[]> {
     console.log("Fetching all events...");
+    const placeholderUrl = "postgres://user:pass@localhost:5432/db";
+    if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL === placeholderUrl) {
+        console.warn("fetchEvents: database is not configured, returning empty list.");
+        return [];
+    }
+
     const pool = getDbPool();
     let client: PoolClient | null = null;
     try {
@@ -324,6 +331,32 @@ export async function deleteJudgeFromEvent(
     }
 }
 
+export async function fetchHeatsForEventSchedule(eventId: number): Promise<HeatForSchedule[]> {
+  const pool = getDbPool();
+  const query = `
+    SELECT
+        hd.round_heat_id,
+        hd.heat_num,
+        hd.start_time,
+        hd.end_time,
+        rd.round_name,
+        div.division_name
+    FROM ss_heat_details hd
+    JOIN ss_round_details rd ON hd.round_id = rd.round_id
+    JOIN ss_event_divisions ed ON rd.event_id = ed.event_id AND rd.division_id = ed.division_id
+    JOIN ss_division div ON ed.division_id = div.division_id
+    WHERE ed.event_id = $1
+    ORDER BY div.division_name, rd.round_name, hd.heat_num;
+  `;
+  try {
+    const result = await pool.query(query, [eventId]);
+    return result.rows;
+  } catch (error) {
+    console.error('Database Error fetching heats for schedule:', error);
+    throw new Error('Failed to fetch heats for the event schedule.');
+  }
+}
+
 export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<JudgingPanelPerEvent [] | null> {
      console.log(`Fetching judging panel details.`);
      if (isNaN(eventId)) {
@@ -390,7 +423,7 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
      } finally {
          if (client) client.release();
      }
-    }
+}
 
      export async function fetchJudgingPanelPasscode(personnel_id: number): Promise< number | null> {
      if (isNaN(personnel_id)) {

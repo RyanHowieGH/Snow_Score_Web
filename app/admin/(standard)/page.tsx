@@ -10,8 +10,8 @@ export default function AdminDashboardPage() {
     const user = useAuth();
 
     // Check user role for conditional rendering
-    const canManageUsers = user && ['Executive Director', 'Administrator'].includes(user.role_name);
-    const canManageEvents = user && ['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.role_name);
+    const canManageUsers = user && ['Executive Director', 'Administrator', 'Head Judge'].includes(user.role_name);
+    const canManageEvents = user && ['Executive Director', 'Administrator', 'Chief of Competition', 'Head Judge'].includes(user.role_name);
 
     return (
         <div className="flex flex-col items-center justify-center pt-10">

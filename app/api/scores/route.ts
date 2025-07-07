@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
     // Step 1: Get the correct run_result_id
     const result = await pool.query(
-      `SELECT run_result_id FROM ss_run_scores WHERE round_heat_id = $1 AND run_num = $2`,
+      `SELECT run_result_id FROM ss_run_results WHERE round_heat_id = $1 AND run_num = $2`,
       [round_heat_id, run_num]
     );
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         INSERT INTO ss_run_scores (personnel_id, run_result_id, score)
         VALUES ($1, $2, $3)
         ON CONFLICT (personnel_id, run_result_id)
-        DO UPDATE SET score = EXCLUDED.score
+        DO UPDATE SET score = $3
       `,
       [personnel_id, run_result_id, score]
     );
