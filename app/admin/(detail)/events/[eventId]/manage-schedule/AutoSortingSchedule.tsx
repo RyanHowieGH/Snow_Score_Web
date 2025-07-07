@@ -35,7 +35,7 @@ function ScheduleHeatItem({
           value={formatToTimeInput(item.start_time)}
           onChange={(e) => onTimeChange(item.heat_id, 'start_time', e.target.value)}
           onBlur={onTimeSave}
-          className="input input-ghost input-xs w-24 font-mono text-center"
+          className="input input-ghost input-s w-36 font-mono text-center text-m pr-8"
         />
         <span className="text-base-content/40">-</span>
         <input
@@ -43,7 +43,7 @@ function ScheduleHeatItem({
           value={formatToTimeInput(item.end_time)}
           onChange={(e) => onTimeChange(item.heat_id, 'end_time', e.target.value)}
           onBlur={onTimeSave}
-          className="input input-ghost input-xs w-24 font-mono text-center"
+          className="input input-ghost input-s w-36 font-mono text-center text-m pr-8"
         />
         <span className={`badge ${item.division_name.toUpperCase().includes('MALE') ? 'badge-info' : 'badge-warning'} badge-sm`}>
           {item.division_name}
