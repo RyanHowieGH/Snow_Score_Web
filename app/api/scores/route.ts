@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         INSERT INTO ss_run_scores (personnel_id, run_result_id, score)
         VALUES ($1, $2, $3)
         ON CONFLICT (personnel_id, run_result_id)
-        DO UPDATE SET score = EXCLUDED.score
+        DO UPDATE SET score = $3
       `,
       [personnel_id, run_result_id, score]
     );

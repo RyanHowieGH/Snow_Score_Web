@@ -39,29 +39,52 @@ export async function GET(req: NextRequest) {
 
     const event = eventResult.rows[0];
 
-    // Fetch athletes for this event
+    // Fetch unique runs for each athlete (one row per athlete_id + run_num)
     const athletesResult = await pool.query(
       `
-      SELECT
+      SELECT DISTINCT ON (rr.athlete_id, rr.run_num)
         rr.athlete_id,
         reg.bib_num AS bib,
-        array_agg(DISTINCT rr.run_num ORDER BY rr.run_num) AS runs
+        rr.run_num,
+        rr.round_heat_id
       FROM ss_run_results rr
       JOIN ss_event_registrations reg ON rr.athlete_id = reg.athlete_id
       WHERE rr.event_id = $1
-      GROUP BY rr.athlete_id, reg.bib_num
-      ORDER BY reg.bib_num
+      ORDER BY rr.athlete_id, rr.run_num, rr.round_heat_id
       `,
       [eventId]
     );
 
+    // Build unique athlete -> runs map
+    const athletesMap = new Map<number, {
+      athlete_id: number;
+      bib: number;
+      runs: { run_num: number; round_heat_id: number }[];
+    }>();
+
+    for (const row of athletesResult.rows) {
+      if (!athletesMap.has(row.athlete_id)) {
+        athletesMap.set(row.athlete_id, {
+          athlete_id: row.athlete_id,
+          bib: row.bib,
+          runs: [],
+        });
+      }
+
+      athletesMap.get(row.athlete_id)!.runs.push({
+        run_num: row.run_num,
+        round_heat_id: row.round_heat_id,
+      });
+    }
+
+    // Final API response
     return NextResponse.json({
       event,
-      athletes: athletesResult.rows,
+      athletes: Array.from(athletesMap.values()),
     });
+
   } catch (err) {
     console.error("Error fetching athletes:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
-
