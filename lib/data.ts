@@ -2,6 +2,8 @@
 import getDbPool from './db';
 import { PoolClient } from 'pg';
 import { HeatForSchedule } from './definitions'; // You will create this type next
+import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
+
 // Import types from the centralized definitions file
 import type {
     SnowEvent,
@@ -420,7 +422,76 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
          return null;
      } finally {
          if (client) client.release();
-     }
+     }  
+}
 
-     
+// This function gets the main event details AND all its rounds/heats in a nested structure
+export async function fetchEventForScheduler(eventId: number): Promise<{ event: EventDetails; rounds: RoundWithHeats[] } | null> {
+  const pool = getDbPool();
+  // First, get the main event details
+  const eventDetails = await fetchEventById(eventId);
+  if (!eventDetails) return null;
+
+  // Then, get all rounds with their heats aggregated into a JSON array
+  const roundsQuery = `
+    SELECT
+        rd.round_id,
+        rd.round_name,
+        rd.round_sequence,
+        ed.division_id,
+        div.division_name,
+        COALESCE(
+            (SELECT json_agg(h.* ORDER BY h.heat_sequence)
+             FROM (
+                SELECT hd.round_heat_id, hd.heat_num, hd.start_time, hd.end_time, hd.heat_sequence
+                FROM ss_heat_details hd
+                WHERE hd.round_id = rd.round_id
+             ) AS h),
+            '[]'::json
+        ) as heats
+    FROM ss_round_details rd
+    JOIN ss_event_divisions ed ON rd.event_id = ed.event_id AND rd.division_id = ed.division_id
+    JOIN ss_division div ON ed.division_id = div.division_id
+    WHERE ed.event_id = $1
+    ORDER BY rd.round_sequence;
+  `;
+
+  try {
+    const result = await pool.query(roundsQuery, [eventId]);
+    return { event: eventDetails, rounds: result.rows };
+  } catch (error) {
+    console.error('Database Error fetching nested schedule data:', error);
+    throw new Error('Failed to fetch schedule data.');
+  }
+}
+
+// Fetches a simple, flat list of all heats for an event, enriched
+// with round and division names, sorted by the global sequence.
+export async function fetchScheduleHeats(eventId: number): Promise<ScheduleHeatItem[]> {
+  const pool = getDbPool();
+  const query = `
+    SELECT
+      hd.round_heat_id as heat_id,
+      hd.heat_num,
+      hd.start_time,
+      hd.end_time, -- <-- ADD THIS LINE
+      hd.schedule_sequence,
+      rd.round_name,
+      div.division_name
+    FROM
+      ss_heat_details hd
+    JOIN ss_round_details rd ON hd.round_id = rd.round_id
+    JOIN ss_division div ON rd.division_id = div.division_id
+    WHERE
+      rd.event_id = $1
+    ORDER BY
+      hd.schedule_sequence;
+  `;
+  try {
+    const result = await pool.query(query, [eventId]);
+    return result.rows.map(row => ({ ...row, id: `HEAT-${row.heat_id}` }));
+  } catch (error) {
+    console.error('Database Error fetching schedule heats:', error);
+    throw new Error('Failed to fetch schedule heats.');
+  }
 }

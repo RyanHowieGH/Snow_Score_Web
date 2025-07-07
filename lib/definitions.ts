@@ -93,4 +93,36 @@ export type HeatForSchedule = {
   division_name: string;
 };
 
+export type Heat = {
+  round_heat_id: number;
+  heat_num: number;
+  start_time: string | null;
+  end_time: string | null;
+  heat_sequence: number;
+};
+
+export type RoundWithHeats = {
+  round_id: number;
+  round_name: string;
+  round_sequence: number;
+  division_id: number;
+  division_name: string;
+  heats: Heat[];
+};
+
+// A discriminated union for our flat schedule list
+// This is the structure for every item on our unified timeline.
+// It's a "discriminated union" based on the 'type' property.
+// This is the new structure for our list. Each item is a heat
+// that knows about its parent round and division.
+export type ScheduleHeatItem = {
+  id: string;
+  heat_id: number;
+  heat_num: number;
+  round_name: string;
+  division_name: string;
+  start_time: string | null;
+  end_time: string | null; // <-- ADD THIS LINE
+  schedule_sequence: number | null;
+};
 // Add other shared types here as your application grows
