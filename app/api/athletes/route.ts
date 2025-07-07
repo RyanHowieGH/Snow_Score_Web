@@ -69,7 +69,6 @@ export async function GET(req: NextRequest) {
     // Fetch unique runs for each athlete (one row per athlete_id + run_num)
     const athletesResult = await pool.query(
       `
-
       SELECT DISTINCT ON (rr.athlete_id, rr.run_num)
         rr.athlete_id,
         reg.bib_num AS bib,
@@ -79,10 +78,10 @@ export async function GET(req: NextRequest) {
       FROM ss_run_results rr
       JOIN ss_heat_results hr ON rr.round_heat_id = hr.round_heat_id
       JOIN ss_event_registrations reg ON hr.event_id = reg.event_id 
-        AND hr.division_id = reg.division_id
-        AND rr.athlete_id  = reg.athlete_id
-      WHERE rr.event_id = $1
-        AND rr.round_heat_id = $2
+                                  AND hr.division_id = reg.division_id
+                                  AND rr.athlete_id  = reg.athlete_id
+      WHERE       rr.event_id = $1
+         AND rr.round_heat_id = $2
       ORDER BY rr.athlete_id, rr.run_num, rr.round_heat_id
       `,
       [eventId, roundHeatId]
