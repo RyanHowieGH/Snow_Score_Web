@@ -1,13 +1,13 @@
 import { fetchJudgingPanelDataByEventId, fetchJudgingPanelPasscode } from '@/lib/data';
-import JudgingPanelClient from './JudgingPanelClient';
+import JudgingPanelClient from '../../../../../../../components/JudgingPanelClient';
 
 type JudgingPanelPageProps = {
   params: {
-    eventId: number | string;
-    divisionId: number | string;
-    roundId: number | string;
-    roundHeatId: number | string;
-    personnelId: number | string;
+    eventId: number;
+    divisionId: number;
+    roundId: number;
+    roundHeatId: number;
+    personnelId: number;
   };
 };
 
