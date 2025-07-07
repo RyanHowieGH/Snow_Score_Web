@@ -1,78 +1,50 @@
-// app/admin/(detail)/events/[eventId]/[judgingPanel]page.tsx
-import React from 'react';
-import Link from 'next/link';
-import { fetchJudgingPanelDataByEventId } from '@/lib/data';
-import { formatDate, formatDateRange } from '@/lib/utils';
-import type { EventDetails } from '@/lib/definitions';
-import { notFound, redirect } from 'next/navigation';
-import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Your auth helper
-import type { AppUserWithRole } from '@/lib/auth/user';
-import type { Metadata } from 'next';
-// Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
-// If you need to pass eventName to it, that's a more advanced layout composition.
-// For now, this page assumes AdminHeader is rendered by the layout.
-
+import { fetchJudgingPanelDataByEventId, fetchJudgingPanelPasscode } from '@/lib/data';
+import JudgingPanelClient from './JudgingPanelClient';
 
 type JudgingPanelPageProps = {
-  params:{
-    eventId: number;    
-    roundId: number;
-    divisionId: number;
-    roundHeatId: number;
-    personnelId: number
+  params: {
+    eventId: number | string;
+    divisionId: number | string;
+    roundId: number | string;
+    roundHeatId: number | string;
+    personnelId: number | string;
   };
 };
 
-type AthleteRun = {
-  athlete_id: number;
-  bib: number;
-  round_heat_id: number;
-  runs: number[];
-};
+export default async function JudgingPanelPage({ params }: JudgingPanelPageProps) {
+  const {
+    eventId,
+    divisionId,
+    roundId,
+    roundHeatId,
+    personnelId,
+  } = params;
 
-export async function generateMetadata({params} : JudgingPanelPageProps ): Promise<Metadata> {
-  const { eventId } = await params;
-  const event_id    = Number(eventId);
+  const event_id = Number(eventId);
+  const division_id = Number(divisionId);
+  const round_id = Number(roundId);
+  const round_heat_id = Number(roundHeatId);
+  const personnel_id = Number(personnelId);
 
-    if (isNaN(event_id)) return { title: 'Event Not Found - Admin | SnowScore' };
+  const judgingPanels = await fetchJudgingPanelDataByEventId(event_id);
+  if (!judgingPanels || !judgingPanels[0]) {
+    return <div>Judging Panel not found.</div>;
+  }
 
-    const judgingPanels = await fetchJudgingPanelDataByEventId(event_id);
-    if (!judgingPanels) return { title: 'Event Not Found - Admin | SnowScore' };
-    return {
-        title: `Judging Panel: ${judgingPanels[0].name} | Admin | SnowScore`,
-        description: `Administrative dashboard for the event: ${judgingPanels[0].name}.`,
-    };
-}
+  const judgePasscode = await fetchJudgingPanelPasscode(personnel_id);
+  if (!judgePasscode) {
+    return <div>Judge Passcode not found.</div>;
+  }
+  
 
-export default async function JudgingPanelPage({params} : JudgingPanelPageProps ) {
-   const {
-     eventId,
-     divisionId,
-     roundId,
-     roundHeatId,
-     personnelId,
-   } = await params;
- 
-   const event_id      = Number(eventId);
-   const division_id   = Number(divisionId);
-   const round_id      = Number(roundId);
-   const round_heat_id = Number(roundHeatId);
-   const personnel_id  = Number(personnelId);
-
-    return (
-      <div
-      className='ml-10'>
-        <h1
-        className='text-2xl font-bold mt-10 mb-5'>Data required to make the panel unique:</h1>
-        <div
-        className="text-xl">
-          <div>event_id: {event_id}</div>
-          <div>division_id: {division_id}</div>
-          <div>round_id: {round_id}</div>
-          <div>round_heat_id: {round_heat_id}</div>
-          <div>personnel_id: {personnel_id}</div>
-        </div>
-
-      </div>
+  return (
+    <JudgingPanelClient
+      judgingPanelPasscode={String(judgePasscode)}
+      eventId={event_id}
+      divisionId={division_id}
+      roundId={round_id}
+      roundHeatId={round_heat_id}
+      personnelId={personnel_id}
+    />
   );
 }
