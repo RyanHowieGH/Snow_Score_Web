@@ -178,7 +178,7 @@ export default function JudgingPanelClient({
       body: JSON.stringify({
         round_heat_id: roundHeatId,
         run_num: runNum,
-        personnelId,
+        personnel_id: personnelId,
         score: parseFloat(score),
       }),
     });
