@@ -213,8 +213,8 @@ export default function JudgingPanelClient({
 
   return (
     <div>
-      <div className="flex flex-row-reverse w-full h-screen">
-        <div className="flex-1/2 p-4 space-y-4">
+      <div className="flex w-full h-screen">
+        <div className="w-[10%] p-4 space-y-4">
           {/* Best Scores List */}
           <div className="w-full">
             <div className="grid grid-cols-2 gap-1 text-sm font-semibold text-center mb-2">
@@ -234,11 +234,12 @@ export default function JudgingPanelClient({
           </div>
         </div>
 
-        <div className=" flex-1/2 p-4 space-y-1">
+        {/* Score Board*/}
+        <div className="w-[50%] p-4 space-y-1">
           {/* Score Display */}
           {selected?.bib && selected?.run && (
-            <div className="text-md font-semibold bg-green-100 rounded p-2 text-center">
-              ATHLETE BIB: {selected.bib}, CURRENT RUN: {selected.run}
+            <div className="text-xl font-bold bg-green-100 rounded p-2 text-center">
+              BIB: {selected.bib} - RUN {selected.run}
             </div>
           )}
           <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem] mb-4">
@@ -271,8 +272,9 @@ export default function JudgingPanelClient({
           </div>
         </div>
 
-        <div className="flex-1/2 p-4 space-y-4 ">
-          {/* Athlete List */}
+
+        {/* Athlete List */}
+        <div className="w-[40%] p-4 space-y-4">
           <div className="w-full">
             <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
               <div>BIB</div>
