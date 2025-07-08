@@ -165,6 +165,12 @@ export default function JudgingPanelClient({
 
   const handleScoreSubmit = async () => {
 
+    if (Number(score) > 100){
+      alert("A score must be within 0 and 100.");
+      setScore("");
+      return;
+    }
+
     console.log("SUBMITTING:", {
       roundHeatId,
       runNum,
@@ -284,24 +290,29 @@ export default function JudgingPanelClient({
                 <div className="bg-gray-100 p-1">{bib}</div>
                 {runs.map(({ run_num }) => {
                   const key = `${athlete_id}-${run_num}`;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        console.log(
-                          `Selected athlete: ${bib}, run: ${run_num}`
-                        );
-                        setRunNum(run_num);
-                        setSelected({ bib, run: run_num, athlete_id });
-                      }}
-                      className="bg-gray-200 p-1 hover:bg-gray-300 "
-                    >
-                      {submittedScores[key] ?? "+"}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+                  const isActive =
+                    selected?.athlete_id === athlete_id && selected.run === run_num;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            console.log(`Selected athlete: ${bib}, run: ${run_num}`);
+                            setRunNum(run_num);
+                            setSelected({ bib, run: run_num, athlete_id });
+                          }}
+                          className={`
+                            p-1
+                            ${isActive
+                              ? "bg-blue-500 text-white font-bold"
+                              : "bg-gray-200 hover:bg-gray-300"}
+                          `}
+                        >
+                          {submittedScores[key] ?? "+"}
+                        </button>
+                      );
+                  })}
+                </div>
+              ))}
           </div>
         </div>
       </div>
