@@ -210,30 +210,28 @@ export default function JudgingPanelClient({
     }
   };
 
-  // Athlete List grid columns
-  const athletesGridCol = 1 + 3;
-
   return (
     <div>
       <div className="flex w-full h-screen">
 
         {/* Athlete List */}
-        <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%]">
-          <div className="w-full">
-            <div className="grid grid-cols-6 gap-0 text-sm font-semibold text-center mb-2">
+        <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%] ">
+          <div className="w-full border-1 border-solid border-black h-full">
+            <div className="grid grid-cols-4 gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div>BIB</div>
               {athletes.length > 0 &&
                 athletes[0].runs.map((run) => (
-                  <div key={run.run_num}>RUN {run.run_num}</div>
+                  <div className="border-l-1 border-black border-solid"
+                  key={run.run_num}>RUN {run.run_num}</div>
                 ))}
             </div>
 
             {athletes.map(({ athlete_id, bib, runs }) => (
               <div
                 key={athlete_id}
-                className="grid grid-cols-6 gap-0 text-center mb-0"
+                className="grid grid-cols-4 gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
               >
-                <div className="bg-gray-100 p-1">{bib}</div>
+                <div className="bg-gray-100 border-black border-solid border-b-1 flex items-center justify-center">{bib}</div>
                 {runs.map(({ run_num }) => {
                   const key = `${athlete_id}-${run_num}`;
                   const isActive =
@@ -247,10 +245,10 @@ export default function JudgingPanelClient({
                             setSelected({ bib, run: run_num, athlete_id });
                           }}
                           className={`
-                            p-1
+                            flex items-center justify-center
                             ${isActive
-                              ? "bg-blue-500 text-white font-bold"
-                              : "bg-gray-200 hover:bg-gray-300"}
+                              ? "bg-blue-500 text-white font-bold border-l-1 border-black border-solid border-b-1"
+                              : "bg-gray-200 hover:bg-gray-300 border-l-1 border-black border-solid border-b-1"}
                           `}
                         >
                           {submittedScores[key] ?? "+"}
@@ -263,7 +261,7 @@ export default function JudgingPanelClient({
         </div>
 
         {/* Score Board*/}
-        <div className="w-[50%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
+        <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
 
           {/* Score Display */}
           <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">            
@@ -309,19 +307,20 @@ export default function JudgingPanelClient({
         </div>
          
         {/* Best Scores List */}
-        <div className="w-[10%] p-4 space-y-4  pt-[2%] pb-[2%]">
-          <div className="w-full">
-            <div className="grid grid-cols-2 gap-0 text-sm font-semibold text-center mb-2">
-              <div>BIB</div>
+        <div className="w-[20%] p-4 space-y-4 pt-[2%] pb-[2%] text-3xl font-bold ">
+          <div className="w-full h-full border-solid border-1 border-black">
+            <div className="grid grid-cols-2 gap-0 text-center mb-0 border-b-1 border-black border-solid min-h-[2rem] text-2xl font-bold">
+              <div className="border-r-1 border-black border-solid">
+                BIB</div>
               <div>BEST</div>
             </div>
             {/* rows */}
             {bestScores.map(({ bib_num, best }) => (
               <div
                 key={bib_num}
-                className="grid grid-cols-2 gap-0 text-center mb-1"
+                className="grid grid-cols-2 gap-0 text-center mb-0 h-[5%] border-b-1 border-black border-solid font-semibold"
               >
-                <div className="bg-gray-100 p-1">{bib_num}</div>
+                <div className="bg-gray-100 p-1 border-r-1 border-black border-solid">{bib_num}</div>
                 <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
               </div>
             ))}
