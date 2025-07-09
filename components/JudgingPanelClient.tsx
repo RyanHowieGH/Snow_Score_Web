@@ -214,64 +214,6 @@ export default function JudgingPanelClient({
   return (
     <div>
       <div className="flex w-full h-screen">
-        <div className="w-[10%] p-4 space-y-4">
-          {/* Best Scores List */}
-          <div className="w-full">
-            <div className="grid grid-cols-2 gap-1 text-sm font-semibold text-center mb-2">
-              <div>BIB</div>
-              <div>BEST</div>
-            </div>
-            {/* rows */}
-            {bestScores.map(({ bib_num, best }) => (
-              <div
-                key={bib_num}
-                className="grid grid-cols-2 gap-1 text-center mb-1"
-              >
-                <div className="bg-gray-100 p-1">{bib_num}</div>
-                <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Score Board*/}
-        <div className="w-[50%] p-4 space-y-1">
-          {/* Score Display */}
-          {selected?.bib && selected?.run && (
-            <div className="text-xl font-bold bg-green-100 rounded p-2 text-center">
-              BIB: {selected.bib} - RUN {selected.run}
-            </div>
-          )}
-          <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem] mb-4">
-            {score}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={handleScoreSubmit}
-            disabled={!roundHeatId || !runNum || !score || eventIsFinished}
-            className="btn bg-orange-600 text-white w-full disabled:opacity-50"
-          >
-            {eventIsFinished ? "Event Finished" : "SUBMIT"}
-          </button>
-
-          {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-2 w-full mt-4">
-            {keys.map((key) => (
-              <button
-                key={key}
-                onClick={() => !eventIsFinished && handleClearButtonClick(key)}
-                className={`btn text-lg ${
-                  key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
-                } ${eventIsFinished ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={eventIsFinished}
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-        </div>
-
 
         {/* Athlete List */}
         <div className="w-[40%] p-4 space-y-4">
@@ -317,6 +259,65 @@ export default function JudgingPanelClient({
               ))}
           </div>
         </div>
+        
+        {/* Score Board*/}
+        <div className="w-[50%] p-4 space-y-1">
+          {/* Score Display */}
+          {selected?.bib && selected?.run && (
+            <div className="text-xl font-bold bg-green-100 rounded p-2 text-center">
+              BIB: {selected.bib} - RUN {selected.run}
+            </div>
+          )}
+          <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem] mb-4">
+            {score}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={handleScoreSubmit}
+            disabled={!roundHeatId || !runNum || !score || eventIsFinished}
+            className="btn bg-orange-600 text-white w-full disabled:opacity-50"
+          >
+            {eventIsFinished ? "Event Finished" : "SUBMIT"}
+          </button>
+
+          {/* Number Pad */}
+          <div className="grid grid-cols-3 gap-2 w-full mt-4">
+            {keys.map((key) => (
+              <button
+                key={key}
+                onClick={() => !eventIsFinished && handleClearButtonClick(key)}
+                className={`btn text-lg ${
+                  key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
+                } ${eventIsFinished ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={eventIsFinished}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-[10%] p-4 space-y-4">
+          {/* Best Scores List */}
+          <div className="w-full">
+            <div className="grid grid-cols-2 gap-1 text-sm font-semibold text-center mb-2">
+              <div>BIB</div>
+              <div>BEST</div>
+            </div>
+            {/* rows */}
+            {bestScores.map(({ bib_num, best }) => (
+              <div
+                key={bib_num}
+                className="grid grid-cols-2 gap-1 text-center mb-1"
+              >
+                <div className="bg-gray-100 p-1">{bib_num}</div>
+                <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   )
