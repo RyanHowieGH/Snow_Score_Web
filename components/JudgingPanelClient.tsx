@@ -112,7 +112,7 @@ export default function JudgingPanelClient({
   if (!verified) {
     return (
     <div className=" min-h-screen flex flex-col justify-center py-12 px-4">
-      <div className="max-w-xl w-full mx-auto bg-white border border-gray-200 rounded-lg shadow-md">
+      <div className="max-w-xl w-full mx-auto bg-white border border-gray-200 shadow-md">
         <div className="p-8 flex flex-col items-center">
           <Image
             src="/assets/goggles_borderless.png"
@@ -138,13 +138,13 @@ export default function JudgingPanelClient({
               onChange={handleCodeChange}
               inputMode="numeric"
               pattern="\d*"
-              className="block w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Access code"
             />
 
             <button
               type="submit"
-              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors duration-200"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 transition-colors duration-200"
             >
               Verify
             </button>
@@ -210,15 +210,17 @@ export default function JudgingPanelClient({
     }
   };
 
+  // Athlete List grid columns
+  const athletesGridCol = 1 + 3;
 
   return (
     <div>
       <div className="flex w-full h-screen">
 
         {/* Athlete List */}
-        <div className="w-[40%] p-4 space-y-4">
+        <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%]">
           <div className="w-full">
-            <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
+            <div className="grid grid-cols-6 gap-0 text-sm font-semibold text-center mb-2">
               <div>BIB</div>
               {athletes.length > 0 &&
                 athletes[0].runs.map((run) => (
@@ -229,7 +231,7 @@ export default function JudgingPanelClient({
             {athletes.map(({ athlete_id, bib, runs }) => (
               <div
                 key={athlete_id}
-                className="grid grid-cols-6 gap-1 text-center mb-1"
+                className="grid grid-cols-6 gap-0 text-center mb-0"
               >
                 <div className="bg-gray-100 p-1">{bib}</div>
                 {runs.map(({ run_num }) => {
@@ -259,35 +261,43 @@ export default function JudgingPanelClient({
               ))}
           </div>
         </div>
-        
+
         {/* Score Board*/}
-        <div className="w-[50%] p-4 space-y-1">
+        <div className="w-[50%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
+
           {/* Score Display */}
-          {selected?.bib && selected?.run && (
-            <div className="text-xl font-bold bg-green-100 rounded p-2 text-center">
-              BIB: {selected.bib} - RUN {selected.run}
+          <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">            
+            {selected?.bib && selected?.run && (
+              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
+                BIB {selected.bib}  -  RUN {selected.run}
+              </div>
+            )}
+            {!selected?.bib && !selected?.run && (
+              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
+                BIB #  -  RUN #
+              </div>
+            )}
+            <div className="text-6xl font-bold bg-green-100 w-full text-center min-h-[3rem] h-[80%] flex items-center justify-center">
+              {score}
             </div>
-          )}
-          <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem] mb-4">
-            {score}
           </div>
 
           {/* Submit Button */}
           <button
             onClick={handleScoreSubmit}
             disabled={!roundHeatId || !runNum || !score || eventIsFinished}
-            className="btn bg-orange-600 text-white w-full disabled:opacity-50"
+            className="bg-orange-600 text-gray-900 w-[50%] h-[10%] text-5xl font-bold border-solid border-black border-1"
           >
             {eventIsFinished ? "Event Finished" : "SUBMIT"}
           </button>
 
           {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-2 w-full mt-4">
+          <div className="grid grid-cols-3 gap-0 w-full mt-4 h-[60%]">
             {keys.map((key) => (
               <button
                 key={key}
                 onClick={() => !eventIsFinished && handleClearButtonClick(key)}
-                className={`btn text-lg ${
+                className={`btn text-5xl rounded-[0] border-solid border-black h-full ${
                   key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
                 } ${eventIsFinished ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={eventIsFinished}
@@ -297,11 +307,11 @@ export default function JudgingPanelClient({
             ))}
           </div>
         </div>
-
-        <div className="w-[10%] p-4 space-y-4">
-          {/* Best Scores List */}
+         
+        {/* Best Scores List */}
+        <div className="w-[10%] p-4 space-y-4  pt-[2%] pb-[2%]">
           <div className="w-full">
-            <div className="grid grid-cols-2 gap-1 text-sm font-semibold text-center mb-2">
+            <div className="grid grid-cols-2 gap-0 text-sm font-semibold text-center mb-2">
               <div>BIB</div>
               <div>BEST</div>
             </div>
@@ -309,7 +319,7 @@ export default function JudgingPanelClient({
             {bestScores.map(({ bib_num, best }) => (
               <div
                 key={bib_num}
-                className="grid grid-cols-2 gap-1 text-center mb-1"
+                className="grid grid-cols-2 gap-0 text-center mb-1"
               >
                 <div className="bg-gray-100 p-1">{bib_num}</div>
                 <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
