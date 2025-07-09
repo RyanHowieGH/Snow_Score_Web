@@ -13,8 +13,6 @@ type AthleteRun = {
 };
 
 export default function ScoreInput() {
-  const { eventId } = useParams();
-  const parsedEventId = eventId ? parseInt(eventId as string, 10) : null;
   const keys = [
     "1",
     "2",
@@ -42,11 +40,16 @@ export default function ScoreInput() {
   const [submittedScores, setSubmittedScores] = useState<
     Record<string, number>
   >({});
+  const { eventId, roundId, divisionId, personnelId } = useParams();
+  const parsedEventId = eventId ? parseInt(eventId as string, 10) : null;
+  const parsedRoundId = roundId ? parseInt(roundId as string, 10) : null;
+  const parsedDivisionId = divisionId ? parseInt(divisionId as string, 10) : null;
+  const parsedPersonnelId = personnelId ? parseInt(personnelId as string, 10) : null;
 
   useEffect(() => {
     if (!parsedEventId) return;
 
-    fetch(`/api/athletes?event_id=${parsedEventId}`)
+    fetch(`/api/athletes?event_id=${parsedEventId}&round_id=${parsedRoundId}&division_id=${parsedDivisionId}&round_heat_id=${roundHeatId}`)
       .then((res) => res.json())
       .then((data) => {
         console.log("API athletes data:", data);
@@ -57,7 +60,7 @@ export default function ScoreInput() {
         console.error("Failed to load athletes or event", err);
         setAthletes([]);
       });
-  }, [parsedEventId]);
+  }, [parsedEventId, parsedRoundId, parsedDivisionId, roundHeatId]);
 
   const handleClick = (value: string) => {
     if (value === "CLEAR") {
@@ -67,10 +70,8 @@ export default function ScoreInput() {
     }
   };
 
-  //Make personnel_id dynamic
-  // For now, hardcoded to 281
   const handleSubmit = async () => {
-    const personnel_id = 281; // Replace with actual personnel_id logic
+    const personnel_id = parsedPersonnelId; 
 
     console.log("SUBMITTING:", {
       roundHeatId,

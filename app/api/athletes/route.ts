@@ -39,9 +39,9 @@ export async function GET(req: NextRequest) {
     }
 
     const eventId = parseInt(eventIdParam, 10);
-    const roundId = parseInt(roundIdParam);
-    const divisionId = parseInt(divisionIdParam);
-    const roundHeatId = parseInt(roundHeatIdParam);
+    const roundId = parseInt(roundIdParam, 10);
+    const divisionId = parseInt(divisionIdParam, 10);
+    const roundHeatId = parseInt(roundHeatIdParam, 10);
 
     // Fetch the specific event by ID
     const eventResult = await pool.query(
@@ -58,10 +58,7 @@ export async function GET(req: NextRequest) {
     );
 
     if (eventResult.rowCount === 0) {
-      return NextResponse.json(
-        { error: "Event not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
     const event = eventResult.rows[0];
@@ -80,19 +77,25 @@ export async function GET(req: NextRequest) {
       JOIN ss_event_registrations reg ON hr.event_id = reg.event_id 
                                   AND hr.division_id = reg.division_id
                                   AND rr.athlete_id  = reg.athlete_id
-      WHERE       rr.event_id = $1
-         AND rr.round_heat_id = $2
+      JOIN ss_round_details rd ON rr.event_id = rd.event_id
+      WHERE rr.event_id = $1
+        AND rd.round_id = $2
+        AND hr.division_id = $3
+        AND rr.round_heat_id = $4
       ORDER BY rr.athlete_id, rr.run_num, rr.round_heat_id
       `,
-      [eventId, roundHeatId]
+      [eventId, roundId, divisionId, roundHeatId]
     );
 
     // Build unique athlete -> runs map
-    const athletesMap = new Map<number, {
-      athlete_id: number;
-      bib: number;
-      runs: { run_num: number; round_heat_id: number }[];
-    }>();
+    const athletesMap = new Map<
+      number,
+      {
+        athlete_id: number;
+        bib: number;
+        runs: { run_num: number; round_heat_id: number }[];
+      }
+    >();
 
     for (const row of athletesResult.rows) {
       if (!athletesMap.has(row.athlete_id)) {
@@ -114,7 +117,6 @@ export async function GET(req: NextRequest) {
       event,
       athletes: Array.from(athletesMap.values()),
     });
-
   } catch (err) {
     console.error("Error fetching athletes:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
