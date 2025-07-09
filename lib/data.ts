@@ -3,6 +3,8 @@ import getDbPool from './db';
 import { PoolClient } from 'pg';
 import { HeatForSchedule } from './definitions'; // You will create this type next
 import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
+import type { RegisteredAthleteWithDivision } from './definitions';
+
 
 // Import types from the centralized definitions file
 import type {
@@ -528,5 +530,68 @@ export async function fetchScheduleHeats(eventId: number): Promise<ScheduleHeatI
   } catch (error) {
     console.error('Database Error fetching schedule heats:', error);
     throw new Error('Failed to fetch schedule heats.');
+  }
+}
+
+/**
+ * Fetches only the divisions that are specifically assigned to a given event.
+ * This is crucial for the athlete registration process.
+ * @param eventId The ID of the event.
+ * @returns A promise that resolves to an array of Division objects, including num_rounds.
+ */
+export async function getDivisionsForEvent(eventId: number): Promise<Division[]> {
+    console.log(`[data.ts] Fetching assigned divisions for event ID: ${eventId}`);
+    if (isNaN(eventId)) {
+        console.error("getDivisionsForEvent: Invalid event ID provided.");
+        return [];
+    }
+
+    const pool = getDbPool();
+    try {
+        const query = `
+            SELECT
+                d.division_id,
+                d.division_name,
+                ed.num_rounds
+            FROM ss_division d
+            JOIN ss_event_divisions ed ON d.division_id = ed.division_id
+            WHERE ed.event_id = $1
+            ORDER BY d.division_name;
+        `;
+        
+        const result = await pool.query<Division>(query, [eventId]);
+        console.log(`[data.ts] Found ${result.rows.length} divisions for event ${eventId}.`);
+        return result.rows;
+    } catch (error) {
+        console.error(`[data.ts] Database Error fetching divisions for event ${eventId}:`, error);
+        throw new Error('Failed to fetch event divisions.');
+    }
+}
+
+export async function fetchRosterForEvent(eventId: number): Promise<RegisteredAthleteWithDivision[]> {
+  console.log(`[data.ts] Fetching full roster for event ID: ${eventId}`);
+  if (isNaN(eventId)) return [];
+
+  const pool = getDbPool();
+  try {
+    const query = `
+      SELECT
+        a.athlete_id,
+        a.first_name,
+        a.last_name,
+        er.bib_num,
+        d.division_id,
+        d.division_name
+      FROM ss_athletes a
+      JOIN ss_event_registrations er ON a.athlete_id = er.athlete_id
+      JOIN ss_division d ON er.division_id = d.division_id
+      WHERE er.event_id = $1
+      ORDER BY d.division_name, a.last_name, a.first_name;
+    `;
+    const result = await pool.query(query, [eventId]);
+    return result.rows;
+  } catch (error) {
+    console.error(`[data.ts] Database Error fetching roster for event ${eventId}:`, error);
+    throw new Error('Failed to fetch event roster.');
   }
 }
