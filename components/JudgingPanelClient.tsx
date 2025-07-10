@@ -68,7 +68,13 @@ export default function JudgingPanelClient({
     if (!eventId) return;
 
     fetch(`/api/athletes?event_id=${eventId}&round_id=${roundId}&division_id=${divisionId}&round_heat_id=${roundHeatId}`)
-      .then((res) => res.json())
+      .then(async (res) => {
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) {
+          return res.json();
+        }
+        throw new Error('Invalid JSON response');
+      })      
       .then((data) => {
         console.log("API athletes data:", data);
         setAthletes(data.athletes);
@@ -78,7 +84,7 @@ export default function JudgingPanelClient({
         console.error("Failed to load athletes or event or best scores", err);
         setAthletes([]);
       });
-  }, [eventId, roundId, divisionId]);
+  }, [eventId, roundId, divisionId, roundHeatId]);
 
   useEffect(() => {
     if (!roundHeatId) return;
@@ -112,7 +118,7 @@ export default function JudgingPanelClient({
   if (!verified) {
     return (
     <div className=" min-h-screen flex flex-col justify-center py-12 px-4">
-      <div className="max-w-xl w-full mx-auto bg-white border border-gray-200 rounded-lg shadow-md">
+      <div className="max-w-xl w-full mx-auto bg-white border border-gray-200 shadow-md">
         <div className="p-8 flex flex-col items-center">
           <Image
             src="/assets/goggles_borderless.png"
@@ -138,13 +144,13 @@ export default function JudgingPanelClient({
               onChange={handleCodeChange}
               inputMode="numeric"
               pattern="\d*"
-              className="block w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Access code"
             />
 
             <button
               type="submit"
-              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded transition-colors duration-200"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 transition-colors duration-200"
             >
               Verify
             </button>
@@ -165,6 +171,12 @@ export default function JudgingPanelClient({
 
   const handleScoreSubmit = async () => {
 
+    if (Number(score) > 100){
+      alert("A score must be within 0 and 100.");
+      setScore("");
+      return;
+    }
+
     console.log("SUBMITTING:", {
       roundHeatId,
       runNum,
@@ -178,7 +190,7 @@ export default function JudgingPanelClient({
       body: JSON.stringify({
         round_heat_id: roundHeatId,
         run_num: runNum,
-        personnelId,
+        personnel_id: personnelId,
         score: parseFloat(score),
       }),
     });
@@ -204,57 +216,92 @@ export default function JudgingPanelClient({
     }
   };
 
-
   return (
     <div>
-      <div className="flex flex-row-reverse w-full h-screen">
-        <div className="flex-1/2 p-4 space-y-4">
-          {/* Best Scores List */}
-          <div className="w-full">
-            <div className="grid grid-cols-2 gap-1 text-sm font-semibold text-center mb-2">
+      <div className="flex w-full h-screen">
+
+        {/* Athlete List */}
+        <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%] ">
+          <div className="w-full border-1 border-solid border-black h-full">
+            <div className="grid grid-cols-4 gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div>BIB</div>
-              <div>BEST</div>
+              {athletes.length > 0 &&
+                athletes[0].runs.map((run) => (
+                  <div className="border-l-1 border-black border-solid"
+                  key={run.run_num}>RUN {run.run_num}</div>
+                ))}
             </div>
-            {/* rows */}
-            {bestScores.map(({ bib_num, best }) => (
+
+            {athletes.map(({ athlete_id, bib, runs }) => (
               <div
-                key={bib_num}
-                className="grid grid-cols-2 gap-1 text-center mb-1"
+                key={athlete_id}
+                className="grid grid-cols-4 gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
               >
-                <div className="bg-gray-100 p-1">{bib_num}</div>
-                <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
-              </div>
-            ))}
+                <div className="bg-gray-100 border-black border-solid border-b-1 flex items-center justify-center">{bib}</div>
+                {runs.map(({ run_num }) => {
+                  const key = `${athlete_id}-${run_num}`;
+                  const isActive =
+                    selected?.athlete_id === athlete_id && selected.run === run_num;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            console.log(`Selected athlete: ${bib}, run: ${run_num}`);
+                            setRunNum(run_num);
+                            setSelected({ bib, run: run_num, athlete_id });
+                          }}
+                          className={`
+                            flex items-center justify-center
+                            ${isActive
+                              ? "bg-blue-500 text-white font-bold border-l-1 border-black border-solid border-b-1"
+                              : "bg-gray-200 hover:bg-gray-300 border-l-1 border-black border-solid border-b-1"}
+                          `}
+                        >
+                          {submittedScores[key] ?? `+`}
+                        </button>
+                      );
+                  })}
+                </div>
+              ))}
           </div>
         </div>
 
-        <div className=" flex-1/2 p-4 space-y-1">
+        {/* Score Board*/}
+        <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
+
           {/* Score Display */}
-          {selected?.bib && selected?.run && (
-            <div className="text-md font-semibold bg-green-100 rounded p-2 text-center">
-              ATHLETE BIB: {selected.bib}, CURRENT RUN: {selected.run}
+          <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">
+            {selected?.bib && selected?.run && (
+              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
+                BIB {selected.bib}  -  RUN {selected.run}
+              </div>
+            )}
+            {!selected?.bib && !selected?.run && (
+              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
+                BIB #  -  RUN #
+              </div>
+            )}
+            <div className="text-6xl font-bold bg-green-100 w-full text-center min-h-[3rem] h-[80%] flex items-center justify-center">
+              {score}
             </div>
-          )}
-          <div className="text-4xl font-bold bg-green-100 p-4 rounded w-full text-center min-h-[3rem] mb-4">
-            {score}
           </div>
 
           {/* Submit Button */}
           <button
             onClick={handleScoreSubmit}
             disabled={!roundHeatId || !runNum || !score || eventIsFinished}
-            className="btn bg-orange-600 text-white w-full disabled:opacity-50"
+            className="bg-orange-600 text-gray-900 w-[50%] h-[10%] text-5xl font-bold border-solid border-black border-1"
           >
             {eventIsFinished ? "Event Finished" : "SUBMIT"}
           </button>
 
           {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-2 w-full mt-4">
+          <div className="grid grid-cols-3 gap-0 w-full mt-4 h-[60%]">
             {keys.map((key) => (
               <button
                 key={key}
                 onClick={() => !eventIsFinished && handleClearButtonClick(key)}
-                className={`btn text-lg ${
+                className={`btn text-5xl rounded-[0] border-solid border-black h-full ${
                   key === "CLEAR" ? "col-span-2 bg-yellow-400" : "bg-yellow-300"
                 } ${eventIsFinished ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={eventIsFinished}
@@ -264,46 +311,28 @@ export default function JudgingPanelClient({
             ))}
           </div>
         </div>
-
-        <div className="flex-1/2 p-4 space-y-4 ">
-          {/* Athlete List */}
-          <div className="w-full">
-            <div className="grid grid-cols-6 gap-1 text-sm font-semibold text-center mb-2">
-              <div>BIB</div>
-              {athletes.length > 0 &&
-                athletes[0].runs.map((run) => (
-                  <div key={run.run_num}>RUN {run.run_num}</div>
-                ))}
+         
+        {/* Best Scores List */}
+        <div className="w-[20%] p-4 space-y-4 pt-[2%] pb-[2%] text-3xl font-bold ">
+          <div className="w-full h-full border-solid border-1 border-black">
+            <div className="grid grid-cols-2 gap-0 text-center mb-0 border-b-1 border-black border-solid min-h-[2rem] text-2xl font-bold">
+              <div className="border-r-1 border-black border-solid">
+                BIB</div>
+              <div>BEST</div>
             </div>
-
-            {athletes.map(({ athlete_id, bib, runs }) => (
+            {/* rows */}
+            {bestScores.map(({ bib_num, best }) => (
               <div
-                key={athlete_id}
-                className="grid grid-cols-6 gap-1 text-center mb-1"
+                key={bib_num}
+                className="grid grid-cols-2 gap-0 text-center mb-0 h-[5%] border-b-1 border-black border-solid font-semibold"
               >
-                <div className="bg-gray-100 p-1">{bib}</div>
-                {runs.map(({ run_num }) => {
-                  const key = `${athlete_id}-${run_num}`;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        console.log(
-                          `Selected athlete: ${bib}, run: ${run_num}`
-                        );
-                        setRunNum(run_num);
-                        setSelected({ bib, run: run_num, athlete_id });
-                      }}
-                      className="bg-gray-200 p-1 hover:bg-gray-300 "
-                    >
-                      {submittedScores[key] ?? "+"}
-                    </button>
-                  );
-                })}
+                <div className="bg-gray-100 p-1 border-r-1 border-black border-solid">{bib_num}</div>
+                <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
               </div>
             ))}
           </div>
         </div>
+
       </div>
     </div>
   )

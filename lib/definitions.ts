@@ -39,6 +39,7 @@ export interface RegisteredAthlete {
     first_name: string;
     last_name: string;
     bib_num?: string | null; // Made bib_num optional string or null
+    division_id: number;
 }
 
 export interface HeadJudge {
