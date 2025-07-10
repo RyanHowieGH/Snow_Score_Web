@@ -68,7 +68,13 @@ export default function JudgingPanelClient({
     if (!eventId) return;
 
     fetch(`/api/athletes?event_id=${eventId}&round_id=${roundId}&division_id=${divisionId}&round_heat_id=${roundHeatId}`)
-      .then((res) => res.json())
+      .then(async (res) => {
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) {
+          return res.json();
+        }
+        throw new Error('Invalid JSON response');
+      })      
       .then((data) => {
         console.log("API athletes data:", data);
         setAthletes(data.athletes);
@@ -78,7 +84,7 @@ export default function JudgingPanelClient({
         console.error("Failed to load athletes or event or best scores", err);
         setAthletes([]);
       });
-  }, [eventId, roundId, divisionId]);
+  }, [eventId, roundId, divisionId, roundHeatId]);
 
   useEffect(() => {
     if (!roundHeatId) return;
@@ -251,7 +257,7 @@ export default function JudgingPanelClient({
                               : "bg-gray-200 hover:bg-gray-300 border-l-1 border-black border-solid border-b-1"}
                           `}
                         >
-                          {submittedScores[key] ?? "+"}
+                          {submittedScores[key] ?? `+`}
                         </button>
                       );
                   })}
@@ -264,7 +270,7 @@ export default function JudgingPanelClient({
         <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
 
           {/* Score Display */}
-          <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">            
+          <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">
             {selected?.bib && selected?.run && (
               <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
                 BIB {selected.bib}  -  RUN {selected.run}

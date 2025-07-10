@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
          AND er.division_id = hr.division_id
          AND er.athlete_id = hr.athlete_id
         WHERE hr.round_heat_id = $1
-        ORDER BY best DESC
+        ORDER BY bib_num ASC
       `,
       [roundHeatId]
     );
