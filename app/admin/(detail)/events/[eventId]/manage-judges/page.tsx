@@ -1,7 +1,3 @@
-
-
-
-// app/admin/(detail)/events/[eventId]/manage-athletes/page.tsx
 import React from 'react'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'

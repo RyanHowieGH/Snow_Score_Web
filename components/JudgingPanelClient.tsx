@@ -51,6 +51,7 @@ export default function JudgingPanelClient({
   ] as const;
 
   const [athletes, setAthletes] = useState<AthleteRun[]>([]);
+  // const [selectedAthlete, setSelectedAthlete] = useState<number>();
   const [score, setScore] = useState("");
   const [runNum, setRunNum] = useState<number | null>(null);
   const [selected, setSelected] = useState<{
@@ -189,11 +190,13 @@ export default function JudgingPanelClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         round_heat_id: roundHeatId,
-        run_num: runNum,
+        run_num: selected?.run,
         personnel_id: personnelId,
         score: parseFloat(score),
+        athlete_id: selected?.athlete_id,
       }),
     });
+        console.log(`--- SELECTED RUN_NUM: ${selected?.run}, SCORE: ${score}, PERSONNEL_ID: ${personnelId}, ATHLETE_ID: ${selected?.athlete_id}, ROUND_HEAT_ID: ${roundHeatId}`)
 
     const data = await response.json();
     console.log("Score submission response:", data);
@@ -257,7 +260,7 @@ export default function JudgingPanelClient({
                               : "bg-gray-200 hover:bg-gray-300 border-l-1 border-black border-solid border-b-1"}
                           `}
                         >
-                          {submittedScores[key] ?? `+`}
+                          {submittedScores[key] ?? `+${athlete_id}`}
                         </button>
                       );
                   })}
