@@ -20,7 +20,7 @@ type StandingData = {
   round_heat_id: number;
 };
 
-const Page = () => {
+const HeadJudgePanel = () => {
   const [heats, setHeats] = useState<HeatData[]>([]);
   const [standings, setStandings] = useState<StandingData[]>([]);
 
@@ -78,18 +78,6 @@ const Page = () => {
               best: heat.best,
             }))}
         />
-        <HeatTable
-          title="Heat 2 Judge Scores"
-          data={heats
-            .filter((heat: HeatData) => heat.round_heat_id === 2)
-            .map((heat: HeatData, index: number) => ({
-              bib: heat.bib,
-              athlete: heat.athlete,
-              rank: index + 1,
-              run1: heat.run1,
-              run2: heat.run2,
-            }))}
-        />
       </main>
 
       <aside className="w-96 p-6 bg-white space-y-6">
@@ -102,18 +90,9 @@ const Page = () => {
               best: s.runs,
             }))}
         />
-        <Standing
-          title="Heat 2 Standings"
-          data={standings
-            .filter((s: StandingData) => s.round_heat_id === 2)
-            .map((s: StandingData) => ({
-              athlete: s.athlete,
-              best: s.runs,
-            }))}
-        />
       </aside>
     </div>
   );
 };
 
-export default Page;
+export default HeadJudgePanel;
