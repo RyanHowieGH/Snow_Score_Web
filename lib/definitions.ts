@@ -32,6 +32,16 @@ export interface Judge {
     event_id: number;
 }
 
+
+export interface RegisteredAthlete {
+    athlete_id: number;
+    first_name: string;
+    last_name: string;
+    bib_num?: string | null; // Made bib_num optional string or null
+    division_id: number;
+}
+
+
 export interface HeadJudge {
     event_id: number;
     user_id: number;
@@ -62,12 +72,12 @@ export interface Athlete {
 }
 
 // Represents a simple view of an athlete registered for an event.
-export interface RegisteredAthlete {
-    athlete_id: number;
-    first_name: string;
-    last_name: string;
-    bib_num?: string | null;
-}
+//export interface RegisteredAthlete {
+ //   athlete_id: number;
+ //   first_name: string;
+ //   last_name: string;
+ //   bib_num?: string | null;
+//}
 
 // Extends RegisteredAthlete to include their specific division for roster lists.
 export interface RegisteredAthleteWithDivision extends RegisteredAthlete {
