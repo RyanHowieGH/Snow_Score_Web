@@ -9,8 +9,6 @@ type HeatData = {
   bib: number;
   athlete: string;
   rank: number;
-  run1: number | string;
-  run2: number | string;
   runs: (number | string)[];
   best: number | string;
   round_heat_id: number[];
@@ -39,19 +37,17 @@ const HeadJudgePanel = () => {
           data.map((heat: HeatData) => ({
             bib: heat.bib,
             athlete: heat.athlete,
-            run1: heat.runs[0] || "DNI",
-            run2: heat.runs[1] || "DNI",
-            best: heat.runs[0] > heat.runs[1] ? heat.runs[0] : heat.runs[1],
+            runs: heat.runs,
+            best: Math.max(...heat.runs.map(Number).filter((n) => !isNaN(n))),
             round_heat_id: heat.round_heat_id,
           }))
         );
         setStandings(
           data.map((standings: StandingData) => ({
             athlete: standings.athlete,
-            runs:
-              standings.runs[0] > standings.runs[1]
-                ? standings.runs[0]
-                : standings.runs[1],
+            runs: Math.max(
+              ...standings.runs.map(Number).filter((n) => !isNaN(n))
+            ),
             round_heat_id: standings.round_heat_id,
           }))
         );
@@ -88,8 +84,7 @@ const HeadJudgePanel = () => {
                 bib: heat.bib,
                 athlete: heat.athlete,
                 rank: index + 1,
-                run1: heat.run1,
-                run2: heat.run2,
+                runs: heat.runs,
                 best: heat.best,
               }))}
           />
