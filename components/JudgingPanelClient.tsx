@@ -260,7 +260,7 @@ export default function JudgingPanelClient({
                               : "bg-gray-200 hover:bg-gray-300 border-l-1 border-black border-solid border-b-1"}
                           `}
                         >
-                          {submittedScores[key] ?? `+${athlete_id}`}
+                          {submittedScores[key] ?? `+`}
                         </button>
                       );
                   })}
