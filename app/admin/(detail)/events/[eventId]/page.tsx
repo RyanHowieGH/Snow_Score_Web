@@ -10,6 +10,7 @@ import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
 import type { AppUserWithRole } from "@/lib/auth/user";
 import type { Metadata } from "next";
 import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
+import PublishEventButton from '@/components/PublishEventButton';
 
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
@@ -221,12 +222,11 @@ export default async function AdminEventDetailPage({
       {/* Optional: Publish button */}
       {event.status?.toLowerCase() === "draft" && (
         <div className="mt-8 pt-6 border-t border-base-300 text-center">
-          <button className="btn btn-success btn-lg">Publish Event</button>
-          <p className="text-xs text-base-content/60 mt-2">
-            Make this event visible to the public and open for registrations (if
-            applicable).
-          </p>
-        </div>
+    <PublishEventButton eventId={eventId} />
+    <p className="text-xs text-base-content/60 mt-2">
+        Make this event visible to the public and open for registrations (if applicable).
+    </p>
+</div>
       )}
     </div>
   );
