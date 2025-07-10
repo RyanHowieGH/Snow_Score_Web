@@ -5,12 +5,17 @@ export async function POST(req: Request) {
   const pool = getDbPool();
 
   try {
-    const { round_heat_id, run_num, personnel_id, score } = await req.json();
+    const { round_heat_id, run_num, personnel_id, score, athlete_id } = await req.json();
 
     // Step 1: Get the correct run_result_id
     const result = await pool.query(
-      `SELECT run_result_id FROM ss_run_results WHERE round_heat_id = $1 AND run_num = $2`,
-      [round_heat_id, run_num]
+      `SELECT run_result_id 
+       FROM ss_run_results rr
+       WHERE round_heat_id = $1
+               AND run_num = $2
+               AND athlete_id = $3
+      `,
+      [round_heat_id, run_num, athlete_id]
     );
 
     if (result.rowCount === 0) {
@@ -19,7 +24,6 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
-
     const run_result_id = result.rows[0].run_result_id;
 
     // Step 2: Insert into ss_run_scores
