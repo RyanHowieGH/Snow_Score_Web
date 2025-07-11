@@ -35,7 +35,7 @@ export default function Header({ eventName = null }) {
                     />
                 </Link>
                 {eventName && (
-                    <span className="ml-4 text-xl font-semibold hidden sm:inline">
+                    <span className="ml-4 text-3xl font-semibold hidden sm:inline">
                         {eventName}
                     </span>
                 )}
@@ -43,10 +43,10 @@ export default function Header({ eventName = null }) {
 
             {/* Right Side: Navigation Links and Auth Button */}
             <div className="flex-none flex items-center gap-8 mr-4"> {/* Ensure items-center for vertical alignment */}
-                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content hover:bg-primary-focus text-xl">
+                 <Link href="/admin/athletes" className="btn btn-ghost text-primary-content hover:bg-primary-focus text-2xl">
                     Athletes
                  </Link>
-                 <Link href="/admin/events" className="btn btn-ghost text-primary-content hover:bg-primary-focus text-xl mr-2">
+                 <Link href="/admin/events" className="btn btn-ghost text-primary-content hover:bg-primary-focus text-2xl mr-2">
                     Events
                  </Link>
 
@@ -54,11 +54,17 @@ export default function Header({ eventName = null }) {
                 {authEnabled && (
                     <>
                         <SignedIn>
-                            {/* User is signed in - UserButton includes profile & sign out */}
                             <div className="ml-2">
                                 <UserButton afterSignOutUrl="/" appearance={{
                                     elements: {
-                                        userButtonAvatarBox: "w-10 h-10",
+                                        userButtonTrigger: {
+                                            "width": "2.5rem", // 48px
+                                            "height": "2.5rem"
+                                        },
+                                        userButtonAvatarBox: {
+                                            "width": "2.5rem",
+                                            "height": "2.5rem"
+                                        },
                                         userButtonPopoverCard: "bg-base-100 text-base-content"
                                     }
                                 }}/>
