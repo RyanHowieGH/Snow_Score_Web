@@ -26,7 +26,7 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
 
   return (
     <div className={`${baseClasses} ${widthClasses}`}>
-      <nav className={`text-lg flex flex-col space-y-2 p-4 flex-grow transition-opacity duration-200 ease-in-out delay-150 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <nav className={`text-lg flex flex-col space-y-2 p-4 flex-grow max-h-fit transition-opacity duration-200 ease-in-out delay-150 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {isOpen && (
           <>
             {/* Standard Links */}
@@ -58,23 +58,23 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
             </Link>
           </>
         )}
-         {!isOpen && (
-             <div className="flex flex-col items-center space-y-4 mt-4">
-             </div>
-         )}
+        {!isOpen && (
+          <div className="flex flex-col items-center space-y-4 mt-4">
+          </div>
+        )}
       </nav>
 
       {/* Toggle Button Area */}
       <div className="p-4 border-t border-primary-focus">
         {/* ... toggle button JSX ... */}
-         <button
-           onClick={toggleSidebar}
-           className="flex items-center justify-center w-full text-primary-content/80 hover:text-primary-content focus:outline-none"
-           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-           aria-expanded={isOpen}
-         >
-           {isOpen ? <ChevronDoubleLeftIcon className="h-6 w-6" /> : <ChevronDoubleRightIcon className="h-6 w-6" />}
-         </button>
+        <button
+          onClick={toggleSidebar}
+          className="flex items-center justify-center w-full text-primary-content/80 hover:text-primary-content focus:outline-none pb-1"
+          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          aria-expanded={isOpen}
+        >
+          {isOpen ? <ChevronDoubleLeftIcon className="h-6 w-6" /> : <ChevronDoubleRightIcon className="h-6 w-6" />}
+        </button>
       </div>
     </div>
   );

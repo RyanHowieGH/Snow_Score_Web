@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@layer utilities {
+  .h-screen-minus-header {
+    /* Adjust 4rem to your actual header height */
+    height: calc(100vh - 5rem); 
+  }
+}
 
 @plugin "daisyui/theme" {
   name: "mytheme";
