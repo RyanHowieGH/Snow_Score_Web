@@ -35,7 +35,7 @@ export default function Header({ eventName = null }) {
                     />
                 </Link>
                 {eventName && (
-                    <span className="ml-4 text-3xl font-semibold hidden sm:inline">
+                    <span className="ml-4 pl-2 text-3xl font-semibold hidden sm:inline">
                         {eventName}
                     </span>
                 )}
