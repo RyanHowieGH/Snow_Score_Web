@@ -66,10 +66,10 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
         CHANGE 3: Added `mt-auto`.
         This pushes the button container to the bottom of the flexbox.
       */}
-      <div className="mt-auto p-4 border-t border-primary-focus">
+      <div className="mt-auto p-4">
         <button
           onClick={toggleSidebar}
-          className="flex items-center justify-center w-full text-primary-content/80 hover:text-primary-content focus:outline-none pb-1"
+          className="flex items-center justify-end-safe w-full text-primary-content/80 hover:text-primary-content focus:outline-none hover:cursor-pointer"
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
           aria-expanded={isOpen}
         >
