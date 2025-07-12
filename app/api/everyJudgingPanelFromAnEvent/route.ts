@@ -11,7 +11,7 @@ export async function GET(event_id: number) {
         JOIN ss_heats_results hr ON hr.round_heat_id = hd.round_heat_id
         JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
         JOIN ss_event_judges ej ON rd.event_id = ej.event_id
-        JOIN ss_events e ON e.event_id = rd.event_id;
+        JOIN ss_events e ON e.event_id = rd.event_id
         WHERE ej.event_id = $1;
          `,
         [event_id]);

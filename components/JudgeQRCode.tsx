@@ -7,7 +7,8 @@ export default async function JudgeQRCode(
   divisionId: string, 
   roundId: string,
   roundHeatId: string,
-  personnelId: string) {
+  personnelId: string,
+  passcode: number) {
 
   const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL_PRODUCTION}/events`;
   const url = `${baseUrl}/${eventId}/${divisionId}/${roundId}/${roundHeatId}/${personnelId}`;
@@ -19,7 +20,14 @@ export default async function JudgeQRCode(
           alt={'QR code for judging panel.'}
           width={200}
           height={200}
-        />
+        />        
+        <div className='flex mt-1'>
+          <div className='font-bold mr-1'>Access code: </div>
+          <div>
+            {passcode}
+          </div>
+        </div>
+        
         <CopyUrlButton 
         url={url} />
     </div>    

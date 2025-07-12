@@ -70,48 +70,34 @@ export async function GET(req: NextRequest) {
     const athletesResult = await pool.query(
       `
       SELECT DISTINCT ON (rr.athlete_id, rr.run_num)
-        rr.athlete_id,
-        reg.bib_num AS bib,
-        rr.run_num,
-        hr.round_heat_id,
-        hr.division_id
-      FROM ss_run_results rr
-      JOIN ss_heat_results hr ON rr.round_heat_id = hr.round_heat_id
-      JOIN ss_event_registrations reg ON hr.event_id = reg.event_id 
-                                  AND hr.division_id = reg.division_id
-                                  AND rr.athlete_id  = reg.athlete_id
-      WHERE       rr.event_id = $1
-         AND rr.round_heat_id = $2
-      ORDER BY rr.athlete_id, rr.run_num, rr.round_heat_id
-      `,
+          rr.athlete_id,
+          reg.bib_num AS bib,
+          rr.run_num,
+          hr.round_heat_id,
+          hr.division_id,
+          hr.seeding
+        FROM ss_run_results rr
+        JOIN ss_heat_results hr ON rr.round_heat_id = hr.round_heat_id
+        JOIN ss_event_registrations reg ON hr.event_id = reg.event_id 
+                                    AND hr.division_id = reg.division_id
+                                    AND rr.athlete_id  = reg.athlete_id
+        WHERE    rr.event_id = $1
+        AND rr.round_heat_id = $2
+        ORDER BY rr.athlete_id,
+                 rr.run_num,
+                 hr.seeding;
+    `,
       [eventId, roundHeatId]
     );
 
 
-  //   SELECT DISTINCT ON (rr.athlete_id, rr.run_num)
-  //       rr.athlete_id,
-  //       reg.bib_num AS bib,
-  //       rr.run_num,
-  //       hr.round_heat_id,
-  //       hr.division_id,
-  //       hr.seeding
-  //     FROM ss_run_results rr
-  //     JOIN ss_heat_results hr ON rr.round_heat_id = hr.round_heat_id
-  //     JOIN ss_event_registrations reg ON hr.event_id = reg.event_id 
-  //                                 AND hr.division_id = reg.division_id
-  //                                 AND rr.athlete_id  = reg.athlete_id
-  //     WHERE       rr.event_id = 100
-  //        AND rr.round_heat_id = 45
-  //     ORDER BY 
-  // rr.athlete_id,
-  // rr.run_num,
-  // hr.seeding;
+
 
     // Build unique athlete -> runs map
     const athletesMap = new Map<number, {
       athlete_id: number;
       bib: number;
-      runs: { run_num: number; round_heat_id: number }[];
+      runs: { run_num: number; round_heat_id: number; seeding: number }[];
     }>();
 
     for (const row of athletesResult.rows) {
@@ -126,6 +112,7 @@ export async function GET(req: NextRequest) {
       athletesMap.get(row.athlete_id)!.runs.push({
         run_num: row.run_num,
         round_heat_id: row.round_heat_id,
+        seeding: row.seeding,
       });
     }
 
