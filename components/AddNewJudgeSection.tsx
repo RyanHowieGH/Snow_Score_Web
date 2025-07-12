@@ -46,88 +46,14 @@ export default function AddNewJudgeSection({
         }
     };
 
-    function handleAdd(judge: Judge) {
-        try{
-            // take judge value from the selected item from dropdown and write into database > async
-            // useEffect to fetch the judge list
-        } catch (error) {
-            console.error('Failed to add new judge', error);
-        }
-        finally{
-            setOpenAddJudge(false);
-        }
-    };
-
     return(
         <div>
             {/* ADD NEW JUDGE */}
             <button 
-            className="btn  mt-2 p-2 border-green-400 border-solid border-2 font-bold w-25" 
-            onClick={() => setOpenAddJudge(true)}>
-                Add +
+            className="btn btn-danger w-[10%] ml-[0] mt-[1%]" 
+            onClick={() =>  setCreateNewJudge(true)}>
+                Add judge
             </button>
-
-            {/* ADD NEW JUDGE FROM LIST */}
-                <Modal open={openAddJudge} onClose={() => setOpenAddJudge(false)}>
-                    <div className="text-center">
-                    <div className="mx-auto my-2 w-48">
-                        <h5 className="text-lg font-black text-gray-800 text-center">                                                                            
-                        Add Judge
-                        </h5>
-                        {/* <p className=" text-gray-498 mt-2">
-                            DO WE WANT TO HAVE ANYTHING AS A SUBTITLE? 
-                        </p> */}
-                    </div>
-                            <select
-                                id="selectedJudgeToAdd"
-                                value={confirmJudgeToAdd}
-                                onChange={e => setConfirmJudgeToAdd(e.target.value)}
-                                className="border border-gray-298 rounded px-2 py-1 w-full text-black">
-                                    <option 
-                                        value="" 
-                                        disabled>
-                                            Registered Judges
-                                    </option>
-
-                                {judges?.map((judge) => (
-                                <option 
-                                    key={judge.personnel_id} 
-                                    value={judge.personnel_id}>
-                                        {judge.name ?? judge.header}
-                                </option>
-                                ))}
-                            </select>
-
-                    <div className="flex gap-2 mt-5">
-                        <button 
-                        className="btn btn-danger w-[52%] ml-[-5]"
-                        onClick={() => {
-                            const selectedJudge = judges?.find(
-                                j => j.personnel_id === confirmJudgeToAdd) ?? null;
-                            if (selectedJudge) 
-                                {
-                                    handleAdd(selectedJudge);
-                                }
-                            setOpenAddJudge(false);
-                        }}
-                        >Add</button>
-                        <button
-                        className="btn btn-danger w-[52%] ml-[-5]"
-                        onClick={() => setOpenAddJudge(false)}>
-                        Cancel
-                        </button>
-                    </div>
-                    <div>
-                        <button
-                        className="btn bg-green-598 mt-2 w-full border-green-700"
-                        onClick={() => {
-                            setOpenAddJudge(false);
-                            setCreateNewJudge(true)}}>
-                                Create New
-                        </button>
-                    </div>
-                    </div>
-                </Modal>
 
 
             {/* CREATE AND ADD NEW JUDGE */}
