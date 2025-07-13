@@ -32,7 +32,7 @@ export default function JudgeEventSpecificSection({ judges, event_id }: JudgesPr
 
 async function deleteJudge(eventId: number, personnelId: string) {
   try {
-    const result = await fetch('/api/delete-judge-from-event', {
+    await fetch('/api/delete-judge-from-event', {
       method: 'DELETE',
       body: JSON.stringify({
         eventId,
@@ -93,15 +93,15 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                 </div>
 
                 {!isEditionMode ? (
-                    <div className="flex list-disc list-inside space-y-1 space-x-20 flex-wrap">
-                    {judges?.map((judge) => (
-                        <div
-                        key={judge.personnel_id}
-                        className="border border-gray-300 bg-white p-4 flex flex-col items-center flex-shrink-0 mb-4"
-                        >
-                        <div className="text-2xl mb-2 text-black text-center font-bold">
-                            {judge.name ?? judge.header}
-                        </div>
+                    <div>
+                        {judges?.map((judge) => (
+                            <div
+                                key={judge.personnel_id}
+                                className="flex items-center justify-between py-2 border-b border-black dark:border-white"
+                            >
+                                <div className="text-lg font-bold text-left text-black dark:text-white">
+                                    {judge.name ?? judge.header}
+                                </div>
                         </div>
                     ))}
                     </div>

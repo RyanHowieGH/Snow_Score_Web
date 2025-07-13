@@ -18,6 +18,7 @@ type AthleteRun = {
   runs: {
     run_num: number;
     round_heat_id: number;
+    seeding: number;
   }[];
 }
 
@@ -196,7 +197,7 @@ export default function JudgingPanelClient({
         athlete_id: selected?.athlete_id,
       }),
     });
-        console.log(`--- SELECTED RUN_NUM: ${selected?.run}, SCORE: ${score}, PERSONNEL_ID: ${personnelId}, ATHLETE_ID: ${selected?.athlete_id}, ROUND_HEAT_ID: ${roundHeatId}`)
+        console.log(`SELECTED RUN_NUM: ${selected?.run}, SCORE: ${score}, PERSONNEL_ID: ${personnelId}, ATHLETE_ID: ${selected?.athlete_id}, ROUND_HEAT_ID: ${roundHeatId}`)
 
     const data = await response.json();
     console.log("Score submission response:", data);
@@ -225,7 +226,7 @@ export default function JudgingPanelClient({
 
         {/* Athlete List */}
         <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%] ">
-          <div className="w-full border-1 border-solid border-black h-full">
+          <div className="w-full h-full border border-black overflow-auto">
             <div className="grid grid-cols-4 gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div>BIB</div>
               {athletes.length > 0 &&
@@ -317,7 +318,7 @@ export default function JudgingPanelClient({
          
         {/* Best Scores List */}
         <div className="w-[20%] p-4 space-y-4 pt-[2%] pb-[2%] text-3xl font-bold ">
-          <div className="w-full h-full border-solid border-1 border-black">
+          <div className="w-full h-full border border-black overflow-auto">
             <div className="grid grid-cols-2 gap-0 text-center mb-0 border-b-1 border-black border-solid min-h-[2rem] text-2xl font-bold">
               <div className="border-r-1 border-black border-solid">
                 BIB</div>

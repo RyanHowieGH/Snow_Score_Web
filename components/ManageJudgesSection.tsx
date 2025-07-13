@@ -6,27 +6,28 @@ import type { JudgingPanelPerEvent } from '@/lib/definitions'
 // Interfaces for the nested Maps
 export interface PersonnelMap {
   [personnelId: string]: {
-    judgeName: string
-    judgeHeader: string
-    personnelId: number
+    judgeName: string,
+    judgeHeader: string,
+    personnelId: number,
+    passcode: number,
   }
 }
 export interface HeatMap {
   [heatId: string]: {
-    heatNumber: number
-    personnels: PersonnelMap
+    heatNumber: number,
+    personnels: PersonnelMap,
   }
 }
 export interface RoundMap {
   [roundId: string]: {
-    roundName: string
-    heats: HeatMap
+    roundName: string,
+    heats: HeatMap,
   }
 }
 export interface DivisionMap {
   [divisionId: string]: {
-    divisionName: string
-    rounds: RoundMap
+    divisionName: string,
+    rounds: RoundMap,
   }
 }
 
@@ -81,7 +82,8 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
       heatGroup.personnels[personnelKey] = {
         judgeName: panel.judge_name,
         judgeHeader: panel.judge_header,
-        personnelId: panel.personnel_id
+        personnelId: panel.personnel_id,
+        passcode: panel.passcode,
       }
     }
   })
@@ -110,7 +112,8 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
                               divisionId,
                               roundId,
                               heatId,
-                              String(personnel.personnelId)
+                              String(personnel.personnelId),
+                              personnel.passcode
                             )}
                           </div>
                         </div>
