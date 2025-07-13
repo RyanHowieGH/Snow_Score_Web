@@ -67,15 +67,11 @@ export default function ScoreInput() {
     }
   };
 
-  //Make personnel_id dynamic
-  // For now, hardcoded to 281
   const handleSubmit = async () => {
-    const personnel_id = 281; // Replace with actual personnel_id logic
 
     console.log("SUBMITTING:", {
       roundHeatId,
       runNum,
-      personnel_id,
       score,
     });
 
@@ -85,8 +81,8 @@ export default function ScoreInput() {
       body: JSON.stringify({
         round_heat_id: roundHeatId,
         run_num: runNum,
-        personnel_id,
         score: parseFloat(score),
+        athlete_id: selected?.athlete_id,
       }),
     });
 
