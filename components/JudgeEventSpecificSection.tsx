@@ -9,15 +9,15 @@ import AddNewJudgeSection from './AddNewJudgeSection';
 // Judge Interface
 export interface Judge {
     personnel_id: string;
-    header: string;
-    name: string;
+    header: string | null;
+    name: string | null;
     event_id: number;
 }
 
 // JudgesProps Interface
 export interface JudgesProps {
     judges: Judge[] | null;
-    event_id: Number;
+    event_id: number;
 }
 
 export default function JudgeEventSpecificSection({ judges, event_id }: JudgesProps) {
@@ -63,9 +63,6 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
   }
 }
 
-
-
-
     const handleRemove = async (judge: Judge) => {
         try {
             await deleteJudgeNullScores(judge.event_id, judge.personnel_id);
@@ -75,7 +72,6 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
         }
         setOpenRemoveJudge(false);
     };
-
 
 
     return (
@@ -100,7 +96,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                 className="flex items-center justify-between py-2 border-b border-black dark:border-white"
                             >
                                 <div className="text-lg font-bold text-left text-black dark:text-white">
-                                    {judge.name ?? judge.header}
+                                    {(judge.name === "" ||  judge.name === null) ? judge.header : judge.name }
                                 </div>
                         </div>
                     ))}
@@ -113,7 +109,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                 className="flex items-center justify-between py-2 border-b border-black dark:border-white"
                             >
                                 <div className="text-lg font-bold text-left text-black dark:text-white">
-                                    {judge.name ?? judge.header}
+                                    {(judge.name === "" || judge.name === null) ? judge.header : judge.name }
                                 </div>
 
                                 {/* REMOVE JUDGE */}
@@ -141,7 +137,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                         Confirm Delete
                                         </h3>
                                         <p className=" text-gray-500 mt-2">
-                                        Are you sure you want to remove {judge.name ?? judge.header} from this event?
+                                        Are you sure you want to remove {(judge.name === "" || judge.name === null) ? judge.header : judge.name} from this event?
                                         </p>
                                     </div>
                                     <div className="flex gap-4">
@@ -161,7 +157,6 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                             </div>
                         ))}                            
                     <AddNewJudgeSection
-                        judges={judges}
                         event_id={event_id}
                     />
                     </div>

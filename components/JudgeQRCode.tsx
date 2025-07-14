@@ -27,7 +27,6 @@ export default async function JudgeQRCode(
             {passcode}
           </div>
         </div>
-        
         <CopyUrlButton 
         url={url} />
     </div>    
