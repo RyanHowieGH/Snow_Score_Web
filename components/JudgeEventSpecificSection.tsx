@@ -74,7 +74,10 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
         }
         setOpenRemoveJudge(false);
     };
-
+        
+    const handleAddJudgeToEvent = (newJudge: Judge) => {
+        setRenderedJudges(prev => [...prev ?? [], newJudge]);
+    };
 
     return (
         <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12 w-full border-t p-12">
@@ -162,6 +165,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                         ))}                            
                     <AddNewJudgeSection
                         event_id={event_id}
+                        onAddJudgeToEvent={handleAddJudgeToEvent}
                     />
                     </div>
                 )}

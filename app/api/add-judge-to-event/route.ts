@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
+import { Judge } from "@/lib/definitions";
 
 export async function POST(req: Request) {
   const pool = getDbPool();
@@ -22,7 +23,14 @@ export async function POST(req: Request) {
       [next_personnel_id, name, header, event_id]
     );
 
-    return NextResponse.json({ success: true });
+      const newJudge: Judge = {
+        personnel_id: String(next_personnel_id),
+        name,
+        header,
+        event_id,
+      };
+
+    return NextResponse.json({ success: true, judge: newJudge });
   } catch (err: unknown) {
     console.error("Error adding judge to event:", err);
     return NextResponse.json(

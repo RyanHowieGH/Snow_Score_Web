@@ -1,14 +1,17 @@
 'use client';
 import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
+import { Judge } from '@/lib/definitions';
 
 interface AddNewJudgeSectionProps {
-  event_id: number;
+  event_id: number,
+  onAddJudgeToEvent: (judge: Judge) => void,
 }
 
 export default function AddNewJudgeSection({
   event_id,
-}: AddNewJudgeSectionProps) {
+  onAddJudgeToEvent
+  }: AddNewJudgeSectionProps) {
     const [openCreateNewJudge, setCreateNewJudge] = useState(false);
 
     const [newJudgeHeader, setNewJudgeHeader] = useState<string>("");
@@ -23,12 +26,12 @@ export default function AddNewJudgeSection({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     name: newJudgeName,
-                    header: newJudgeName,
+                    header: newJudgeHeader,
                     event_id,
                 }),
                 });
-
                 const data = await response.json();
+                onAddJudgeToEvent(data.judge);
                 console.log("Score submission response:", data);
         } catch (error) {
             console.error('Failed to add new judge', error);
