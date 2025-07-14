@@ -1,9 +1,9 @@
 'use server';
 
-import { streamArticleFromData } from '@/lib/ai'; // Import the new streaming function
 import { fetchEventResultsForArticle } from '@/lib/data';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { createStreamableValue } from 'ai/rsc';
+import { generateArticleInSections } from '@/lib/ai';
 
 export async function generateEventSummaryAction(eventId: number) {
     // createStreamableValue is a utility from the Vercel AI SDK that helps manage the stream.
@@ -16,9 +16,8 @@ export async function generateEventSummaryAction(eventId: number) {
             if (!articleData) throw new Error("Could not find event data.");
 
             // Get the stream from the AI service
-            const articleStream = streamArticleFromData(articleData);
+            const articleStream = generateArticleInSections(articleData);
 
-            // Pipe the AI stream into our streamable value
             for await (const chunk of articleStream) {
                 stream.update(chunk);
             }
