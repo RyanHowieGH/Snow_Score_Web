@@ -51,9 +51,11 @@ export interface JudgingPanelPerEvent {
     passcode: number;
 }
 
-export default function ManageJudgingPanelsDisplay({ event_id, panels }: JudgingPanelPerEventProps) {
+export default function ManageJudgingPanelsDisplay({ event_id, panels: panels }: JudgingPanelPerEventProps) {
 
-  if (!panels || panels.length === 0) {
+  const [renderedPanels, setRenderedPanels] = useState(panels);
+
+  if (!renderedPanels || renderedPanels.length === 0) {
     return (
       <div className="text-black p-4">
         No judging panel found for this event.
@@ -65,7 +67,7 @@ export default function ManageJudgingPanelsDisplay({ event_id, panels }: Judging
 
   const panelsMap: DivisionMap = {}
 
-  panels.forEach(panel => {
+  renderedPanels.forEach(panel => {
     const divisionKey = String(panel.division_id)
     const roundKey = String(panel.round_id)
     const heatKey = String(panel.round_heat_id)
@@ -147,7 +149,6 @@ export default function ManageJudgingPanelsDisplay({ event_id, panels }: Judging
                         ))}
                       </div>
                     </div>
-                   
                   </div>
                 ))}
               </div>
