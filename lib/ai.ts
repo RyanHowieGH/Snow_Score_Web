@@ -32,6 +32,9 @@ export async function* generateArticleFromData(data: ArticleData): AsyncGenerato
         - Give a special mention to the strong performance by Canadian athletes, including ${canadianPerformers}.
 
         Keep the tone enthusiastic and professional. Do not use placeholder text like "[Insert...]" and write a complete article.
+        Do not mention any specific tricks or technical details, focus on the overall event and athlete achievements.
+        The article should be engaging and suitable for publication on the Alberta Snowboard Association's website.
+        Eliminate whitespace in front of accessed data.
     `;
     
     try {
