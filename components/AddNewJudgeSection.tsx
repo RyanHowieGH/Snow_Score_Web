@@ -2,6 +2,7 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
 import { Judge } from '@/lib/definitions';
+import { Info, X } from 'lucide-react';
 
 interface AddNewJudgeSectionProps {
   event_id: number,
@@ -59,7 +60,34 @@ export default function AddNewJudgeSection({
                     setNewJudgeHeader(""); 
                     setNewJudgeName("")}}>
                     <form onSubmit={(e) => handleSubmitNewJudge(e)}>
-                        <div>
+                        <div>      
+                            {/*Tooltip*/}      
+                            <div className="relative ml-2 group inline-block">
+                            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-context-menu" />
+
+                            <div
+                                className={`
+                                invisible group-hover:visible 
+                                opacity-0 group-hover:opacity-100 
+                                transition-all duration-150
+                                absolute left-full top-1/2
+                                ml-2 w-[2000%]
+                                -translate-y-1/2
+                                bg-gray-800 text-white text-sm 
+                                rounded p-3 shadow
+                                `}
+                            >
+                                <div>
+                                    <div>
+                                        The new judge will be assigned to every division, round and heat in this event. The judging panels QR code for this judge will be displayed once the page is refreshed.
+                                    </div>
+                                    <div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/*New Judge form*/}
+                            </div>
                             <h3 
                             className='text-black font-bold text-xl text-center mb-5'>
                                 New Judge
