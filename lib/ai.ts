@@ -1,57 +1,41 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArticleData } from "./definitions";
 
-// --- THIS IS THE NEW HELPER FUNCTION ---
-// It returns a Promise that resolves after a specified number of milliseconds.
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-
-// Helper function for a single AI call (unchanged)
-async function* callGeminiStream(prompt: string): AsyncGenerator<string> {
+// This is the only function needed in this file.
+export async function* generateArticleFromData(data: ArticleData): AsyncGenerator<string> {
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-    if (!apiKey) throw new Error("API Key not set.");
-    
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemma-3n-e2b-it" });
-    const result = await model.generateContentStream(prompt);
-
-    for await (const chunk of result.stream) {
-        yield chunk.text();
+    if (!apiKey) {
+        throw new Error("API Key not set in environment variables.");
     }
-}
 
-// The main function that orchestrates multiple, smaller calls
-export async function* generateArticleInSections(data: ArticleData): AsyncGenerator<string> {
     try {
-        // --- CALL 1: Generate the Introduction ---
-        const introPrompt = `You are a sports journalist. Write an exciting, 1-paragraph introduction for an article about the "${data.name}" event which took place in ${data.location}. Mention it was a great day for snowboarding.`;
-        for await (const chunk of callGeminiStream(introPrompt)) {
-            yield chunk;
-        }
-        yield '\n\n';
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemma-2b-it" }); // Using your specified model
 
-        // --- ADD A DELAY TO AVOID HITTING RATE LIMITS ---
-        await delay(1000); // Wait for 1 second
+        // A single, concise prompt that is less likely to hit model limits
+        const simplePrompt = `
+            You are a sports journalist for the Alberta Snowboard Association. 
+            Write an exciting, 3-paragraph summary article for the "${data.name}" event that took place in ${data.location}.
 
-        // --- CALL 2: Generate the Results Section ---
-        const resultsPrompt = `...`; // Your results prompt
-        for await (const chunk of callGeminiStream(resultsPrompt)) {
-            yield chunk;
-        }
-        yield '\n\n';
+            Key highlights to include:
+            - The event was a huge success with great weather.
+            - The winners were: ${data.results.map(res => `${res.podium.find(p => p.rank === 1)?.first_name} ${res.podium.find(p => p.rank === 1)?.last_name || ''} in the ${res.division_name} division`).join(', ')}.
+            - Give a special mention to the strong performance by Canadian athletes, including ${data.top_canadians.map(can => can.first_name + ' ' + can.last_name).join(', ')}.
 
-        // --- ADD ANOTHER DELAY ---
-        await delay(1000); // Wait for 1 second
+            Keep the tone enthusiastic and professional.
+        `;
+        
+        const result = await model.generateContentStream(simplePrompt);
 
-        // --- CALL 3: Generate the Conclusion ---
-        const conclusionPrompt = `...`; // Your conclusion prompt
-        for await (const chunk of callGeminiStream(conclusionPrompt)) {
-            yield chunk;
+        for await (const chunk of result.stream) {
+            yield chunk.text();
         }
 
     } catch (error) {
-        console.error("Error in generateArticleInSections:", error);
-        // We throw the error so the action can catch the specific message
-        throw new Error("An error occurred while generating the article."); 
+        console.error("Error in generateArticleFromData:", error);
+        if (error instanceof Error) {
+            throw new Error(`AI Service Error: ${error.message}`);
+        }
+        throw new Error("An unknown error occurred while generating the article.");
     }
 }
