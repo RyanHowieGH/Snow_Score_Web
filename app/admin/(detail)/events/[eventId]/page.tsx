@@ -11,6 +11,8 @@ import type { AppUserWithRole } from "@/lib/auth/user";
 import type { Metadata } from "next";
 import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
 import PublishEventButton from '@/components/PublishEventButton';
+import { ArticleGenerator } from './ArticleGenerator'; // <-- Add this import
+
 
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
@@ -217,6 +219,8 @@ export default async function AdminEventDetailPage({
           linkHref={`/admin/events/${eventId}/manage-judges`}
           icon={<UserGroupIcon className="h-7 w-7 text-accent" />} // Slightly smaller icon
         />
+        <ArticleGenerator eventId={eventId} />
+
       </div>
 
       {/* Optional: Publish button */}

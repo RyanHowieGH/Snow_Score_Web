@@ -202,3 +202,22 @@ export type ScheduleHeatItem = {
   end_time: string | null;
   schedule_sequence: number | null;
 };
+
+// --- Article Generation Types ---
+
+export interface PodiumAthlete {
+    rank: number;
+    first_name: string;
+    last_name: string;
+    nationality: string | null;
+}
+
+export interface EventResult {
+    division_name: string;
+    podium: PodiumAthlete[];
+}
+
+export interface ArticleData extends EventDetails {
+    results: EventResult[];
+    top_canadians: PodiumAthlete[];
+}
