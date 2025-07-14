@@ -1,6 +1,6 @@
 {
   "functions": {
-    "app/admin/(detail)/events/[eventId]/generate-summary/actions.js": {
+    "app/**": {
       "maxDuration": 300
     }
   }
