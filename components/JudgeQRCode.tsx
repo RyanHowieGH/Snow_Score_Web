@@ -10,7 +10,7 @@ export default async function JudgeQRCode(
   personnelId: string,
   passcode: number) {
 
-  const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL_PRODUCTION}/events`;
+  const baseUrl = `${process.env.NEXT_PUBLIC_APP_URL_PROD}/events`;
   const url = `${baseUrl}/${eventId}/${divisionId}/${roundId}/${roundHeatId}/${personnelId}`;
   const dataUrl = await toDataURL(url);
   return (
