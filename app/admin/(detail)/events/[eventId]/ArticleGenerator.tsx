@@ -3,21 +3,23 @@
 import React, { useState, useTransition } from 'react';
 import { SparklesIcon } from '@heroicons/react/24/solid';
 import { generateEventSummaryAction } from './generate-summary/actions';
+import { readStreamableValue } from 'ai/rsc';
 
 export function ArticleGenerator({ eventId }: { eventId: number }) {
-    const [article, setArticle] = useState<string | null>(null);
+    const [article, setArticle] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
 
     const handleGenerate = () => {
         setError(null);
-        setArticle(null);
+        setArticle(''); // Reset to empty string
+        
         startTransition(async () => {
-            const result = await generateEventSummaryAction(eventId);
-            if (result.success && result.article) {
-                setArticle(result.article);
-            } else {
-                setError(result.error || "An unknown error occurred.");
+            const { articleStream } = await generateEventSummaryAction(eventId);
+            
+            // Read from the stream and update the state chunk-by-chunk
+            for await (const chunk of readStreamableValue(articleStream)) {
+                setArticle(prevArticle => prevArticle + chunk);
             }
         });
     };
@@ -27,7 +29,7 @@ export function ArticleGenerator({ eventId }: { eventId: number }) {
             <div className="card-body">
                 <h2 className="card-title">AI Event Summary Generator</h2>
                 <p className="text-sm opacity-70">
-                    Use AI to generate a draft article summarizing the event's results. Review and edit the text before publishing.
+                    Use AI to generate a draft article summarizing the event's results.
                 </p>
                 <div className="card-actions justify-end mt-4">
                     <button className="btn btn-accent" onClick={handleGenerate} disabled={isPending}>
@@ -36,20 +38,21 @@ export function ArticleGenerator({ eventId }: { eventId: number }) {
                     </button>
                 </div>
 
-                {isPending && <div className="text-center py-4"><span className="loading loading-spinner"></span></div>}
-                
                 {error && <div role="alert" className="alert alert-error mt-4 text-sm"><span>{error}</span></div>}
 
-                {article && (
+                {/* The textarea now updates in real-time as the stream comes in */}
+                {(isPending || article) && (
                     <div className="mt-4 space-y-4">
                         <textarea 
                             className="textarea textarea-bordered w-full h-96 text-base"
                             value={article}
-                            onChange={(e) => setArticle(e.target.value)}
+                            readOnly={isPending} // Make it read-only while generating
+                            placeholder="AI is writing..."
                         ></textarea>
                         <button 
                             className="btn btn-sm btn-outline"
                             onClick={() => navigator.clipboard.writeText(article)}
+                            disabled={isPending || !article}
                         >
                             Copy to Clipboard
                         </button>
