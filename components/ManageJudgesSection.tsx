@@ -1,7 +1,5 @@
 import React from 'react'
 import JudgeQRCode from '@/components/JudgeQRCode'
-import { fetchJudgingPanelDataByEventId } from '@/lib/data'
-import type { JudgingPanelPerEvent } from '@/lib/definitions'
 
 // Interfaces for the nested Maps
 export interface PersonnelMap {
@@ -31,12 +29,27 @@ export interface DivisionMap {
   }
 }
 
-interface DisplayProps {
-  eventId: string
+export interface JudgingPanelPerEventProps {
+  panels: JudgingPanelPerEvent[] | null,
+  event_id: number,
 }
 
-export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayProps) {
-  const panels: JudgingPanelPerEvent[] | null = await fetchJudgingPanelDataByEventId(Number(eventId))
+export interface JudgingPanelPerEvent {
+    event_id: number;
+    division_id: number;
+    division_name: string;
+    round_id: number;
+    round_heat_id: number;
+    heat_num: number;
+    personnel_id: number;
+    name: string;
+    round_name: string;
+    judge_name: string;
+    judge_header: string;
+    passcode: number;
+}
+
+export default async function ManageJudgingPanelsDisplay({ event_id, panels }: JudgingPanelPerEventProps) {
 
   if (!panels || panels.length === 0) {
     return (
@@ -45,6 +58,8 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
       </div>
     )
   }
+
+  const eventId = event_id;
 
   const panelsMap: DivisionMap = {}
 
@@ -114,11 +129,11 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
                         {Object.values(personnels).map((personnel, index) => (
                           <div key={index} className="text-center space-y-2">
                             <span className="font-semibold text-base-content text-xl">
-                              {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
+                              {personnel.judgeName || personnel.judgeHeader || "Unknown"}
                             </span>
                             <div className="mt-1">
                               {JudgeQRCode(
-                                eventId,
+                                String(eventId),
                                 divisionId,
                                 roundId,
                                 heatId,
