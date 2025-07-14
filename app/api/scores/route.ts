@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       [personnel_id, run_result_id, score]
     );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (err: unknown) {
     console.error("Error saving score:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

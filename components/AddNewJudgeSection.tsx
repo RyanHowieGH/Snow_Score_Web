@@ -1,48 +1,46 @@
 'use client';
 import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
+import { Judge } from '@/lib/definitions';
+import { Info, X } from 'lucide-react';
 
-
-    // Judge Interface
-    export interface Judge {
-        personnel_id: string;
-        header: string;
-        name: string;
-        event_id: number;
-    }
-
-    // JudgesProps Interface
-    export interface EventJudgesProps {
-        judges: Judge[] | null;
-        event_id: Number;
-    }
-
+interface AddNewJudgeSectionProps {
+  event_id: number,
+  onAddJudgeToEvent: (judge: Judge) => void,
+}
 
 export default function AddNewJudgeSection({
-    judges,
-    event_id
-} : EventJudgesProps) {
-    const [confirmJudgeToAdd, setConfirmJudgeToAdd] = useState<string>('');
-    const [openAddJudge, setOpenAddJudge] = useState(false);
+  event_id,
+  onAddJudgeToEvent
+  }: AddNewJudgeSectionProps) {
     const [openCreateNewJudge, setCreateNewJudge] = useState(false);
 
-    // New Judge Properties (ss_event_judges)
-    const [newJudgeHeader, setNewJudgeHeader] = useState("");
-    const [newJudgeName, setNewJudgeName] = useState("");
-    // new personnel_id would be a sequence
-    // how to get the event id if this is an external component from the event page???
+    const [newJudgeHeader, setNewJudgeHeader] = useState<string>("");
+    const [newJudgeName, setNewJudgeName] = useState<string>("");
 
-    const handleSubmitNewJudge = (e: FormEvent<HTMLFormElement>) =>{
+    const handleSubmitNewJudge = async (e: FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
         try{
-            // write in the database the next number in the sequence for personnel_id, new header, new name, event_id > async
-            // useEffect to fetch the judge list
             // implement regex (prevent SQL injection here or any undesired thing)
+            const response = await fetch("/api/add-judge-to-event", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newJudgeName,
+                    header: newJudgeHeader,
+                    event_id,
+                }),
+                });
+                const data = await response.json();
+                onAddJudgeToEvent(data.judge);
+                console.log("Score submission response:", data);
         } catch (error) {
             console.error('Failed to add new judge', error);
         }
         finally{
             setCreateNewJudge(false);
+            setNewJudgeHeader(""); 
+            setNewJudgeName("");
         }
     };
 
@@ -62,7 +60,34 @@ export default function AddNewJudgeSection({
                     setNewJudgeHeader(""); 
                     setNewJudgeName("")}}>
                     <form onSubmit={(e) => handleSubmitNewJudge(e)}>
-                        <div>
+                        <div>      
+                            {/*Tooltip*/}      
+                            <div className="relative ml-2 group inline-block">
+                            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-context-menu" />
+
+                            <div
+                                className={`
+                                invisible group-hover:visible 
+                                opacity-0 group-hover:opacity-100 
+                                transition-all duration-150
+                                absolute left-full top-1/2
+                                ml-2 w-[2000%]
+                                -translate-y-1/2
+                                bg-gray-800 text-white text-sm 
+                                rounded p-3 shadow
+                                `}
+                            >
+                                <div>
+                                    <div>
+                                        The new judge will be assigned to every division, round and heat in this event. The judging panels QR code for this judge will be displayed once the page is refreshed.
+                                    </div>
+                                    <div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/*New Judge form*/}
+                            </div>
                             <h3 
                             className='text-black font-bold text-xl text-center mb-5'>
                                 New Judge
