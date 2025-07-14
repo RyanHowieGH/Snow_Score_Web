@@ -4,6 +4,8 @@ import { PoolClient } from 'pg';
 import { HeatForSchedule } from './definitions'; // You will create this type next
 import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
 import type { RegisteredAthleteWithDivision } from './definitions';
+import type { EventResult, PodiumAthlete, ArticleData } from './definitions';
+
 
 
 // Import types from the centralized definitions file
@@ -594,4 +596,66 @@ export async function fetchRosterForEvent(eventId: number): Promise<RegisteredAt
     console.error(`[data.ts] Database Error fetching roster for event ${eventId}:`, error);
     throw new Error('Failed to fetch event roster.');
   }
+}
+
+export async function fetchEventResultsForArticle(eventId: number): Promise<ArticleData | null> {
+    const eventDetails = await fetchEventById(eventId);
+    if (!eventDetails) return null;
+
+    const pool = getDbPool();
+    const client = await pool.connect();
+
+    try {
+        // Query to get the top 3 athletes per division for the podium
+        const resultsQuery = `
+            WITH RankedAthletes AS (
+                SELECT
+                    er.division_id,
+                    a.first_name,
+                    a.last_name,
+                    a.nationality,
+                    hr.best as final_score,
+                    ROW_NUMBER() OVER(PARTITION BY er.division_id ORDER BY hr.best DESC) as rank
+                FROM ss_heat_results hr
+                JOIN ss_event_registrations er ON hr.event_id = er.event_id AND hr.athlete_id = er.athlete_id
+                JOIN ss_athletes a ON er.athlete_id = a.athlete_id
+                WHERE hr.event_id = $1
+            )
+            SELECT
+                d.division_name,
+                json_agg(json_build_object('rank', ra.rank, 'first_name', ra.first_name, 'last_name', ra.last_name, 'nationality', ra.nationality) ORDER BY ra.rank) as podium
+            FROM RankedAthletes ra
+            JOIN ss_division d ON ra.division_id = d.division_id
+            WHERE ra.rank <= 3
+            GROUP BY d.division_name;
+        `;
+        
+        // Query to get the top 3 Canadian athletes overall
+        const topCanadiansQuery = `
+            SELECT first_name, last_name, nationality, best as final_score,
+                   ROW_NUMBER() OVER(ORDER BY best DESC) as rank
+            FROM ss_heat_results hr
+            JOIN ss_athletes a ON hr.athlete_id = a.athlete_id
+            WHERE hr.event_id = $1 AND a.nationality = 'CAN'
+            ORDER BY final_score DESC
+            LIMIT 3;
+        `;
+
+        const [resultsResult, topCanadiansResult] = await Promise.all([
+            client.query(resultsQuery, [eventId]),
+            client.query(topCanadiansQuery, [eventId])
+        ]);
+
+        return {
+            ...eventDetails,
+            results: resultsResult.rows,
+            top_canadians: topCanadiansResult.rows,
+        };
+
+    } catch (error) {
+        console.error(`Database error fetching results for article generation for event ${eventId}:`, error);
+        return null;
+    } finally {
+        client.release();
+    }
 }
