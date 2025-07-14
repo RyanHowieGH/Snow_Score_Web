@@ -10,7 +10,7 @@ export async function* generateArticleFromData(data: ArticleData): AsyncGenerato
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemma-2b-it" }); // Using your specified model
+        const model = genAI.getGenerativeModel({ model: "gemma-3n-e2b-it" }); // Using your specified model
 
         // A single, concise prompt that is less likely to hit model limits
         const simplePrompt = `
