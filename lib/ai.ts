@@ -41,7 +41,7 @@ export async function* streamArticleFromData(data: ArticleData): AsyncGenerator<
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemma-2b-it" });
+        const model = genAI.getGenerativeModel({ model: "gemma-3n-e2b-it" });
 
         // Use generateContentStream instead of generateContent
         const result = await model.generateContentStream(prompt);
