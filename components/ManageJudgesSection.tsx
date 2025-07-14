@@ -1,4 +1,6 @@
+'use client'
 import React from 'react'
+import { useState, useEffect } from 'react'
 import JudgeQRCode from '@/components/JudgeQRCode'
 
 // Interfaces for the nested Maps
@@ -49,7 +51,7 @@ export interface JudgingPanelPerEvent {
     passcode: number;
 }
 
-export default async function ManageJudgingPanelsDisplay({ event_id, panels }: JudgingPanelPerEventProps) {
+export default function ManageJudgingPanelsDisplay({ event_id, panels }: JudgingPanelPerEventProps) {
 
   if (!panels || panels.length === 0) {
     return (

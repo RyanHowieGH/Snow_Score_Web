@@ -17,6 +17,8 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
     return {
         title: eventDetails ? `Manage Judges: ${eventDetails.name}` : 'Manage Event Judges',
         };
+
+        
 }
 
 export default async function ManageJudgingPanelsPage({ params }: { params: { eventId: string } }) {
