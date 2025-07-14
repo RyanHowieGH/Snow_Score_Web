@@ -1,30 +1,34 @@
 'use server';
 
+import { streamArticleFromData } from '@/lib/ai'; // Import the new streaming function
 import { fetchEventResultsForArticle } from '@/lib/data';
-import { generateArticleFromData } from '@/lib/ai';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
+import { createStreamableValue } from 'ai/rsc';
 
-export async function generateEventSummaryAction(eventId: number): Promise<{ success: boolean; article?: string; error?: string; }> {
-    try {
-        // 1. Authorization
-        const user = await getAuthenticatedUserWithRole();
-        if (!user || !['Executive Director', 'Administrator'].includes(user.roleName)) {
-            return { success: false, error: "Unauthorized." };
+export async function generateEventSummaryAction(eventId: number) {
+    // createStreamableValue is a utility from the Vercel AI SDK that helps manage the stream.
+    const stream = createStreamableValue('');
+
+    (async () => {
+        try {
+            await getAuthenticatedUserWithRole(); // Authorization
+            const articleData = await fetchEventResultsForArticle(eventId);
+            if (!articleData) throw new Error("Could not find event data.");
+
+            // Get the stream from the AI service
+            const articleStream = streamArticleFromData(articleData);
+
+            // Pipe the AI stream into our streamable value
+            for await (const chunk of articleStream) {
+                stream.update(chunk);
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "An unknown error occurred.";
+            stream.error(message);
+        } finally {
+            stream.done();
         }
+    })();
 
-        // 2. Fetch Data
-        const articleData = await fetchEventResultsForArticle(eventId);
-        if (!articleData) {
-            return { success: false, error: "Could not find event data or results." };
-        }
-
-        // 3. Generate Article
-        const generatedArticle = await generateArticleFromData(articleData);
-
-        return { success: true, article: generatedArticle };
-
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "An unknown error occurred.";
-        return { success: false, error: message };
-    }
+    return { articleStream: stream.value };
 }

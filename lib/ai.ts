@@ -2,12 +2,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArticleData } from "./definitions";
 
 // This function takes the structured data and generates the article using Google Gemini
-export async function generateArticleFromData(data: ArticleData): Promise<string> {
+export async function* streamArticleFromData(data: ArticleData): AsyncGenerator<string, void, undefined> {
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
-
-    if (!apiKey) {
-        throw new Error("Google Gemini API key is not set in environment variables.");
-    }
+    if (!apiKey) throw new Error("Google Gemini API key not set.");
 
     // --- PROMPT ENGINEERING (Remains the same) ---
     // We give the AI a role, context, and a clear task.
@@ -44,20 +41,17 @@ export async function generateArticleFromData(data: ArticleData): Promise<string
 
     try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemma-3n-e2b-it" });
+        const model = genAI.getGenerativeModel({ model: "gemma-2b-it" });
 
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        const article = response.text();
-        
-        if (!article) {
-            throw new Error("AI (Gemini) failed to generate an article text.");
+        // Use generateContentStream instead of generateContent
+        const result = await model.generateContentStream(prompt);
+
+        // Yield each chunk of text as it arrives from the stream
+        for await (const chunk of result.stream) {
+            yield chunk.text();
         }
-        
-        return article;
-
     } catch (error) {
-        console.error("Error calling Google Gemini Service:", error);
-        throw new Error("Failed to communicate with the Google AI service.");
+        console.error("Error calling Google Gemini Streaming Service:", error);
+        throw new Error("Failed to communicate with the Google AI service for streaming.");
     }
 }
