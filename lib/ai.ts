@@ -12,7 +12,7 @@ async function* callGeminiStream(prompt: string): AsyncGenerator<string> {
     if (!apiKey) throw new Error("API Key not set.");
     
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemma-2b-it" });
+    const model = genAI.getGenerativeModel({ model: "gemma-3n-e2b-it" });
     const result = await model.generateContentStream(prompt);
 
     for await (const chunk of result.stream) {
