@@ -88,6 +88,10 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
     }
   })
 
+  const handleAddJudgeToHeat = () => {
+
+  }
+
   return (
     <div className="space-y-6">
       {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
@@ -99,26 +103,34 @@ export default async function ManageJudgingPanelsDisplay({ eventId }: DisplayPro
                 <h3 className="font-semibold text-secondary text-2xl mt-5">ROUND: {roundName}</h3>
                 {Object.entries(heats).map(([heatId, { heatNumber, personnels }]) => (
                   <div key={heatId} className="space-y-2">
-                    <h4 className="text-xl font-bold">HEAT: {heatNumber}</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {Object.values(personnels).map((personnel, index) => (
-                        <div key={index} className="text-center space-y-2">
-                          <span className="font-semibold text-base-content text-xl">
-                            {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
-                          </span>
-                          <div className="mt-1">
-                            {JudgeQRCode(
-                              eventId,
-                              divisionId,
-                              roundId,
-                              heatId,
-                              String(personnel.personnelId),
-                              personnel.passcode
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                    <div >  
+                     <div className="flex justify-between items-center">
+                      <h4 className="text-xl font-bold">HEAT: {heatNumber}</h4>
+                      <button 
+                      className="btn bg-green-500 text-white w-[10%] ml-[0] mb-[1%]">
+                        Add judge</button>
                     </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {Object.values(personnels).map((personnel, index) => (
+                          <div key={index} className="text-center space-y-2">
+                            <span className="font-semibold text-base-content text-xl">
+                              {personnel.judgeName || personnel.judgeHeader || "The name and header of this judge is unknown. Please edit it to assign a name or header."}
+                            </span>
+                            <div className="mt-1">
+                              {JudgeQRCode(
+                                eventId,
+                                divisionId,
+                                roundId,
+                                heatId,
+                                String(personnel.personnelId),
+                                personnel.passcode
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                   
                   </div>
                 ))}
               </div>

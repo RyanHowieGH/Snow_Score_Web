@@ -48,7 +48,8 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
                     judges={eventDetails.judges} 
                     event_id={eventId}/>
                 <div className="card-body">
-                    <ManageJudgingPanelsDisplay eventId={String(eventId)} />
+                    <ManageJudgingPanelsDisplay 
+                        eventId={String(eventId)} />
                 </div>
             </div>
         </div>
