@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/admin/(detail)/events/[eventId]/page": {
+      "maxDuration": 300
+    }
+  }
+}
