@@ -226,9 +226,9 @@ export default function JudgingPanelClient({
       <div className="flex w-full h-screen">
 
         {/* Athlete List */}
-        <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%] ">
-          <div className="w-full h-full border border-black overflow-auto">
-            <div className="grid grid-cols-4 gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
+        <div className="w-[30%] p-4 space-y-4 pt-[2%] pb-[2%] ">
+          <div className="w-full h-full border border-black  overflow-x-auto">
+            <div className="inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div>BIB</div>
               {athletes.length > 0 &&
                 athletes[0].runs.map((run) => (
@@ -240,7 +240,7 @@ export default function JudgingPanelClient({
             {athletes.map(({ athlete_id, bib, runs }) => (
               <div
                 key={athlete_id}
-                className="grid grid-cols-4 gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
+                className="inline-grid grid-flow-col auto-cols-[minmax(7rem,2fr)] gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
               >
                 <div className="bg-gray-100 border-black border-solid border-b-1 flex items-center justify-center">{bib}</div>
                 {runs.map(({ run_num }) => {
@@ -273,11 +273,7 @@ export default function JudgingPanelClient({
 
         {/* Score Board*/}
         <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
-          
-          
-          
           <div className="h-[30%] w-[100%] flex justify-center ">
-
             {/* Left side arrows */}
             <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%]">
               <button
