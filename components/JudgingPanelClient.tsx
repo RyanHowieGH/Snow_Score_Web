@@ -275,17 +275,27 @@ export default function JudgingPanelClient({
 
           {/* Score Display */}
           <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">
-            {selected?.bib && selected?.run && (
-              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
-                BIB {selected.bib}  -  RUN {selected.run}
+            {selected?.bib != null && selected?.run != null ? (
+              <div className="flex">
+                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
+                  BIB {selected.bib} 
+                </div>
+                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
+                  RUN {selected.run}
+                </div>
               </div>
-            )}
-            {!selected?.bib && !selected?.run && (
-              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
-                BIB #  -  RUN #
+            ) : (
+              <div className="flex flex-row w-full">       
+                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
+                  BIB
+                </div>
+                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
+                  RUN
+                </div>
               </div>
+       
             )}
-            <div className="text-6xl font-bold bg-green-100 w-full text-center min-h-[3rem] h-[80%] flex items-center justify-center">
+            <div className="text-6xl font-bold bg-green-100 w-full text-center min-h-[3rem] h-[86%] flex items-center justify-center">
               {score}
             </div>
           </div>

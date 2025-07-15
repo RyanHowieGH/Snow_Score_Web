@@ -1,7 +1,7 @@
 'use client'
-import React from 'react'
-import { useState, useEffect } from 'react'
-import JudgeQRCode from '@/components/JudgeQRCode'
+import React from 'react';
+import { useState, useEffect } from 'react';
+import JudgeQRCode from '@/components/JudgeQRCode';
 
 // Interfaces for the nested Maps
 export interface PersonnelMap {
@@ -51,7 +51,7 @@ export interface JudgingPanelPerEvent {
     passcode: number;
 }
 
-export default function ManageJudgingPanelsDisplay({ event_id, panels: panels }: JudgingPanelPerEventProps) {
+export default function ManageJudgingPanelsDisplay({ event_id, panels }: JudgingPanelPerEventProps) {
 
   const [renderedPanels, setRenderedPanels] = useState(panels);
 
@@ -106,10 +106,6 @@ export default function ManageJudgingPanelsDisplay({ event_id, panels: panels }:
       }
     }
   })
-
-  const handleAddJudgeToHeat = () => {
-
-  }
 
   return (
     <div className="space-y-6">
