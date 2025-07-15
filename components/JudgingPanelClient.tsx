@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from 'next/image';
+import { ArrowBigUp, ArrowBigDown, ArrowLeft, ArrowRight } from 'lucide-react';
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -272,33 +273,71 @@ export default function JudgingPanelClient({
 
         {/* Score Board*/}
         <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
+          
+          
+          
+          <div className="h-[30%] w-[100%] flex justify-center ">
 
-          {/* Score Display */}
-          <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">
-            {selected?.bib != null && selected?.run != null ? (
-              <div className="flex">
-                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
-                  BIB {selected.bib} 
-                </div>
-                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
-                  RUN {selected.run}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-row w-full">       
-                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
-                  BIB
-                </div>
-                <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
-                  RUN
-                </div>
-              </div>
-       
-            )}
-            <div className="text-6xl font-bold bg-green-100 w-full text-center min-h-[3rem] h-[86%] flex items-center justify-center">
-              {score}
+            {/* Left side arrows */}
+            <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%]">
+              <button
+                className="p-[2%] border border-black rounded bg-gray-100 hover:bg-gray-200"
+                aria-label="Previous Bib"
+              >
+                <ArrowBigUp className="h-27 w-27" />
+              </button>
+              <button
+                className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
+                aria-label="Next Bib"
+              >
+                <ArrowBigDown className="h-27 w-27" />
+              </button>
             </div>
+
+            {/* Score Display */}
+            <div className="border-solid border-black border-1 mb-4 w-[50%]">
+              {selected?.bib != null && selected?.run != null ? (
+                <div className="flex">
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
+                    BIB {selected.bib} 
+                  </div>
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
+                    RUN {selected.run}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-row w-full">       
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
+                    BIB
+                  </div>
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
+                    RUN
+                  </div>
+                </div>
+              )}
+              <div className="text-[8vw] font-bold bg-green-100 w-full text-center h-[85%] flex items-center justify-center">
+                {score}
+              </div>
+            </div>
+
+          {/* Right side arrows */}
+          <div className="flex flex-col items-center justify-center gap-[5%] ml-[5%]">
+            <button
+              className="p-[3%] border border-black rounded bg-gray-100 hover:bg-gray-200"
+              aria-label="Right side competitor"
+            >
+              <ArrowRight className="h-27 w-27" />
+            </button>
+            <button
+              className="p-[3%] border border-black rounded bg-gray-100 hover:bg-gray-200"
+              aria-label="Left side competitor"
+            >
+              <ArrowLeft className="h-27 w-27" />
+            </button>
           </div>
+
+          </div>
+
 
           {/* Submit Button */}
           <button

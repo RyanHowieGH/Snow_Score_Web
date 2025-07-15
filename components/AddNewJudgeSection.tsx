@@ -63,8 +63,8 @@ export default function AddNewJudgeSection({
                         <div>      
                             {/*Tooltip*/}      
                             <div className="relative ml-2 group inline-block">
-                            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-context-menu" />
 
+                            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-context-menu" />
                             <div
                                 className={`
                                 invisible group-hover:visible 
@@ -77,13 +77,7 @@ export default function AddNewJudgeSection({
                                 rounded p-3 shadow
                                 `}
                             >
-                                <div>
-                                    <div>
-                                        The new judge will be assigned to every division, round and heat in this event. The judging panels QR code for this judge will be displayed once the page is refreshed.
-                                    </div>
-                                    <div>
-                                    </div>
-                                </div>
+                                The new judge will be assigned to every division, round and heat in this event. The judging panels QR code for this judge will be displayed once the page is refreshed.
                             </div>
 
                             {/*New Judge form*/}
