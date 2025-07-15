@@ -66,6 +66,7 @@ export default function JudgingPanelClient({
     Record<string, number>
   >({});
   const [bestScores, setBestScores] = useState<BestScore[]>([]);
+  const [submissionFlag, setSubmissionFlag] = useState<boolean>(false);
 
   useEffect(() => {
     if (!eventId) return;
@@ -98,7 +99,7 @@ export default function JudgingPanelClient({
         console.error("Failed to load best scores", err);
         setBestScores([]);
       });
-  }, [personnelId, roundHeatId]);
+  }, [personnelId, roundHeatId, submissionFlag]);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.replace(/\D/g, '');
@@ -208,7 +209,7 @@ export default function JudgingPanelClient({
         ...prev,
         [`${selected?.athlete_id}-${runNum}`]: parseFloat(score),
       }));
-
+      setSubmissionFlag(!submissionFlag);
       setScore("");
     }
     if (eventIsFinished) {
@@ -225,9 +226,10 @@ export default function JudgingPanelClient({
     <div>
       <div className="flex w-full h-screen">
 
-        {/* Athlete List */}
+        {/* Athlete List
+        make the top row sticky to vertical scrolling*/}
         <div className="w-[30%] p-4 space-y-4 pt-[2%] pb-[2%] ">
-          <div className="w-full h-full border border-black  overflow-x-auto">
+          <div className="w-full h-full border border-black overflow-x-auto">
             <div className="inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div className="sticky left-0 bg-white border-r-1 border-black border-solid">BIB</div>
               {athletes.length > 0 &&
@@ -364,7 +366,7 @@ export default function JudgingPanelClient({
         {/* Best Scores List */}
         <div className="w-[20%] p-4 space-y-4 pt-[2%] pb-[2%] text-3xl font-bold ">
           <div className="w-full h-full border border-black overflow-auto">
-            <div className="grid grid-cols-2 gap-0 text-center mb-0 border-b-1 border-black border-solid min-h-[2rem] text-2xl font-bold">
+            <div className="grid grid-cols-2 gap-0 text-center mb-0 border-b-1 border-black border-solid min-h-[2rem] text-2xl font-bold sticky top-0">
               <div className="border-r-1 border-black border-solid bg-white">
                 BIB</div>
               <div className="bg-white">BEST</div>
