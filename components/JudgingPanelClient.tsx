@@ -25,7 +25,7 @@ type AthleteRun = {
 
 type BestScore = {
   bib_num: number;
-  best: number;
+  best_run_score: number;
 }
 
 export default function JudgingPanelClient({
@@ -91,14 +91,14 @@ export default function JudgingPanelClient({
 
   useEffect(() => {
     if (!roundHeatId) return;
-    fetch(`/api/bestScoreTable?round_heat_id=${roundHeatId}`)
-      .then(res => res.ok ? res.json() : [])
+    fetch(`/api/best-run-score-per-judge?round_heat_id=${roundHeatId}&personnel_id=${personnelId}`)
+      .then((res => res.ok ? res.json() : []))
       .then((data: BestScore[]) => setBestScores(data))
       .catch(err => {
         console.error("Failed to load best scores", err);
         setBestScores([]);
       });
-  }, [roundHeatId]);
+  }, [personnelId, roundHeatId]);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.replace(/\D/g, '');
@@ -370,13 +370,13 @@ export default function JudgingPanelClient({
               <div>BEST</div>
             </div>
             {/* rows */}
-            {bestScores.map(({ bib_num, best }) => (
+            {bestScores.map(({ bib_num, best_run_score }) => (
               <div
                 key={bib_num}
                 className="grid grid-cols-2 gap-0 text-center mb-0 h-[5%] border-b-1 border-black border-solid font-semibold"
               >
                 <div className="bg-gray-100 p-1 border-r-1 border-black border-solid">{bib_num}</div>
-                <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
+                <div className="bg-green-100 p-1">{Number(best_run_score).toFixed(0)}</div>
               </div>
             ))}
           </div>
