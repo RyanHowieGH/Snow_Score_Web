@@ -1,4 +1,3 @@
-// npm install qrcode
 import { toDataURL } from 'qrcode';
 import CopyUrlButton from './CopyURLButton';
 

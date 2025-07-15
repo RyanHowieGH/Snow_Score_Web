@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from 'next/image';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -24,7 +25,7 @@ type AthleteRun = {
 
 type BestScore = {
   bib_num: number;
-  best: number;
+  best_run_score: number;
 }
 
 export default function JudgingPanelClient({
@@ -90,14 +91,14 @@ export default function JudgingPanelClient({
 
   useEffect(() => {
     if (!roundHeatId) return;
-    fetch(`/api/bestScoreTable?round_heat_id=${roundHeatId}`)
-      .then(res => res.ok ? res.json() : [])
+    fetch(`/api/best-run-score-per-judge?round_heat_id=${roundHeatId}&personnel_id=${personnelId}`)
+      .then((res => res.ok ? res.json() : []))
       .then((data: BestScore[]) => setBestScores(data))
       .catch(err => {
         console.error("Failed to load best scores", err);
         setBestScores([]);
       });
-  }, [roundHeatId]);
+  }, [personnelId, roundHeatId]);
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.replace(/\D/g, '');
@@ -225,9 +226,9 @@ export default function JudgingPanelClient({
       <div className="flex w-full h-screen">
 
         {/* Athlete List */}
-        <div className="w-[40%] p-4 space-y-4 pt-[2%] pb-[2%] ">
-          <div className="w-full h-full border border-black overflow-auto">
-            <div className="grid grid-cols-4 gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
+        <div className="w-[30%] p-4 space-y-4 pt-[2%] pb-[2%] ">
+          <div className="w-full h-full border border-black  overflow-x-auto">
+            <div className="inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div>BIB</div>
               {athletes.length > 0 &&
                 athletes[0].runs.map((run) => (
@@ -239,7 +240,7 @@ export default function JudgingPanelClient({
             {athletes.map(({ athlete_id, bib, runs }) => (
               <div
                 key={athlete_id}
-                className="grid grid-cols-4 gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
+                className="inline-grid grid-flow-col auto-cols-[minmax(7rem,2fr)] gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
               >
                 <div className="bg-gray-100 border-black border-solid border-b-1 flex items-center justify-center">{bib}</div>
                 {runs.map(({ run_num }) => {
@@ -272,23 +273,67 @@ export default function JudgingPanelClient({
 
         {/* Score Board*/}
         <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
-
-          {/* Score Display */}
-          <div className="border-solid border-black border-1 mb-4 w-[50%] h-[30%]">
-            {selected?.bib && selected?.run && (
-              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
-                BIB {selected.bib}  -  RUN {selected.run}
-              </div>
-            )}
-            {!selected?.bib && !selected?.run && (
-              <div className="text-xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center">
-                BIB #  -  RUN #
-              </div>
-            )}
-            <div className="text-6xl font-bold bg-green-100 w-full text-center min-h-[3rem] h-[80%] flex items-center justify-center">
-              {score}
+          <div className="h-[30%] w-[100%] flex justify-center ">
+            {/* Left side arrows */}
+            <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%]">
+              <button
+                className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
+                aria-label="Previous Bib"
+              >
+                <ChevronUp className="h-27 w-27" />
+              </button>
+              <button
+                className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
+                aria-label="Next Bib"
+              >
+                <ChevronDown className="h-27 w-27" />
+              </button>
             </div>
+
+            {/* Score Display */}
+            <div className="border-solid border-black border-1 mb-4 w-[50%]">
+              {selected?.bib != null && selected?.run != null ? (
+                <div className="flex">
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
+                    BIB {selected.bib} 
+                  </div>
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
+                    RUN {selected.run}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-row w-full">       
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
+                    BIB
+                  </div>
+                  <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
+                    RUN
+                  </div>
+                </div>
+              )}
+              <div className="text-[8vw] font-bold bg-green-100 w-full text-center h-[85%] flex items-center justify-center">
+                {score}
+              </div>
+            </div>
+
+          {/* Right side arrows */}
+          <div className="flex flex-col items-center justify-center gap-[5%] ml-[5%]">
+            <button
+              className="p-[3%] border border-black rounded bg-gray-100  active:bg-gray-200"
+              aria-label="Right side competitor"
+            >
+              <ChevronRight  className="h-27 w-27" />
+            </button>
+            <button
+              className="p-[3%] border border-black rounded bg-gray-100  active:bg-gray-200"
+              aria-label="Left side competitor"
+            >
+              <ChevronLeft className="h-27 w-27" />
+            </button>
           </div>
+
+          </div>
+
 
           {/* Submit Button */}
           <button
@@ -325,13 +370,13 @@ export default function JudgingPanelClient({
               <div>BEST</div>
             </div>
             {/* rows */}
-            {bestScores.map(({ bib_num, best }) => (
+            {bestScores.map(({ bib_num, best_run_score }) => (
               <div
                 key={bib_num}
                 className="grid grid-cols-2 gap-0 text-center mb-0 h-[5%] border-b-1 border-black border-solid font-semibold"
               >
                 <div className="bg-gray-100 p-1 border-r-1 border-black border-solid">{bib_num}</div>
-                <div className="bg-green-100 p-1">{Number(best).toFixed(0)}</div>
+                <div className="bg-green-100 p-1">{Number(best_run_score).toFixed(0)}</div>
               </div>
             ))}
           </div>
