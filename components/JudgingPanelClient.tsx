@@ -229,10 +229,10 @@ export default function JudgingPanelClient({
         <div className="w-[30%] p-4 space-y-4 pt-[2%] pb-[2%] ">
           <div className="w-full h-full border border-black  overflow-x-auto">
             <div className="inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
-              <div>BIB</div>
+              <div className="sticky left-0 bg-white border-r-1 border-black border-solid">BIB</div>
               {athletes.length > 0 &&
                 athletes[0].runs.map((run) => (
-                  <div className="border-l-1 border-black border-solid"
+                  <div className=" bg-white border-r-1 border-black border-solid"
                   key={run.run_num}>RUN {run.run_num}</div>
                 ))}
             </div>
@@ -242,7 +242,7 @@ export default function JudgingPanelClient({
                 key={athlete_id}
                 className="inline-grid grid-flow-col auto-cols-[minmax(7rem,2fr)] gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
               >
-                <div className="bg-gray-100 border-black border-solid border-b-1 flex items-center justify-center">{bib}</div>
+                <div className="border-black border-solid border-b-1 border-r-1 flex items-center justify-center sticky left-0 bg-white">{bib}</div>
                 {runs.map(({ run_num }) => {
                   const key = `${athlete_id}-${run_num}`;
                   const isActive =
@@ -258,8 +258,8 @@ export default function JudgingPanelClient({
                           className={`
                             flex items-center justify-center
                             ${isActive
-                              ? "bg-blue-500 text-white font-bold border-l-1 border-black border-solid border-b-1"
-                              : "bg-gray-200 hover:bg-gray-300 border-l-1 border-black border-solid border-b-1"}
+                              ? "bg-blue-500 text-white font-bold border-r-1 border-black border-solid border-b-1"
+                              : "bg-gray-200 hover:bg-gray-300 border-r-1 border-black border-solid border-b-1"}
                           `}
                         >
                           {submittedScores[key] ?? `+`}
@@ -277,13 +277,13 @@ export default function JudgingPanelClient({
             {/* Left side arrows */}
             <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%]">
               <button
-                className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
+                className="p-[2%] border border-black rounded bg-white active:bg-gray-200"
                 aria-label="Previous Bib"
               >
                 <ChevronUp className="h-27 w-27" />
               </button>
               <button
-                className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
+                className="p-[2%] border border-black rounded bg-white active:bg-gray-200"
                 aria-label="Next Bib"
               >
                 <ChevronDown className="h-27 w-27" />
@@ -319,13 +319,13 @@ export default function JudgingPanelClient({
           {/* Right side arrows */}
           <div className="flex flex-col items-center justify-center gap-[5%] ml-[5%]">
             <button
-              className="p-[3%] border border-black rounded bg-gray-100  active:bg-gray-200"
+              className="p-[3%] border border-black rounded bg-white active:bg-gray-200"
               aria-label="Right side competitor"
             >
               <ChevronRight  className="h-27 w-27" />
             </button>
             <button
-              className="p-[3%] border border-black rounded bg-gray-100  active:bg-gray-200"
+              className="p-[3%] border border-black rounded bg-white active:bg-gray-200"
               aria-label="Left side competitor"
             >
               <ChevronLeft className="h-27 w-27" />
@@ -365,9 +365,9 @@ export default function JudgingPanelClient({
         <div className="w-[20%] p-4 space-y-4 pt-[2%] pb-[2%] text-3xl font-bold ">
           <div className="w-full h-full border border-black overflow-auto">
             <div className="grid grid-cols-2 gap-0 text-center mb-0 border-b-1 border-black border-solid min-h-[2rem] text-2xl font-bold">
-              <div className="border-r-1 border-black border-solid">
+              <div className="border-r-1 border-black border-solid bg-white">
                 BIB</div>
-              <div>BEST</div>
+              <div className="bg-white">BEST</div>
             </div>
             {/* rows */}
             {bestScores.map(({ bib_num, best_run_score }) => (
@@ -375,7 +375,7 @@ export default function JudgingPanelClient({
                 key={bib_num}
                 className="grid grid-cols-2 gap-0 text-center mb-0 h-[5%] border-b-1 border-black border-solid font-semibold"
               >
-                <div className="bg-gray-100 p-1 border-r-1 border-black border-solid">{bib_num}</div>
+                <div className="bg-white p-1 border-r-1 border-black border-solid">{bib_num}</div>
                 <div className="bg-green-100 p-1">{Number(best_run_score).toFixed(0)}</div>
               </div>
             ))}
