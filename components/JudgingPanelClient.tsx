@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from 'next/image';
-import { ArrowBigUp, ArrowBigDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -277,16 +277,16 @@ export default function JudgingPanelClient({
             {/* Left side arrows */}
             <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%]">
               <button
-                className="p-[2%] border border-black rounded bg-gray-100 hover:bg-gray-200"
+                className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
                 aria-label="Previous Bib"
               >
-                <ArrowBigUp className="h-27 w-27" />
+                <ChevronUp className="h-27 w-27" />
               </button>
               <button
                 className="p-[2%] border border-black rounded bg-gray-100 active:bg-gray-200"
                 aria-label="Next Bib"
               >
-                <ArrowBigDown className="h-27 w-27" />
+                <ChevronDown className="h-27 w-27" />
               </button>
             </div>
 
@@ -319,16 +319,16 @@ export default function JudgingPanelClient({
           {/* Right side arrows */}
           <div className="flex flex-col items-center justify-center gap-[5%] ml-[5%]">
             <button
-              className="p-[3%] border border-black rounded bg-gray-100 hover:bg-gray-200"
+              className="p-[3%] border border-black rounded bg-gray-100  active:bg-gray-200"
               aria-label="Right side competitor"
             >
-              <ArrowRight className="h-27 w-27" />
+              <ChevronRight  className="h-27 w-27" />
             </button>
             <button
-              className="p-[3%] border border-black rounded bg-gray-100 hover:bg-gray-200"
+              className="p-[3%] border border-black rounded bg-gray-100  active:bg-gray-200"
               aria-label="Left side competitor"
             >
-              <ArrowLeft className="h-27 w-27" />
+              <ChevronLeft className="h-27 w-27" />
             </button>
           </div>
 
