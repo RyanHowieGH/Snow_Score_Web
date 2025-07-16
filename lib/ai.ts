@@ -7,8 +7,6 @@ export async function* generateArticleFromData(data: ArticleData): AsyncGenerato
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemma-3n-e2b-it" });
-
-    // --- THIS IS THE FIX: More robust data formatting ---
     
     // Create a clean, readable summary of the winners.
     const winnerSummary = data.results.map(result => {
