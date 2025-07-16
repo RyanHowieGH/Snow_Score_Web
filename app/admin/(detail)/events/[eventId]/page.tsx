@@ -1,5 +1,4 @@
 // app\admin\(detail)\events\[eventId]\page.tsx
-
 import React from "react";
 import Link from "next/link";
 import { fetchEventById } from "@/lib/data";
@@ -12,7 +11,8 @@ import type { Metadata } from "next";
 import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
 import PublishEventButton from '@/components/PublishEventButton';
 import { ArticleGenerator } from './ArticleGenerator'; // <-- Add this import
-
+import { Toaster } from 'react-hot-toast';
+import QuickviewHeadjudgeDisplay from "@/components/QuickviewHeadjudgeDisplay";
 
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
@@ -85,6 +85,7 @@ export default async function AdminEventDetailPage({
   return (
     // VVV --- REDUCED TOP PADDING for less headroom --- VVV
     <div className="space-y-6 p-4 md:pt-2 md:px-6 md:pb-6">
+      <Toaster />
       {/* Page Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-base-300">
         {" "}
@@ -112,22 +113,18 @@ export default async function AdminEventDetailPage({
             Quick Overview
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Location:
-              </strong>{" "}
-              {event.location}
+            <p className="font-medium text-base-content/70 block">
+                Location:{" "}
+                <span className="font-normal">{event.location}</span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Dates:
-              </strong>{" "}
-              {formatDateRange(startDate, endDate)}
+            <p className="font-medium text-base-content/70 block mb-0.5">
+                Dates:{" "}
+                <span className="font-normal">
+                  {formatDateRange(startDate, endDate)}
+                </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Status:
-              </strong>
+            <p className="font-medium text-base-content/70 block mb-0.5">
+                Status:{' '}
               <span
                 className={`ml-1 badge badge-sm ${
                   event.status?.toLowerCase() === "scheduled"
@@ -142,51 +139,44 @@ export default async function AdminEventDetailPage({
                 {event.status || "N/A"}
               </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Discipline:
-              </strong>{" "}
-              {event.discipline_name || "Not Specified"}
+            <p className="font-medium text-base-content/70">
+                Discipline:{" "}
+                <span className="font-normal">
+                  {event.discipline_name || "Not Specified"}
+                </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Divisions:
-              </strong>{" "}
-              {event.divisions?.length
-                ? event.divisions
-                    .map((division) => {
-                      const count = event.athletes?.filter(
-                        (athlete) =>
-                          athlete.division_id === division.division_id
-                      ).length;
-                      return `${division.division_name} (${count})`;
-                    })
-                    .join(", ")
-                : "None"}
+            <p className="font-medium text-base-content/70">
+                Divisions:{" "}
+                <span className="font-normal">
+                  {event.divisions?.length
+                  ? event.divisions
+                      .map((division) => {
+                        const count = event.athletes?.filter(
+                          (athlete) =>
+                            athlete.division_id === division.division_id
+                        ).length;
+                        return `${division.division_name} (${count})`;
+                      })
+                      .join(", ")
+                  : 
+                  "None"}
+                </span>
+              
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Registered Athletes:
-              </strong>{" "}
-              {event.athletes?.length || 0}
+            <p className="font-medium text-base-content/70">
+                Registered Athletes:{" "}
+                <span className="font-normal">
+                  {event.athletes?.length || 0}
+                </span>
+              
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Assigned Judges:
-              </strong>{" "}
-              {event.judges?.length || 0}
+            <p className="font-medium text-base-content/70">
+                Assigned Judges:{" "}
+                <span className="font-normal">
+                  {event.judges?.length || 0}
+                </span>
             </p>
-            <div className="flex items-center gap-2">
-              <strong className="font-medium text-base-content/70">
-                Head Judge:
-              </strong>
-              {event.headJudge && event.headJudge.length > 0
-                ? event.headJudge
-                    .map((hj) => `${hj.first_name} ${hj.last_name}`)
-                    .join(", ")
-                : "None"}
-              <EditHeadJudgeButton eventId={eventId} userRoleId={user.roleId} />
-            </div>
+            <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} />
           </div>
         </div>
       </div>
