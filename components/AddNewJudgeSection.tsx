@@ -51,7 +51,7 @@ export default function AddNewJudgeSection({
         <div>
             {/* ADD NEW JUDGE */}
             <button 
-            className="btn btn-danger w-[10%] ml-[0] mt-[1%]" 
+            className="btn btn-danger ml-[0] mt-[1%]" 
             onClick={() =>  setCreateNewJudge(true)}>
                 Add judge
             </button>

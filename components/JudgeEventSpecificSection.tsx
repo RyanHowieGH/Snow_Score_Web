@@ -90,9 +90,9 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                         Judges
                     </h2>
                     <button
-                    className="px-8 py-2 bg-gray-300 text-black rounded hover:bg-gray-600"
+                    className="px-8 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer font-semibold"
                     onClick={() => setIsEditionMode(!isEditionMode)}>
-                        Manage Judges
+                        Manage
                     </button>
                 </div>
 
@@ -121,12 +121,12 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                 </div>
 
                                 {/* REMOVE JUDGE */}
-                                <button className="btn btn-danger" onClick={() => handleSelectJudgeToRemove(judge)}>
+                                <button className="btn btn-danger h-7 font-semibold" onClick={() => handleSelectJudgeToRemove(judge)}>
                                     <Image
                                     src="/assets/icons/trash.png"
                                     alt={'Trash icon.'}
-                                    width={20}
-                                    height={20}
+                                    width={15}
+                                    height={15}
                                 />
                                 Remove
                                 </button>
@@ -165,11 +165,13 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                     </Modal>
                                 )}
                             </div>
-                        ))}                            
-                    <AddNewJudgeSection
-                        event_id={event_id}
-                        onAddJudgeToEvent={handleAddJudgeToEvent}
-                    />
+                        ))}      
+                        <div className="flex justify-end mt-[1%]">
+                            <AddNewJudgeSection
+                                event_id={event_id}
+                                onAddJudgeToEvent={handleAddJudgeToEvent}
+                            />
+                        </div>                      
                     </div>
                 )}
             </div>
