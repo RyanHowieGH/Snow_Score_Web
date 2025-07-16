@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from 'next/image';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Toaster, toast } from "react-hot-toast";
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -58,13 +59,11 @@ export default function JudgingPanelClient({
   const [runNum, setRunNum] = useState<number | null>(null);
   const [selected, setSelected] = useState<{
     bib: number;
-    run: number;
+    run_num: number;
     athlete_id: number;
   } | null>(null);
   const [eventIsFinished, setEventIsFinished] = useState(false);
-  const [submittedScores, setSubmittedScores] = useState<
-    Record<string, number>
-  >({});
+  const [submittedScores, setSubmittedScores] = useState<Record<string, number>>({}); // USEEFFECT TO FETCH FROM THE DB AND PASS AS DEFAULT
   const [bestScores, setBestScores] = useState<BestScore[]>([]);
   const [submissionFlag, setSubmissionFlag] = useState<boolean>(false);
 
@@ -106,6 +105,15 @@ export default function JudgingPanelClient({
     setInputCode(sanitized);
   };
 
+  function getSpecificScore (round_heat_id: number, personnel_id: number, athlete_id: number, run_num: number) {
+      fetch(`/api/athlete-run-score-per-judge?round_heat_id=${round_heat_id}&personnel_id=${personnel_id}&run_num=${run_num}&=${athlete_id}`)
+      .then((res => res.ok ? res.json() : null))
+      .then((data: Record<string, number>) => setSubmittedScores(data))
+      .catch(err => {
+        console.error("Failed to load scores from database", err);
+      });
+  }
+
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -114,7 +122,7 @@ export default function JudgingPanelClient({
     if (sanitizedCode === String(judgingPanelPasscode)) {
       setVerified(true);
     } else {
-      alert('Invalid access code');
+      toast.error("Invalid access code");
       setInputCode('');
     }
   };
@@ -122,6 +130,7 @@ export default function JudgingPanelClient({
   if (!verified) {
     return (
     <div className=" min-h-screen flex flex-col justify-center py-12 px-4">
+      <Toaster />
       <div className="max-w-xl w-full mx-auto bg-white border border-gray-200 shadow-md">
         <div className="p-8 flex flex-col items-center">
           <Image
@@ -176,7 +185,7 @@ export default function JudgingPanelClient({
   const handleScoreSubmit = async () => {
 
     if (Number(score) > 100){
-      alert("A score must be within 0 and 100.");
+      toast.error("Error: score exceeds 100", {position: "bottom-center"});
       setScore("");
       return;
     }
@@ -193,18 +202,19 @@ export default function JudgingPanelClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         round_heat_id: roundHeatId,
-        run_num: selected?.run,
+        run_num: selected?.run_num,
         personnel_id: personnelId,
         score: parseFloat(score),
         athlete_id: selected?.athlete_id,
       }),
     });
-        console.log(`SELECTED RUN_NUM: ${selected?.run}, SCORE: ${score}, PERSONNEL_ID: ${personnelId}, ATHLETE_ID: ${selected?.athlete_id}, ROUND_HEAT_ID: ${roundHeatId}`)
+        console.log(`SELECTED RUN_NUM: ${selected?.run_num}, SCORE: ${score}, PERSONNEL_ID: ${personnelId}, ATHLETE_ID: ${selected?.athlete_id}, ROUND_HEAT_ID: ${roundHeatId}`)
 
     const data = await response.json();
     console.log("Score submission response:", data);
 
     if (response.ok) {
+      toast.success("Score submitted successfully", {position: "bottom-center"});
       setSubmittedScores((prev) => ({
         ...prev,
         [`${selected?.athlete_id}-${runNum}`]: parseFloat(score),
@@ -224,6 +234,7 @@ export default function JudgingPanelClient({
 
   return (
     <div>
+      <Toaster />
       <div className="flex w-full h-screen">
 
         {/* Athlete List
@@ -247,15 +258,16 @@ export default function JudgingPanelClient({
                 <div className="border-black border-solid border-b-1 border-r-1 flex items-center justify-center sticky left-0 bg-white">{bib}</div>
                 {runs.map(({ run_num }) => {
                   const key = `${athlete_id}-${run_num}`;
+                  // aaaa
                   const isActive =
-                    selected?.athlete_id === athlete_id && selected.run === run_num;
+                    selected?.athlete_id === athlete_id && selected.run_num === run_num;
                       return (
                         <button
                           key={key}
                           onClick={() => {
                             console.log(`Selected athlete: ${bib}, run: ${run_num}`);
                             setRunNum(run_num);
-                            setSelected({ bib, run: run_num, athlete_id });
+                            setSelected({ bib, run_num, athlete_id });
                           }}
                           className={`
                             flex items-center justify-center
@@ -294,13 +306,13 @@ export default function JudgingPanelClient({
 
             {/* Score Display */}
             <div className="border-solid border-black border-1 mb-4 w-[50%]">
-              {selected?.bib != null && selected?.run != null ? (
+              {selected?.bib != null && selected?.run_num != null ? (
                 <div className="flex">
                   <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
                     BIB {selected.bib} 
                   </div>
                   <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2 border-l-1">
-                    RUN {selected.run}
+                    RUN {selected.run_num}
                   </div>
                 </div>
               ) : (
