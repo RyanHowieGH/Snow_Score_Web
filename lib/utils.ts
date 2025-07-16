@@ -28,3 +28,35 @@ export const formatDateRange = (startInput: Date | string | undefined | null, en
 
     return `${startDateStr} - ${endDateStr}`;
 };
+
+/**
+ * Calculates a dynamic, time-based status for an event.
+ * @param startDate The event's start date.
+ * @param endDate The event's end date.
+ * @returns A string: "COMPLETE", "ONGOING", or "UPCOMING".
+ */
+export const getEventState = (startDate: Date, endDate: Date): 'COMPLETE' | 'ONGOING' | 'UPCOMING' => {
+  const now = new Date();
+
+  // For accurate date-only comparison, we should ignore the time part.
+  // We set the time to the beginning of the day for `now`.
+  now.setHours(0, 0, 0, 0);
+
+  // We set the time of the event end date to the very end of the day.
+  // This ensures an event ending "today" is considered ONGOING, not COMPLETE.
+  const endOfDay = new Date(endDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  if (endOfDay < now) {
+    return 'COMPLETE';
+  }
+
+  // If the start date is today or in the past, and we haven't returned COMPLETE,
+  // it must be ONGOING.
+  if (startDate <= now) {
+    return 'ONGOING';
+  }
+  
+  // If neither of the above, the event must be in the future.
+  return 'UPCOMING';
+};

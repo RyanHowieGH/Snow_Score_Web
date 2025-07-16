@@ -3,6 +3,7 @@ import React from "react";
 import Link from "next/link";
 import { fetchEventById } from "@/lib/data";
 import { formatDate, formatDateRange } from "@/lib/utils";
+import { getEventState } from "@/lib/utils"; 
 import type { EventDetails } from "@/lib/definitions";
 import { notFound, redirect } from "next/navigation";
 import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
@@ -81,6 +82,8 @@ export default async function AdminEventDetailPage({
       : new Date(event.start_date);
   const endDate =
     event.end_date instanceof Date ? event.end_date : new Date(event.end_date);
+    const eventState = getEventState(startDate, endDate);
+
 
   return (
     // VVV --- REDUCED TOP PADDING for less headroom --- VVV
@@ -127,16 +130,14 @@ export default async function AdminEventDetailPage({
                 Status:{' '}
               <span
                 className={`ml-1 badge badge-sm ${
-                  event.status?.toLowerCase() === "scheduled"
-                    ? "badge-success"
-                    : event.status?.toLowerCase() === "completed"
-                    ? "badge-primary"
-                    : event.status?.toLowerCase() === "cancelled"
-                    ? "badge-error"
-                    : "badge-ghost"
+                  eventState === "ONGOING"
+                    ? "badge-success" // Green for live/ongoing
+                    : eventState === "COMPLETE"
+                    ? "badge-primary" // Blue/Primary for completed
+                    : "badge-ghost"   // Default/Ghost for upcoming
                 } badge-outline`}
               >
-                {event.status || "N/A"}
+                {eventState}
               </span>
             </p>
             <p className="font-medium text-base-content/70">

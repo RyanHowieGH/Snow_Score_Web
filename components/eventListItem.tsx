@@ -1,42 +1,49 @@
-'use client'; // <-- MAKE THIS A CLIENT COMPONENT
+// components\eventListItem.tsx
+
+'use client';
 
 import React, { useState, useTransition } from "react";
 import Link from 'next/link';
-import { formatDateRange } from '@/lib/utils';
+// --- UPDATE THIS IMPORT ---
+import { formatDateRange, getEventState } from '@/lib/utils';
 import type { SnowEvent } from '@/lib/definitions';
-import { deleteEventAction } from '@/app/admin/(detail)/events/actions'; // Adjust path if your action is elsewhere
-import { TrashIcon, PencilIcon } from '@heroicons/react/24/outline'; // Example icons
-import { useRouter } from "next/navigation"; // For re-fetching data
+import { deleteEventAction } from '@/app/admin/(detail)/events/actions';
+import { TrashIcon, PencilIcon, ClockIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { useRouter } from "next/navigation";
 
 interface EventListItemProps {
     event: SnowEvent;
-    isUpcoming: boolean;
+    // --- 'isUpcoming' prop is NO LONGER NEEDED ---
     baseUrl?: string;
     linkActionText?: string;
     linkActionSuffix?: string;
-    isAdminView?: boolean; // New prop to indicate if this is rendered in an admin context
+    isAdminView?: boolean;
 }
 
 const EventListItem: React.FC<EventListItemProps> = ({
     event,
-    isUpcoming,
     baseUrl = '/events',
     linkActionText = 'View Details',
     linkActionSuffix = '',
-    isAdminView = false // Default to false
+    isAdminView = false
 }) => {
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isDeletePending, startDeleteTransition] = useTransition();
 
+    // Ensure start_date and end_date are Date objects
     const startDate = typeof event.start_date === 'string' ? new Date(event.start_date) : event.start_date;
     const endDate = typeof event.end_date === 'string' ? new Date(event.end_date) : event.end_date;
-    const formattedDate = formatDateRange(startDate, endDate);
+    
+    // --- VVV NEW: Calculate the state directly in the component VVV ---
+    const eventState = getEventState(startDate, endDate);
 
+    const formattedDate = formatDateRange(startDate, endDate);
     const eventUrl = `${baseUrl}/${event.event_id}${linkActionSuffix}`;
 
     const handleDelete = async () => {
+        // ... (handleDelete logic remains the same)
         if (!window.confirm(`Are you sure you want to delete the event "${event.name}"? This action cannot be undone.`)) {
             return;
         }
@@ -47,18 +54,39 @@ const EventListItem: React.FC<EventListItemProps> = ({
             setIsDeleting(false);
             if (!result.success) {
                 setError(result.message || "Failed to delete event.");
-                // Optionally, clear error after a few seconds
                 setTimeout(() => setError(null), 5000);
             } else {
-                // Success! Revalidation should update the list.
-                // For a more immediate UI update, you might need to manage the list state in the parent
-                // or trigger a router.refresh() if the parent component re-fetches data.
-                // RevalidatePath in action is the primary way.
-                // router.refresh(); // Uncomment if revalidatePath isn't updating UI quickly enough
-                alert(result.message); // Or use a toast notification
+                alert(result.message);
             }
         });
     };
+
+    // --- VVV NEW: Define badge properties based on the calculated state VVV ---
+    const getBadgeProps = () => {
+        switch (eventState) {
+            case 'ONGOING':
+                return {
+                    text: 'ONGOING',
+                    className: 'badge-success',
+                    icon: <ClockIcon className="h-3 w-3 mr-1" />
+                };
+            case 'COMPLETE':
+                return {
+                    text: 'COMPLETE',
+                    className: 'badge-primary',
+                    icon: <CheckCircleIcon className="h-3 w-3 mr-1" />
+                };
+            case 'UPCOMING':
+            default:
+                return {
+                    text: 'UPCOMING',
+                    className: 'badge-info',
+                    icon: <CalendarIcon className="h-3 w-3 mr-1" />
+                };
+        }
+    };
+    const badge = getBadgeProps();
+
 
     return (
         <li className="bg-base-100 shadow-md rounded-lg transition-shadow hover:shadow-lg p-4">
@@ -74,16 +102,12 @@ const EventListItem: React.FC<EventListItemProps> = ({
 
                 {/* Action Buttons Area */}
                 <div className="flex-shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
-                    {isUpcoming && (
-                        <div className="badge badge-info badge-outline badge-sm py-3 px-2 w-full justify-center sm:w-auto">
-                            UPCOMING
-                        </div>
-                    )}
-                    {!isUpcoming && (
-                        <div className="badge badge-ghost badge-outline badge-sm py-3 px-2 w-full justify-center sm:w-auto">
-                            PAST
-                        </div>
-                    )}
+                    
+                    {/* --- VVV UPDATED BADGE RENDERING VVV --- */}
+                    <div className={`badge ${badge.className} badge-outline badge-sm py-3 px-2 w-full justify-center sm:w-auto flex flex-row items-center`}>
+                        {badge.icon}
+                        {badge.text}
+                    </div>
 
                     {/* Main Action Button (View/Manage) */}
                     <Link href={eventUrl} className="btn btn-sm btn-primary btn-outline w-full sm:w-auto">
@@ -104,7 +128,7 @@ const EventListItem: React.FC<EventListItemProps> = ({
                             ) : (
                                 <TrashIcon className="h-4 w-4" />
                             )}
-                            <span className="sm:hidden ml-2">Delete</span> {/* Text for small screens */}
+                            <span className="sm:hidden ml-2">Delete</span>
                         </button>
                     )}
                 </div>
