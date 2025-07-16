@@ -1,5 +1,4 @@
 // app\admin\(detail)\events\[eventId]\page.tsx
-
 import React from "react";
 import Link from "next/link";
 import { fetchEventById } from "@/lib/data";
@@ -12,7 +11,8 @@ import type { Metadata } from "next";
 import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
 import PublishEventButton from '@/components/PublishEventButton';
 import { ArticleGenerator } from './ArticleGenerator'; // <-- Add this import
-
+import { Toaster } from 'react-hot-toast';
+import QuickviewHeadjudgeDisplay from "@/components/QuickviewHeadjudgeDisplay";
 
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
@@ -85,6 +85,7 @@ export default async function AdminEventDetailPage({
   return (
     // VVV --- REDUCED TOP PADDING for less headroom --- VVV
     <div className="space-y-6 p-4 md:pt-2 md:px-6 md:pb-6">
+      <Toaster />
       {/* Page Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-base-300">
         {" "}
@@ -123,7 +124,7 @@ export default async function AdminEventDetailPage({
                 </span>
             </p>
             <p className="font-medium text-base-content/70 block mb-0.5">
-                Status:
+                Status:{' '}
               <span
                 className={`ml-1 badge badge-sm ${
                   event.status?.toLowerCase() === "scheduled"
@@ -175,19 +176,7 @@ export default async function AdminEventDetailPage({
                   {event.judges?.length || 0}
                 </span>
             </p>
-            <div className="flex items-center gap-2 font-medium text-base-content/70">
-                Head Judge:{` `}
-                <span className="font-normal">
-                  {event.headJudge && event.headJudge.length > 0
-                  ? event.headJudge
-                      .map((hj) => `${hj.first_name} ${hj.last_name}`)
-                      .join(", ")
-                  : 
-                  "None"}
-                </span>
-              
-              <EditHeadJudgeButton eventId={eventId} userRoleId={user.roleId} />
-            </div>
+            <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} />
           </div>
         </div>
       </div>
