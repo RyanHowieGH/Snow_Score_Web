@@ -45,10 +45,10 @@ export default function EventSidebar({ isOpen, toggleSidebar, eventId }) {
       </nav>
 
       {/* Toggle Button Area: mt-auto pushes this to the very bottom of the flex container */}
-      <div className="mt-auto p-4 border-t border-primary-focus">
+      <div className="mt-auto p-4">
         <button
           onClick={toggleSidebar}
-          className="flex items-center justify-center w-full text-primary-content/80 hover:text-primary-content focus:outline-none"
+          className="flex items-center justify-end-safe w-full text-primary-content/80 hover:text-primary-content focus:outline-none hover:cursor-pointer"
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
           aria-expanded={isOpen}
         >
