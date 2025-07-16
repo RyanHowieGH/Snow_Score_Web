@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Modal from "./PopUpModal";
 import Image from 'next/image';
 import AddNewJudgeSection from './AddNewJudgeSection';
-
+import {Toaster, toast} from 'react-hot-toast';
 
 // Judge Interface
 export interface Judge {
@@ -68,9 +68,11 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
         try {
             await deleteJudgeNullScores(judge.event_id, judge.personnel_id);
             await deleteJudge(judge.event_id, judge.personnel_id);
-            setRenderedJudges((renderedJudges ?? []).filter((judgeToRemove: Judge) => judgeToRemove.personnel_id !== judge.personnel_id))
+            setRenderedJudges((renderedJudges ?? []).filter((judgeToRemove: Judge) => judgeToRemove.personnel_id !== judge.personnel_id));
+            toast.success(`${(judge.name === "" || judge.name === null) ? judge.header : judge.name} was removed from the event`);
         } catch (error) {
             console.error('Failed to remove judge', error);
+            toast.error(`Failed to remove ${(judge.name === "" || judge.name === null) ? judge.header : judge.name} from the event`);
         }
         setOpenRemoveJudge(false);
     };
@@ -81,6 +83,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
 
     return (
         <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12 w-full border-t p-12">
+            <Toaster />
             <div className="w-full">
                 <div className="flex items-center justify-between w-full  dark:border-white pb-4">
                     <h2 className="text-2xl font-semibold text-secondary">

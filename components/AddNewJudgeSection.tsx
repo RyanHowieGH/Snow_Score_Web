@@ -3,6 +3,7 @@ import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
 import { Judge } from '@/lib/definitions';
 import { Info, X } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
 
 interface AddNewJudgeSectionProps {
   event_id: number,
@@ -33,9 +34,11 @@ export default function AddNewJudgeSection({
                 });
                 const data = await response.json();
                 onAddJudgeToEvent(data.judge);
-                console.log("Score submission response:", data);
+                console.log("A new judge was added to the event");
+                toast.success(`${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} was assigned to the event`);
         } catch (error) {
             console.error('Failed to add new judge', error);
+            toast.error(`Failed to assign ${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} to the event`);
         }
         finally{
             setCreateNewJudge(false);
