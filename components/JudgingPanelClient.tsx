@@ -21,6 +21,7 @@ type AthleteRun = {
     run_num: number;
     round_heat_id: number;
     seeding: number;
+    score: number;
   }[];
 }
 
@@ -63,14 +64,14 @@ export default function JudgingPanelClient({
     athlete_id: number;
   } | null>(null);
   const [eventIsFinished, setEventIsFinished] = useState(false);
-  const [submittedScores, setSubmittedScores] = useState<Record<string, number>>({}); // USEEFFECT TO FETCH FROM THE DB AND PASS AS DEFAULT
+  const [submittedScores, setSubmittedScores] = useState<Record<string, number>>({}); 
   const [bestScores, setBestScores] = useState<BestScore[]>([]);
   const [submissionFlag, setSubmissionFlag] = useState<boolean>(false);
 
   useEffect(() => {
     if (!eventId) return;
 
-    fetch(`/api/athletes?event_id=${eventId}&round_id=${roundId}&division_id=${divisionId}&round_heat_id=${roundHeatId}`)
+    fetch(`/api/athletes-and-score?personnel_id=${personnelId}&round_heat_id=${roundHeatId}`)
       .then(async (res) => {
         const ct = res.headers.get('content-type');
         if (ct && ct.includes('application/json')) {
@@ -81,13 +82,13 @@ export default function JudgingPanelClient({
       .then((data) => {
         console.log("API athletes data:", data);
         setAthletes(data.athletes);
-        setEventIsFinished(data.event.status === "COMPLETE");
+        // setEventIsFinished(data.event.status === "COMPLETE");
       })
       .catch((err) => {
-        console.error("Failed to load athletes or event or best scores", err);
+        console.error("Failed to load athletes data and scores", err);
         setAthletes([]);
       });
-  }, [eventId, roundId, divisionId, roundHeatId]);
+  }, []);
 
   useEffect(() => {
     if (!roundHeatId) return;
@@ -190,6 +191,18 @@ export default function JudgingPanelClient({
       return;
     }
 
+    if (runNum === null){
+      toast.error("Select a run", {position: "bottom-center"});
+      return;
+    }
+
+    if (score === ""){
+      toast.error("Enter a score to submit", {position: "bottom-center"});
+      return;
+    }
+
+
+    
     console.log("SUBMITTING:", {
       roundHeatId,
       runNum,
@@ -241,7 +254,7 @@ export default function JudgingPanelClient({
         make the top row sticky to vertical scrolling*/}
         <div className="w-[30%] p-4 space-y-4 pt-[2%] pb-[2%] ">
           <div className="w-full h-full border border-black overflow-x-auto">
-            <div className="inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
+            <div className=" top-0 z-10 sticky inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
               <div className="sticky left-0 bg-white border-r-1 border-black border-solid">BIB</div>
               {athletes.length > 0 &&
                 athletes[0].runs.map((run) => (
@@ -256,9 +269,8 @@ export default function JudgingPanelClient({
                 className="inline-grid grid-flow-col auto-cols-[minmax(7rem,2fr)] gap-0 text-center mb-0 h-[5%] font-semibold text-2xl"
               >
                 <div className="border-black border-solid border-b-1 border-r-1 flex items-center justify-center sticky left-0 bg-white">{bib}</div>
-                {runs.map(({ run_num }) => {
+                {runs.map(({ run_num, score }) => {
                   const key = `${athlete_id}-${run_num}`;
-                  // aaaa
                   const isActive =
                     selected?.athlete_id === athlete_id && selected.run_num === run_num;
                       return (
@@ -276,7 +288,7 @@ export default function JudgingPanelClient({
                               : "bg-gray-200 hover:bg-gray-300 border-r-1 border-black border-solid border-b-1"}
                           `}
                         >
-                          {submittedScores[key] ?? `+`}
+                          {score ?? (submittedScores[key] ?? (submittedScores[key] ?? "+"))}
                         </button>
                       );
                   })}
@@ -352,8 +364,8 @@ export default function JudgingPanelClient({
           {/* Submit Button */}
           <button
             onClick={handleScoreSubmit}
-            disabled={!roundHeatId || !runNum || !score || eventIsFinished}
-            className="bg-orange-600 text-gray-900 w-[50%] h-[10%] text-5xl font-bold border-solid border-black border-1"
+            disabled={eventIsFinished}
+            className="bg-orange-600 text-black w-[50%] h-[10%] text-5xl font-bold border-solid border-black border-1 active:bg-orange-700"
           >
             {eventIsFinished ? "Event Finished" : "SUBMIT"}
           </button>

@@ -42,7 +42,7 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
         <div className="space-y-6">
             <Toaster />
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl md:text-3xl font-bold">Manage Judges: 
+                <h2 className="text-2xl md:text-3xl font-bold">Manage Judges:{` `}
                     <span className='font-normal'>
                         {eventDetails.name}
                     </span>

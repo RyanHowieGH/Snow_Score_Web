@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
 
 
     // Build unique athlete -> runs map
-    const athletesMap = new Map<number, {athlete_id: number; bib: number; runs: { run_num: number; round_heat_id: number; seeding: number }[];}>();
+    const athletesMap = new Map<number, {athlete_id: number; bib: number; runs: { run_num: number; round_heat_id: number; seeding: number, score: number }[];}>();
 
     for (const row of athletesResult.rows) {
       if (!athletesMap.has(row.athlete_id)) {
@@ -78,12 +78,12 @@ export async function GET(req: NextRequest) {
         run_num: row.run_num,
         round_heat_id: row.round_heat_id,
         seeding: row.seeding,
+        score: parseInt(row.score),
       });
     }
 
     // Final API response
     return NextResponse.json({
-      event,
       athletes: Array.from(athletesMap.values()),
     });
 
