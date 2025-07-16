@@ -1,4 +1,4 @@
-// app/api/athletes/route.ts
+// app/api/athletes-and-score/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
 
