@@ -17,8 +17,6 @@ export async function generateMetadata({ params }: { params: any }): Promise<Met
     return {
         title: eventDetails ? `Manage Judges: ${eventDetails.name}` : 'Manage Event Judges',
         };
-
-        
 }
 
 export default async function ManageJudgingPanelsPage({ params }: { params: { eventId: string } }) {
@@ -37,7 +35,7 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
         notFound();
     }
 
-    const panels: JudgingPanelPerEvent[] | null = await fetchJudgingPanelDataByEventId(Number(eventId))
+    const panels: JudgingPanelPerEvent[] | null = await fetchJudgingPanelDataByEventId(Number(eventId));
 
     return (
         <div className="space-y-6">

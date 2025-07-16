@@ -6,30 +6,6 @@ export async function GET(req: NextRequest) {
   const pool = getDbPool();
 
   try {
-    const eventIdParam = req.nextUrl.searchParams.get("event_id");
-    if (!eventIdParam) {
-      return NextResponse.json(
-        { error: "Missing the event identifier" },
-        { status: 400 }
-      );
-    }
-
-    const roundIdParam = req.nextUrl.searchParams.get("round_id");
-    if (!roundIdParam) {
-      return NextResponse.json(
-        { error: "Missing the round identifier" },
-        { status: 400 }
-      );
-    }
-
-    const divisionIdParam = req.nextUrl.searchParams.get("division_id");
-    if (!divisionIdParam) {
-      return NextResponse.json(
-        { error: "Missing the division identifier" },
-        { status: 400 }
-      );
-    }
-
     const roundHeatIdParam = req.nextUrl.searchParams.get("round_heat_id");
     if (!roundHeatIdParam) {
       return NextResponse.json(
@@ -38,33 +14,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const eventId = parseInt(eventIdParam, 10);
     const roundHeatId = parseInt(roundHeatIdParam);
 
-    // Fetch the specific event by ID
-    const eventResult = await pool.query(
-      `
-      SELECT
-        e.event_id,
-        e.status,
-        e.name AS event_name
-      FROM ss_events e
-      WHERE e.event_id = $1
-      LIMIT 1
-      `,
-      [eventId]
-    );
 
-    if (eventResult.rowCount === 0) {
+    const personnelIdParam = req.nextUrl.searchParams.get("personnel_id");
+    if (!personnelIdParam) {
       return NextResponse.json(
-        { error: "Event not found" },
-        { status: 404 }
+        { error: "Missing judge identifier" },
+        { status: 400 }
       );
     }
 
-    const event = eventResult.rows[0];
+    const personnelId = parseInt(personnelIdParam);
 
-    // Fetch unique runs for each athlete (one row per athlete_id + run_num)
     const athletesResult = await pool.query(
       `
       SELECT *
@@ -75,7 +37,8 @@ export async function GET(req: NextRequest) {
             rr.run_num,
             hr.round_heat_id,
             hr.division_id,
-            hr.seeding
+            hr.seeding,
+            rs.score
         FROM ss_run_results    rr
         JOIN ss_heat_results   hr ON rr.round_heat_id = hr.round_heat_id
                                 AND rr.athlete_id   = hr.athlete_id
@@ -83,8 +46,9 @@ export async function GET(req: NextRequest) {
                                 ON hr.event_id      = reg.event_id 
                                 AND hr.division_id  = reg.division_id
                                 AND rr.athlete_id   = reg.athlete_id
-        WHERE rr.event_id       = $1
-          AND rr.round_heat_id  = $2
+        JOIN ss_run_scores     rs ON rr.run_result_id = rs.run_result_id
+        WHERE rr.round_heat_id  = $1
+          AND rs.personnel_id = $2
         ORDER BY rr.athlete_id,
                 rr.run_num,
                 hr.seeding   ASC
@@ -92,7 +56,7 @@ export async function GET(req: NextRequest) {
       ORDER BY t.seeding    ASC,
                t.run_num   ASC;
     `,
-      [eventId, roundHeatId]
+      [roundHeatId, personnelId]
     );
 
 
