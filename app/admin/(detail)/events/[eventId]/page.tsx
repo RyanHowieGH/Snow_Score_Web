@@ -112,22 +112,18 @@ export default async function AdminEventDetailPage({
             Quick Overview
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Location:
-              </strong>{" "}
-              {event.location}
+            <p className="font-medium text-base-content/70 block">
+                Location:{" "}
+                <span className="font-normal">{event.location}</span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Dates:
-              </strong>{" "}
-              {formatDateRange(startDate, endDate)}
+            <p className="font-medium text-base-content/70 block mb-0.5">
+                Dates:{" "}
+                <span className="font-normal">
+                  {formatDateRange(startDate, endDate)}
+                </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
+            <p className="font-medium text-base-content/70 block mb-0.5">
                 Status:
-              </strong>
               <span
                 className={`ml-1 badge badge-sm ${
                   event.status?.toLowerCase() === "scheduled"
@@ -142,49 +138,54 @@ export default async function AdminEventDetailPage({
                 {event.status || "N/A"}
               </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Discipline:
-              </strong>{" "}
-              {event.discipline_name || "Not Specified"}
+            <p className="font-medium text-base-content/70">
+                Discipline:{" "}
+                <span className="font-normal">
+                  {event.discipline_name || "Not Specified"}
+                </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Divisions:
-              </strong>{" "}
-              {event.divisions?.length
-                ? event.divisions
-                    .map((division) => {
-                      const count = event.athletes?.filter(
-                        (athlete) =>
-                          athlete.division_id === division.division_id
-                      ).length;
-                      return `${division.division_name} (${count})`;
-                    })
-                    .join(", ")
-                : "None"}
+            <p className="font-medium text-base-content/70">
+                Divisions:{" "}
+                <span className="font-normal">
+                  {event.divisions?.length
+                  ? event.divisions
+                      .map((division) => {
+                        const count = event.athletes?.filter(
+                          (athlete) =>
+                            athlete.division_id === division.division_id
+                        ).length;
+                        return `${division.division_name} (${count})`;
+                      })
+                      .join(", ")
+                  : 
+                  "None"}
+                </span>
+              
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Registered Athletes:
-              </strong>{" "}
-              {event.athletes?.length || 0}
+            <p className="font-medium text-base-content/70">
+                Registered Athletes:{" "}
+                <span className="font-normal">
+                  {event.athletes?.length || 0}
+                </span>
+              
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Assigned Judges:
-              </strong>{" "}
-              {event.judges?.length || 0}
+            <p className="font-medium text-base-content/70">
+                Assigned Judges:{" "}
+                <span className="font-normal">
+                  {event.judges?.length || 0}
+                </span>
             </p>
-            <div className="flex items-center gap-2">
-              <strong className="font-medium text-base-content/70">
-                Head Judge:
-              </strong>
-              {event.headJudge && event.headJudge.length > 0
-                ? event.headJudge
-                    .map((hj) => `${hj.first_name} ${hj.last_name}`)
-                    .join(", ")
-                : "None"}
+            <div className="flex items-center gap-2 font-medium text-base-content/70">
+                Head Judge:{` `}
+                <span className="font-normal">
+                  {event.headJudge && event.headJudge.length > 0
+                  ? event.headJudge
+                      .map((hj) => `${hj.first_name} ${hj.last_name}`)
+                      .join(", ")
+                  : 
+                  "None"}
+                </span>
+              
               <EditHeadJudgeButton eventId={eventId} userRoleId={user.roleId} />
             </div>
           </div>
