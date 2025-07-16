@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Modal from "./PopUpModal";
 import Image from 'next/image';
 import AddNewJudgeSection from './AddNewJudgeSection';
-
+import {Toaster, toast} from 'react-hot-toast';
 
 // Judge Interface
 export interface Judge {
@@ -68,9 +68,11 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
         try {
             await deleteJudgeNullScores(judge.event_id, judge.personnel_id);
             await deleteJudge(judge.event_id, judge.personnel_id);
-            setRenderedJudges((renderedJudges ?? []).filter((judgeToRemove: Judge) => judgeToRemove.personnel_id !== judge.personnel_id))
+            setRenderedJudges((renderedJudges ?? []).filter((judgeToRemove: Judge) => judgeToRemove.personnel_id !== judge.personnel_id));
+            toast.success(`${(judge.name === "" || judge.name === null) ? judge.header : judge.name} was removed from the event`);
         } catch (error) {
             console.error('Failed to remove judge', error);
+            toast.error(`Failed to remove ${(judge.name === "" || judge.name === null) ? judge.header : judge.name} from the event`);
         }
         setOpenRemoveJudge(false);
     };
@@ -81,15 +83,16 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
 
     return (
         <div className="mb-6 flex flex-col md:flex-row md:justify-between gap-8 md:gap-12 w-full border-t p-12">
+            <Toaster />
             <div className="w-full">
                 <div className="flex items-center justify-between w-full  dark:border-white pb-4">
                     <h2 className="text-2xl font-semibold text-secondary">
                         Judges
                     </h2>
                     <button
-                    className="px-8 py-2 bg-gray-300 text-black rounded hover:bg-gray-600"
+                    className="px-8 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 cursor-pointer font-semibold"
                     onClick={() => setIsEditionMode(!isEditionMode)}>
-                        Manage Judges
+                        Manage
                     </button>
                 </div>
 
@@ -118,12 +121,12 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                 </div>
 
                                 {/* REMOVE JUDGE */}
-                                <button className="btn btn-danger" onClick={() => handleSelectJudgeToRemove(judge)}>
+                                <button className="btn btn-danger h-7 font-semibold" onClick={() => handleSelectJudgeToRemove(judge)}>
                                     <Image
                                     src="/assets/icons/trash.png"
                                     alt={'Trash icon.'}
-                                    width={20}
-                                    height={20}
+                                    width={15}
+                                    height={15}
                                 />
                                 Remove
                                 </button>
@@ -162,11 +165,13 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                                     </Modal>
                                 )}
                             </div>
-                        ))}                            
-                    <AddNewJudgeSection
-                        event_id={event_id}
-                        onAddJudgeToEvent={handleAddJudgeToEvent}
-                    />
+                        ))}      
+                        <div className="flex justify-end mt-[1%]">
+                            <AddNewJudgeSection
+                                event_id={event_id}
+                                onAddJudgeToEvent={handleAddJudgeToEvent}
+                            />
+                        </div>                      
                     </div>
                 )}
             </div>
