@@ -68,6 +68,7 @@ export async function createUserAction(
     prevState: UserActionResult | null,
     formData: FormData
 ): Promise<UserActionResult> {
+    const uniqueRequestId = `ACTION-${Date.now()}`;
 
     // 1. Authorization Check
     const callingUser = await getAuthenticatedUserWithRole();
@@ -78,6 +79,8 @@ export async function createUserAction(
     if (!allowedRoles.includes(callingUser.roleName)) {
         return { success: false, message: "You do not have permission to create users.", error: "Forbidden" };
     }
+
+    
 
     // 2. Validate Form Data
     const validation = CreateUserFormSchema.safeParse({
@@ -110,6 +113,7 @@ export async function createUserAction(
 
     try {
         console.log(`Admin ${callingUser.email} attempting to create user: ${email} with initial password.`);
+        console.log(`[${uniqueRequestId}] Admin ${callingUser.email} attempting to create user: ${email}`);
 
         // 5. Call Clerk Backend API
         const client = await clerkClient(); // Get client instance
@@ -122,6 +126,7 @@ export async function createUserAction(
         });
 
         console.log(`User created successfully in Clerk with ID: ${newUser.id}`);
+        console.log(`[${uniqueRequestId}] User created successfully in Clerk. Response ID: ${newUser.id}`);
 
         // 6. Linking & Role Assignment (Handled by Webhook)
 
@@ -133,6 +138,8 @@ export async function createUserAction(
         };
 
     } catch (error: unknown) { // Use unknown type
+        console.error(`[${uniqueRequestId}] Error creating user via Clerk API:`, error);
+
         console.error("Error creating user via Clerk API:", error);
         let errorMessage = "Failed to create user.";
         let clerkErrorCode: string | undefined = undefined;

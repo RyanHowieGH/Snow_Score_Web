@@ -54,6 +54,7 @@ export async function POST(req: Request) {
        return new Response('Error occurred: Invalid event data payload', { status: 400 });
   }
   const authProviderId = eventData.id;
+  console.log(`[WEBHOOK] Received event '${eventType}' for Clerk ID: ${authProviderId}`);
 
   const pool = getDbPool();
   let client: PoolClient | null = null;
@@ -159,6 +160,8 @@ export async function POST(req: Request) {
 
   } catch (dbError) {
     console.error(`Database error processing webhook event ${eventType} for ${authProviderId || 'unknown ID'}:`, dbError);
+        console.error(`[WEBHOOK] Database error on event '${eventType}' for Clerk ID ${authProviderId}:`, dbError);
+
     return new Response('Error occurred: Database operation failed', { status: 500 });
   } finally {
     if (client) {
