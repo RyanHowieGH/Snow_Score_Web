@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "users:create": "ts-node scripts/create-users.cts",
+  "users:cleanup": "ts-node scripts/cleanup-users.cts"
+},
   "dependencies": {
     "@clerk/backend": "^1.28.0",
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "@clerk/nextjs": "^6.15.0",
     "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
@@ -42,9 +45,11 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "daisyui": "^5.0.9",
+    "dotenv": "^17.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
