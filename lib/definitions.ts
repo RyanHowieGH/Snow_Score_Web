@@ -221,3 +221,12 @@ export interface ArticleData extends EventDetails {
     results: EventResult[];
     top_canadians: PodiumAthlete[];
 }
+
+export type UserWithRole = {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role_name: string;
+  auth_provider_user_id: string; // This is the Clerk ID needed for deletion
+};

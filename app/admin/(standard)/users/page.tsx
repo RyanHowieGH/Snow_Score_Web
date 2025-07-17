@@ -4,6 +4,8 @@ import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
 import CreateUserForm from './CreateUserForm';
 import getDbPool from '@/lib/db';
+import UserList from './UserList'; // <-- IMPORT THE NEW COMPONENT
+import { fetchUsersWithRoles } from '@/lib/data'; // <-- IMPORT THE NEW FETCH FUNCTION
 
 // Fetch available roles server-side
 async function getRoles() {
@@ -30,18 +32,14 @@ async function getRoles() {
 
 
 export default async function ManageUsersPage() {
-    // --- Page Level Authorization Check ---
     const user = await getAuthenticatedUserWithRole();
-    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition']; // Roles allowed to VIEW this page
+    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
     if (!user || !allowedRoles.includes(user.roleName)) {
-        // Redirect if user is not logged in or doesn't have permission
-        // Although middleware might already handle the logged-out case
-        console.log(`User ${user?.email} with role ${user?.roleName} denied access to /admin/users`);
-        redirect('/admin'); // Or redirect to an '/unauthorized' page
+        redirect('/admin');
     }
-    // --- End Authorization Check ---
 
-    const assignableRoles = await getRoles(); // Fetch roles the current user can assign
+    const assignableRoles = await getRoles();
+    const existingUsers = await fetchUsersWithRoles(); // <-- FETCH THE USERS
 
     return (
         <div className="space-y-6">
@@ -53,18 +51,16 @@ export default async function ManageUsersPage() {
                     <p className="text-sm opacity-70">
                         Creates a user account in the authentication system. An invitation or password setup email will be sent by Clerk. The user will be assigned the selected role in this application via the webhook.
                     </p>
-                    {/* Pass assignable roles to the form */}
                     <CreateUserForm assignableRoles={assignableRoles} />
                 </div>
             </div>
 
             <div className="card bg-base-100 shadow mt-6">
-                 <div className="card-body">
-                      <h3 className="card-title">Existing Users</h3>
-                      {/* TODO: Implement UserList component here */}
-                      <p className='italic text-sm'>User list and role editing/deletion coming soon...</p>
-                      {/* <UserList currentUserRole={user.roleName} /> */}
-                 </div>
+                <div className="card-body">
+                    <h3 className="card-title">Existing Users</h3>
+                    {/* --- VVV IMPLEMENTED USER LIST VVV --- */}
+                    <UserList users={existingUsers} currentUserId={user.appUserId} />
+                </div>
             </div>
         </div>
     );

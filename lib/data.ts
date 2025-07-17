@@ -5,6 +5,7 @@ import { HeatForSchedule } from './definitions'; // You will create this type ne
 import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
 import type { RegisteredAthleteWithDivision } from './definitions';
 import type { EventResult, PodiumAthlete, ArticleData } from './definitions';
+import { UserWithRole } from './definitions';
 
 
 
@@ -658,4 +659,26 @@ export async function fetchEventResultsForArticle(eventId: number): Promise<Arti
     } finally {
         client.release();
     }
+}
+
+export async function fetchUsersWithRoles(): Promise<UserWithRole[]> {
+  const pool = getDbPool();
+  try {
+    const result = await pool.query<UserWithRole>(`
+      SELECT 
+        u.user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.auth_provider_user_id,
+        r.role_name
+      FROM ss_users u
+      JOIN ss_roles r ON u.role_id = r.role_id
+      ORDER BY r.role_id, u.last_name ASC;
+    `);
+    return result.rows;
+  } catch (error) {
+    console.error("Failed to fetch users with roles:", error);
+    return [];
+  }
 }

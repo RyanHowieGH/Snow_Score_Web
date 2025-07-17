@@ -197,51 +197,61 @@ export async function updateUserRoleAction(userId: number, newRoleId: number): P
 }
 
 // --- Delete User Action ---
-export async function deleteUserAction(clerkUserIdToDelete: string): Promise<UserActionResult> {
+export async function deleteUserAction(clerkUserIdToDelete: string, dbUserIdToDelete: number): Promise<UserActionResult> {
      'use server';
 
-     // 1. Authorization Check
+     // 1. Authorization Check (Your existing code is perfect)
      const callingUser = await getAuthenticatedUserWithRole();
      if (!callingUser) return { success: false, message: "Authentication required.", error: "Unauthorized" };
      const allowedDeleteRoles = ['Executive Director', 'Administrator'];
-      if (!allowedDeleteRoles.includes(callingUser.roleName)) {
+     if (!allowedDeleteRoles.includes(callingUser.roleName)) {
          return { success: false, message: "You do not have permission to delete users.", error: "Forbidden" };
      }
-      if (callingUser.authProviderId === clerkUserIdToDelete) {
-           return { success: false, message: "Cannot delete your own account.", error: "Forbidden" };
-      }
+     if (callingUser.authProviderId === clerkUserIdToDelete) {
+         return { success: false, message: "Cannot delete your own account.", error: "Forbidden" };
+     }
 
      console.log(`User ${callingUser.email} attempting to delete Clerk user ID: ${clerkUserIdToDelete}`);
 
-      try {
-           // 2. Call Clerk API to delete the user
-           const client = await clerkClient(); // Get client instance
-           await client.users.deleteUser(clerkUserIdToDelete); // Use the instance
-           console.log(`Deletion request sent to Clerk for user ${clerkUserIdToDelete}.`);
+     try {
+         // --- VVV NEW: Explicitly delete from your local DB first VVV ---
+         // It's often safer to delete from your own DB first. If this fails,
+         // the user still exists in Clerk and no harm is done.
+         // If you delete from Clerk first and the DB delete fails, you have an "orphan" record.
+         const pool = getDbPool();
+         const deleteDbResult = await pool.query('DELETE FROM ss_users WHERE user_id = $1', [dbUserIdToDelete]);
 
-           // 3. Webhook/FK handles ss_users cleanup (verify this)
+         if (deleteDbResult.rowCount === 0) {
+            // This is a safety check in case the user was already deleted from the DB
+            console.warn(`Attempted to delete user from DB with ID ${dbUserIdToDelete}, but they were not found.`);
+         }
+         // --- ^^^ END OF DB DELETION ---
 
-           revalidatePath('/admin/users');
-           return { success: true, message: "User deletion initiated with Clerk." };
+         // 2. Call Clerk API to delete the user
+         const client = await clerkClient();
+         await client.users.deleteUser(clerkUserIdToDelete);
+         console.log(`Successfully deleted user ${clerkUserIdToDelete} from Clerk and local database.`);
 
-      } catch (error: unknown) { // Use unknown type
-           console.error(`Error deleting Clerk user ${clerkUserIdToDelete}:`, error);
-           let errorMessage = "Failed to delete user.";
-           let clerkErrorCode: string | undefined = undefined;
+         // 3. Revalidate the path to refresh the UI
+         revalidatePath('/admin/users');
+         return { success: true, message: "User deleted successfully." };
 
-             // --- Use Type Guard and Specific Item Type ---
-           if (isClerkApiError(error) && error.errors && error.errors.length > 0) {
+     } catch (error: unknown) {
+         console.error(`Error deleting user ${clerkUserIdToDelete}:`, error);
+         // ... (Your excellent error handling logic remains the same) ...
+         let errorMessage = "Failed to delete user.";
+         let clerkErrorCode: string | undefined = undefined;
+         if (isClerkApiError(error) && error.errors && error.errors.length > 0) {
             const clerkErrors = error.errors;
             const firstError: ClerkApiErrorItem = clerkErrors[0];
             errorMessage = firstError.longMessage || firstError.message || errorMessage;
             clerkErrorCode = firstError.code;
             if (clerkErrorCode === 'resource_not_found') {
-                 errorMessage = "User not found in Clerk (might be already deleted).";
+                errorMessage = "User not found in Clerk (might be already deleted).";
             }
-       } else if (error instanceof Error) {
+         } else if (error instanceof Error) {
            errorMessage = error.message;
-       }
-       // --- End Type Guard Usage ---
-           return { success: false, message: errorMessage, error: clerkErrorCode || "API Error" };
-      }
+         }
+         return { success: false, message: errorMessage, error: clerkErrorCode || "API Error" };
+     }
 }
