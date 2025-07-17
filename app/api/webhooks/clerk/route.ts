@@ -87,12 +87,14 @@ export async function POST(req: Request) {
       const insertQuery = `
         INSERT INTO ss_users (first_name, last_name, email, role_id, auth_provider_user_id)
         VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (auth_provider_user_id) DO NOTHING
-        ON CONFLICT (email) DO NOTHING;
+        -- Prioritize checking for an existing user by their unique Clerk ID.
+        ON CONFLICT (auth_provider_user_id) 
+        -- If the Clerk ID already exists, do nothing, as they are already linked.
+        DO NOTHING;
       `;
       const result = await client.query(insertQuery, [
-        firstName,              // Use direct first_name
-        lastName,               // Use direct last_name
+        firstName,
+        lastName,
         email.toLowerCase(),
         assignedRoleId,
         authProviderId,
