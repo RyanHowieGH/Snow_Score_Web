@@ -1,6 +1,6 @@
 "use client";
-import HeatTable from "../../../components/HeatTable";
-import Standing from "../../../components/Standings";
+import HeatTable from "@/components/HeatTable";
+import Standing from "@/components/Standings";
 import { useEffect, useState } from "react";
 
 type HeatData = {

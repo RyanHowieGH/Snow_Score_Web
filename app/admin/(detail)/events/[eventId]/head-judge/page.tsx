@@ -1,80 +1,124 @@
 "use client";
-import React from "react";
-import Link from "next/link";
-
+import HeatTable from "@/components/HeatTable";
+import Standing from "@/components/Standings";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import React from "react";
 
-const HeadJudgePage = () => {
+type HeatData = {
+  bib: number;
+  athlete: string;
+  rank: number;
+  runs: (number | string)[];
+  best: number | string;
+  round_heat_id: number[];
+};
+
+type StandingData = {
+  athlete: string;
+  runs: (number | string)[];
+  round_heat_id: number[];
+};
+
+const HeadJudgePanel = () => {
   const { eventId } = useParams();
-  const eventBaseUrl = `/admin/events/${eventId}/head-judge`;
+  const parsedEventId = eventId ? parseInt(eventId as string, 10) : null;
+  const [heats, setHeats] = useState<HeatData[]>([]);
+  const [standings, setStandings] = useState<StandingData[]>([]);
+
+  useEffect(() => {
+    if (!parsedEventId) return;
+
+    fetch(`/api/Heats?event_id=${parsedEventId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("API heats data:", data);
+        setHeats(
+          data.map((heat: HeatData) => ({
+            bib: heat.bib,
+            athlete: heat.athlete,
+            runs: heat.runs,
+            best: Math.max(...heat.runs.map(Number).filter((n) => !isNaN(n))),
+            round_heat_id: heat.round_heat_id,
+          }))
+        );
+        setStandings(
+          data.map((standings: StandingData) => ({
+            athlete: standings.athlete,
+            runs: Math.max(
+              ...standings.runs.map(Number).filter((n) => !isNaN(n))
+            ),
+            round_heat_id: standings.round_heat_id,
+          }))
+        );
+      })
+      .catch((err) => {
+        console.error("Failed to load round heat id", err);
+        setHeats([]);
+        setStandings([]);
+      });
+  }, [parsedEventId]);
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center text-primary">
-        Head Judge Dashboard
-      </h1>
+    <div className="flex min-h-screen">
+      <main className="flex-1 p-6 bg-gray-100 grid grid-cols-1 gap-6">
+        {Array.from(
+          new Set(
+            heats.flatMap((heat) =>
+              Array.isArray(heat.round_heat_id)
+                ? heat.round_heat_id
+                : [heat.round_heat_id]
+            )
+          )
+        ).map((roundHeatId) => (
+          <HeatTable
+            key={roundHeatId}
+            title={`Heat ${roundHeatId} Judge Scores`}
+            data={heats
+              .filter((heat) =>
+                Array.isArray(heat.round_heat_id)
+                  ? heat.round_heat_id.includes(roundHeatId)
+                  : heat.round_heat_id === roundHeatId
+              )
+              .map((heat, index) => ({
+                bib: heat.bib,
+                athlete: heat.athlete,
+                rank: index + 1,
+                runs: heat.runs,
+                best: heat.best,
+              }))}
+          />
+        ))}
+      </main>
 
-      <div className="overflow-x-auto mb-8">
-        <table className="min-w-full border border-base-300 bg-base-100 shadow-md rounded-lg">
-          <thead className="bg-base-200 text-base-content uppercase text-sm font-semibold">
-            <tr>
-              <th className="px-4 py-3 border-b border-base-300 text-left">
-                Judge Name
-              </th>
-              <th className="px-4 py-3 border-b border-base-300 text-left">
-                Judge Type
-              </th>
-              <th className="px-4 py-3 border-b border-base-300 text-left">
-                Judge Status
-              </th>
-              <th className="px-4 py-3 border-b border-base-300 text-left">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Replace with dynamic data */}
-            <tr className="hover:bg-base-100">
-              <td className="px-4 py-2 border-t border-base-300">John Doe</td>
-              <td className="px-4 py-2 border-t border-base-300">Head Judge</td>
-              <td className="px-4 py-2 border-t border-base-300">Active</td>
-              <td className="px-4 py-2 border-t border-base-300">
-                <Link
-                  href="/admin/judges/edit"
-                  className="text-blue-600 hover:underline"
-                >
-                  Edit
-                </Link>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link
-          href={`${eventBaseUrl}/addJudge`}
-          className="btn btn-primary w-full"
-        >
-          Add Judge
-        </Link>
-        <Link
-          href={`${eventBaseUrl}/judges`}
-          className="btn btn-secondary w-full"
-        >
-          Monitor Judges
-        </Link>
-        <Link href={`${eventBaseUrl}/events`} className="btn btn-accent w-full">
-          Monitor Events
-        </Link>
-        <Link
-          href={`${eventBaseUrl}/judgePanel`}
-          className="btn btn-accent w-full"
-        >
-          Judge Panel
-        </Link>
-      </div>
+      <aside className="w-96 p-6 bg-white space-y-6">
+        {Array.from(
+          new Set(
+            standings.flatMap((s) =>
+              Array.isArray(s.round_heat_id)
+                ? s.round_heat_id
+                : [s.round_heat_id]
+            )
+          )
+        ).map((roundHeatId) => (
+          <Standing
+            key={roundHeatId}
+            title={`Heat ${roundHeatId} Standings`}
+            data={standings
+              .filter((s) =>
+                Array.isArray(s.round_heat_id)
+                  ? s.round_heat_id.includes(roundHeatId)
+                  : s.round_heat_id === roundHeatId
+              )
+              .map((s) => ({
+                athlete: s.athlete,
+                best: s.runs,
+              }))}
+          />
+        ))}
+      </aside>
     </div>
   );
 };
 
-export default HeadJudgePage;
+export default HeadJudgePanel;
