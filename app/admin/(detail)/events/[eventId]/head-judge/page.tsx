@@ -5,6 +5,18 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import React from "react";
 
+type DivisionData = {
+  divisionId: number,
+  divisionName: string,
+  rounds: RoundData[], 
+};
+
+type RoundData = {
+  roundId: number,
+  roundName: string,
+  heats: HeatData[],
+};
+
 type HeatData = {
   bib: number;
   athlete: string;
@@ -25,6 +37,10 @@ const HeadJudgePanel = () => {
   const parsedEventId = eventId ? parseInt(eventId as string, 10) : null;
   const [heats, setHeats] = useState<HeatData[]>([]);
   const [standings, setStandings] = useState<StandingData[]>([]);
+  const [selectedDivisionId, setSeletectedDivisionId] = useState();
+  const [selectedRoundId, setSeletectedRoundId] = useState();
+  const [selectedHeatId, setSeletectedHeatId] = useState();
+
 
   useEffect(() => {
     if (!parsedEventId) return;
@@ -61,63 +77,88 @@ const HeadJudgePanel = () => {
 
   return (
     <div className="flex min-h-screen">
-      <main className="flex-1 p-6 bg-gray-100 grid grid-cols-1 gap-6">
-        {Array.from(
-          new Set(
-            heats.flatMap((heat) =>
-              Array.isArray(heat.round_heat_id)
-                ? heat.round_heat_id
-                : [heat.round_heat_id]
-            )
-          )
-        ).map((roundHeatId) => (
-          <HeatTable
-            key={roundHeatId}
-            title={`Heat ${roundHeatId} Judge Scores`}
-            data={heats
-              .filter((heat) =>
+      {/* <div>
+        <div>
+          <select
+            className="select select-bordered font-normal w-full text-black"
+            value={selectedDivisionId}
+            onChange={e => {
+              const id = e.target.value;
+              setSelectedDivisionId(id);
+              const hj = headJudges.find(h => String(h.user_id) === id);
+              if (hj?.first_name && hj?.last_name) {
+                setOnChangeHeadjudgeName(`${hj.first_name} ${hj.last_name}`);
+              }
+            }}          >
+            <option value="" disabled>
+              Select head judge
+            </option>
+            {headJudges.map(hj => (
+              <option key={hj.user_id} value={hj.user_id}>
+                {hj.first_name} {hj.last_name}
+              </option>
+            ))}
+          </select>
+        </div> */}
+        <div className="flex-1 p-6 bg-gray-100 grid grid-cols-1 gap-6">
+          {Array.from(
+            new Set(
+              heats.flatMap((heat) =>
                 Array.isArray(heat.round_heat_id)
-                  ? heat.round_heat_id.includes(roundHeatId)
-                  : heat.round_heat_id === roundHeatId
+                  ? heat.round_heat_id
+                  : [heat.round_heat_id]
               )
-              .map((heat, index) => ({
-                bib: heat.bib,
-                athlete: heat.athlete,
-                rank: index + 1,
-                runs: heat.runs,
-                best: heat.best,
-              }))}
-          />
-        ))}
-      </main>
-
-      <aside className="w-96 p-6 bg-white space-y-6">
-        {Array.from(
-          new Set(
-            standings.flatMap((s) =>
-              Array.isArray(s.round_heat_id)
-                ? s.round_heat_id
-                : [s.round_heat_id]
             )
-          )
-        ).map((roundHeatId) => (
-          <Standing
-            key={roundHeatId}
-            title={`Heat ${roundHeatId} Standings`}
-            data={standings
-              .filter((s) =>
+          ).map((roundHeatId) => (
+            <HeatTable
+              key={roundHeatId}
+              title={`Heat ${roundHeatId} Judge Scores`}
+              data={heats
+                .filter((heat) =>
+                  Array.isArray(heat.round_heat_id)
+                    ? heat.round_heat_id.includes(roundHeatId)
+                    : heat.round_heat_id === roundHeatId
+                )
+                .map((heat, index) => ({
+                  bib: heat.bib,
+                  athlete: heat.athlete,
+                  rank: index + 1,
+                  runs: heat.runs,
+                  best: heat.best,
+                }))}
+            />
+          ))}
+        </div>
+
+        <aside className="w-96 p-6 bg-white space-y-6">
+          {Array.from(
+            new Set(
+              standings.flatMap((s) =>
                 Array.isArray(s.round_heat_id)
-                  ? s.round_heat_id.includes(roundHeatId)
-                  : s.round_heat_id === roundHeatId
+                  ? s.round_heat_id
+                  : [s.round_heat_id]
               )
-              .map((s) => ({
-                athlete: s.athlete,
-                best: s.runs,
-              }))}
-          />
-        ))}
-      </aside>
-    </div>
+            )
+          ).map((roundHeatId) => (
+            <Standing
+              key={roundHeatId}
+              title={`Heat ${roundHeatId} Standings`}
+              data={standings
+                .filter((s) =>
+                  Array.isArray(s.round_heat_id)
+                    ? s.round_heat_id.includes(roundHeatId)
+                    : s.round_heat_id === roundHeatId
+                )
+                .map((s) => ({
+                  athlete: s.athlete,
+                  best: s.runs,
+                }))}
+            />
+          ))}
+        </aside>
+      </div>
+
+    // </div>
   );
 };
 
