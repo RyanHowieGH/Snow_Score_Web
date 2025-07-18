@@ -41,6 +41,18 @@ const HeadJudgePanel = () => {
   const [selectedRoundId, setSeletectedRoundId] = useState();
   const [selectedHeatId, setSeletectedHeatId] = useState();
 
+  const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
+
+  useEffect (() => {
+    const refreshInterval = setInterval(() => {
+      setRefreshPageFlag(prev => !prev);
+    }, 1000);
+
+    return () => {
+      clearInterval(refreshInterval);
+    }
+  }, [])
+
 
   useEffect(() => {
     if (!parsedEventId) return;
@@ -72,8 +84,13 @@ const HeadJudgePanel = () => {
         console.error("Failed to load round heat id", err);
         setHeats([]);
         setStandings([]);
-      });
-  }, [parsedEventId]);
+      });  
+      
+// SWITCH THE THIS DEPENDENCIES TO START/STOP TESTING
+  }, [refreshPageFlag]);
+  // }, []);
+
+
 
   return (
     <div className="flex min-h-screen">

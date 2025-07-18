@@ -23,6 +23,9 @@ type StandingData = {
 const HeadJudgePanel = () => {
   const [heats, setHeats] = useState<HeatData[]>([]);
   const [standings, setStandings] = useState<StandingData[]>([]);
+  const [refreshPage, setRefreshPage] = useState<boolean>(true);
+
+ 
 
   useEffect(() => {
     const fetchHeats = async () => {
