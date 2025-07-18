@@ -1,6 +1,6 @@
 "use client";
-import HeatTable from "../../../components/HeatTable";
-import Standing from "../../../components/Standings";
+import HeatTable from "@/components/HeatTable";
+import Standing from "@/components/Standings";
 import { useEffect, useState } from "react";
 
 type HeatData = {
@@ -23,6 +23,9 @@ type StandingData = {
 const HeadJudgePanel = () => {
   const [heats, setHeats] = useState<HeatData[]>([]);
   const [standings, setStandings] = useState<StandingData[]>([]);
+  const [refreshPage, setRefreshPage] = useState<boolean>(true);
+
+ 
 
   useEffect(() => {
     const fetchHeats = async () => {
