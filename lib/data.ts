@@ -23,6 +23,8 @@ import type {
 } from './definitions';
 // Note: formatDate and formatDateRange should be imported from lib/utils.ts where they are used, not usually from here.
 
+
+
 // --- Data Fetching Functions ---
 
 export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
@@ -234,36 +236,46 @@ export async function fetchAssignedDivisionIds(eventId: number): Promise<number[
     }
 }
 
-export async function fetchAllAthletes(): Promise<Athlete[]> {
-    console.log("Fetching all athletes (for general lists, not event-specific registration)...");
+const validSortColumns = ['athlete_id', 'last_name', 'nationality', 'fis_num'] as const;
+type SortColumn = typeof validSortColumns[number];
+type SortDirection = 'asc' | 'desc';
+
+export async function fetchAllAthletes(
+    // --- VVV NEW: Add sorting parameters VVV ---
+    sortBy: SortColumn = 'athlete_id',
+    sortDirection: SortDirection = 'asc'
+): Promise<Athlete[]> {
+    // --- VVV NEW: Validate inputs to ensure they are safe VVV ---
+    const orderByColumn = validSortColumns.includes(sortBy) ? sortBy : 'athlete_id';
+    const orderDirection = sortDirection.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+
     const pool = getDbPool();
-    let client: PoolClient | null = null;
     try {
-        client = await pool.connect();
-        const result = await client.query( // No specific type hint needed if using map
-            `SELECT
-                athlete_id, last_name, first_name, dob, gender,
-                nationality, stance, fis_num
-             FROM ss_athletes
-             ORDER BY last_name ASC, first_name ASC`
-        );
-        const athletes: Athlete[] = result.rows.map(row => ({
-            athlete_id: row.athlete_id,
-            last_name: row.last_name,
-            first_name: row.first_name,
-            dob: new Date(row.dob), // Convert to Date
-            gender: row.gender,
-            nationality: row.nationality,
-            stance: row.stance,
-            fis_num: row.fis_num,
-        }));
-        console.log(`Fetched ${athletes.length} athletes from ss_athletes.`);
-        return athletes;
+        // --- VVV UPDATED: The query now includes dynamic ORDER BY ---
+        // Note: We are safely injecting validated column and direction names.
+        // DO NOT use parameterized queries ($1, $2) for ORDER BY columns.
+        const query = `
+            SELECT 
+                athlete_id,
+                last_name,
+                first_name,
+                dob,
+                gender,
+                nationality,
+                stance,
+                fis_num
+            FROM ss_athletes
+            ORDER BY ${orderByColumn} ${orderDirection} NULLS LAST;
+        `;
+        // 'NULLS LAST' is good practice to keep rows with null values at the bottom.
+
+        const result = await pool.query(query);
+        return result.rows;
+
     } catch (error) {
-        console.error("Error fetching all athletes:", error);
+        console.error("Failed to fetch all athletes:", error);
+        // In case of error, return an empty array to prevent the page from crashing.
         return [];
-    } finally {
-        if (client) client.release();
     }
 }
 

@@ -1,21 +1,32 @@
 // components/AthleteList.tsx
 'use client';
 
-import React, { useState } from 'react';
-import type { Athlete } from '@/lib/data';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import type { Athlete } from '@/lib/definitions';
 import DeleteAthleteButton from './DeleteAthleteButton';
+import { ArrowUpIcon as ArrowUpSolid, ArrowDownIcon as ArrowDownSolid } from '@heroicons/react/24/solid';
+import { ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 
 interface AthleteListProps {
     athletes: Athlete[];
+    currentSortBy: string;
+    currentSortDir: string;
 }
 
-export default function AthleteList({ athletes: initialAthletes }: AthleteListProps) {
+export default function AthleteList({ athletes: initialAthletes, currentSortBy, currentSortDir }: AthleteListProps) {
+    // We use state to manage the list for instant optimistic UI updates on delete.
     const [athletes, setAthletes] = useState(initialAthletes);
-    // Store error messages keyed by athlete ID
     const [errorMessages, setErrorMessages] = useState<Record<number, string>>({});
+    const pathname = usePathname();
+
+    // This effect ensures that if the sorted list from the server changes, our component's state updates.
+    useEffect(() => {
+        setAthletes(initialAthletes);
+    }, [initialAthletes]);
 
     const handleDeletionError = (athleteId: number, message: string) => {
-         console.log(`Setting error for ${athleteId}: ${message}`);
          setErrorMessages(prev => ({ ...prev, [athleteId]: message }));
          setTimeout(() => {
              setErrorMessages(prev => {
@@ -23,18 +34,46 @@ export default function AthleteList({ athletes: initialAthletes }: AthleteListPr
                  delete newState[athleteId];
                  return newState;
              });
-         }, 7000); // Clear after 7 seconds
+         }, 7000);
     };
 
     const handleSuccessfulDeletion = (deletedAthleteId: number) => {
-         console.log(`Deletion successful for ${deletedAthleteId}, list should revalidate.`);
          setAthletes(prev => prev.filter(a => a.athlete_id !== deletedAthleteId));
-         // Clear any previous error for this athlete
          setErrorMessages(prev => {
              const newState = { ...prev };
              delete newState[deletedAthleteId];
              return newState;
          });
+    };
+
+    // --- VVV SORTING LOGIC FROM PREVIOUS SUGGESTION VVV ---
+    const createSortLink = (column: string) => {
+        const newSortDir = currentSortBy === column && currentSortDir === 'asc' ? 'desc' : 'asc';
+        const params = new URLSearchParams();
+        params.set('sortBy', column);
+        params.set('sortDir', newSortDir);
+        return `${pathname}?${params.toString()}`;
+    };
+
+    const SortableHeader = ({ column, label }: { column: string; label: string }) => {
+        const isActive = currentSortBy === column;
+        return (
+          <Link href={createSortLink(column)} className="group inline-flex items-center whitespace-nowrap">
+            {label}
+            <span className="w-5 h-5 ml-1"> {/* Fixed-size container for the icon */}
+                {isActive ? (
+                  currentSortDir === 'asc' ? (
+                    <ArrowUpSolid className="h-4 w-4 text-primary" />
+                  ) : (
+                    <ArrowDownSolid className="h-4 w-4 text-primary" />
+                  )
+                ) : (
+                  // Show a faint, generic sort icon that becomes less faint on hover
+                  <ArrowsUpDownIcon className="h-4 w-4 text-base-content/20 group-hover:text-base-content/50 transition-colors" />
+                )}
+            </span>
+          </Link>
+        );
     };
 
     // Handle case where initial list is empty
@@ -56,40 +95,33 @@ export default function AthleteList({ athletes: initialAthletes }: AthleteListPr
                 {/* Table Head */}
                 <thead>
                     <tr className="text-xs uppercase">
-                        <th>ID</th>
-                        <th>Name</th>
+                        <th><SortableHeader column="athlete_id" label="ID" /></th>
+                        <th><SortableHeader column="last_name" label="Name" /></th>
                         <th>DOB</th>
                         <th>Gender</th>
-                        <th>Nat.</th>
-                        <th>FIS #</th>
+                        <th><SortableHeader column="nationality" label="Nat." /></th>
+                        <th><SortableHeader column="fis_num" label="FIS #" /></th>
                         <th>Stance</th>
                         <th className='text-center'>Actions</th>
                     </tr>
                 </thead>
-                {/* Table Body */}
                 <tbody>
                     {athletes.map((athlete) => (
                         <tr key={athlete.athlete_id} className="hover text-sm">
                             <th className="font-medium">{athlete.athlete_id}</th>
                             <td>{athlete.first_name} {athlete.last_name}</td>
-                            {/* Format date for display */}
-                            <td>{athlete.dob instanceof Date ? athlete.dob.toLocaleDateString() : 'Invalid Date'}</td>
+                            <td>{new Date(athlete.dob).toLocaleDateString()}</td>
                             <td>{athlete.gender}</td>
                             <td>{athlete.nationality || '-'}</td>
                             <td>{athlete.fis_num || '-'}</td>
                             <td>{athlete.stance || '-'}</td>
                             <td className='text-center'>
-                                {/* Delete Button */}
                                 <DeleteAthleteButton
                                     athleteId={athlete.athlete_id}
                                     athleteName={`${athlete.first_name} ${athlete.last_name}`}
                                     onDeleted={handleSuccessfulDeletion}
-                                    onError={handleDeletionError} // Pass bound handler
+                                    onError={handleDeletionError}
                                 />
-                                {/* Placeholder for Edit Button */}
-                                {/* <button className="btn btn-xs btn-ghost text-info ml-1 p-1" title="Edit Athlete">
-                                    <PencilIcon className="h-4 w-4" />
-                                </button> */}
                             </td>
                         </tr>
                     ))}

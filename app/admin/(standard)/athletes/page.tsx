@@ -1,19 +1,26 @@
 // app/admin/(standard)/athletes/page.tsx
+
 import React from 'react';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { redirect } from 'next/navigation';
-import { fetchAllAthletes, Athlete } from '@/lib/data';
+import { fetchAllAthletes } from '@/lib/data';
 import AthleteList from '@/components/AthleteList';
 import type { Metadata } from 'next';
+import { Athlete } from '@/lib/definitions';
 
-// Page metadata
 export const metadata: Metadata = {
     title: 'Athletes - Admin',
     description: 'View and manage athletes in the database.',
 };
 
-// This is a Server Component
-export default async function ManageAthletesPage() {
+interface ManageAthletesPageProps {
+    searchParams?: {
+        sortBy?: string;
+        sortDir?: string;
+    };
+}
+
+export default async function ManageAthletesPage({ searchParams }: ManageAthletesPageProps) {
     // --- Authorization Check ---
     const user = await getAuthenticatedUserWithRole();
     const allowedViewRoles = ['Executive Director', 'Administrator', 'Chief of Competition', 'Technical Director', 'Head Judge'];
@@ -21,23 +28,38 @@ export default async function ManageAthletesPage() {
         console.log(`User ${user?.email} role ${user?.roleName} denied access to /admin/athletes`);
         redirect('/admin');
     }
-    // --- End Authorization Check ---
 
-    // Fetch all athletes server-side
-    const athletes: Athlete[] = await fetchAllAthletes();
+    // --- VVV THIS IS THE CORRECTED LOGIC VVV ---
+    // Awaiting the searchParams prop resolves the dynamic API usage warning.
+    // We create a new variable to hold the resolved value.
+    const resolvedSearchParams = await searchParams;
+    
+    const sortBy = resolvedSearchParams?.sortBy || 'athlete_id';
+    const sortDir = resolvedSearchParams?.sortDir || 'asc';
+    // --- ^^^ END OF CORRECTION ^^^ ---
+
+    const validSortBy = ['athlete_id', 'last_name', 'nationality', 'fis_num'].includes(sortBy) ? sortBy : 'athlete_id';
+    const validSortDir = ['asc', 'desc'].includes(sortDir) ? sortDir : 'asc';
+
+    // Fetch all athletes server-side, passing the sort parameters
+    const athletes: Athlete[] = await fetchAllAthletes(
+        validSortBy as any,
+        validSortDir as any
+    );
 
     return (
         <div className="space-y-6">
-             {/* Page Header */}
              <div className='flex flex-col sm:flex-row justify-between items-center gap-4 mb-4'>
                 <h2 className="text-2xl md:text-3xl font-bold">Athletes</h2>
             </div>
-
-            {/* Card containing the athlete list */}
             <div className="card bg-base-100 shadow-md">
                  <div className="card-body">
-                     {/* Render the client component list, passing fetched data */}
-                    <AthleteList athletes={athletes} />
+                    {/* Pass the sort state to the list component */}
+                    <AthleteList
+                        athletes={athletes}
+                        currentSortBy={validSortBy}
+                        currentSortDir={validSortDir}
+                    />
                 </div>
             </div>
         </div>
