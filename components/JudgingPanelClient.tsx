@@ -157,6 +157,7 @@ export default function JudgingPanelClient({
               value={inputCode}
               onChange={handleCodeChange}
               inputMode="numeric"
+              autoComplete="off"
               pattern="\d*"
               className="block w-full px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Access code"
@@ -301,23 +302,23 @@ export default function JudgingPanelClient({
         <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
           <div className="h-[30%] w-[100%] flex justify-center ">
             {/* Left side arrows */}
-            <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%]">
+            <div className="flex flex-col items-center justify-center gap-[5%] ml-[2%] w-[20%]">
               <button
-                className="p-[2%] border border-black rounded bg-white active:bg-gray-200"
+                className="p-[2%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
                 aria-label="Previous Bib"
               >
-                <ChevronUp className="h-27 w-27" />
+                <ChevronUp className="h-[100%] w-[100%]" />
               </button>
               <button
-                className="p-[2%] border border-black rounded bg-white active:bg-gray-200"
+                className="p-[2%] border border-black rounded bg-white active:bg-gray-200 w-[70%]"
                 aria-label="Next Bib"
               >
-                <ChevronDown className="h-27 w-27" />
+                <ChevronDown className="h-[100%] w-[100%]" />
               </button>
             </div>
 
             {/* Score Display */}
-            <div className="border-solid border-black border-1 mb-4 w-[50%]">
+            <div className="border-solid border-black border-1 mb-4 w-[50%] ml-[2%] mr-[2%]">
               {selected?.bib != null && selected?.run_num != null ? (
                 <div className="flex">
                   <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
@@ -343,18 +344,18 @@ export default function JudgingPanelClient({
             </div>
 
           {/* Right side arrows */}
-          <div className="flex flex-col items-center justify-center gap-[5%] ml-[5%]">
+          <div className="flex flex-col items-center justify-center gap-[5%] mr-[2%] w-[20%]">
             <button
-              className="p-[3%] border border-black rounded bg-white active:bg-gray-200"
+              className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
               aria-label="Right side competitor"
             >
-              <ChevronRight  className="h-27 w-27" />
+              <ChevronRight  className="w-[100%] h-[100%]" />
             </button>
             <button
-              className="p-[3%] border border-black rounded bg-white active:bg-gray-200"
+              className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%]"
               aria-label="Left side competitor"
             >
-              <ChevronLeft className="h-27 w-27" />
+              <ChevronLeft className="w-[100%] h-[100%]" />
             </button>
           </div>
 

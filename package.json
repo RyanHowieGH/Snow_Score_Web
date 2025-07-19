@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-  "build": "next build",
-  "start": "next start",
-  "lint": "next lint",
-  "users:create": "ts-node scripts/create-users.cts",
-  "users:cleanup": "ts-node scripts/cleanup-users.cts"
-},
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "users:create": "ts-node scripts/create-users.cts",
+    "users:cleanup": "ts-node scripts/cleanup-users.cts",
+    "test": "jest"
+  },
   "dependencies": {
     "@clerk/backend": "^1.28.0",
     "@clerk/clerk-sdk-node": "^4.13.23",
@@ -38,6 +39,10 @@
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.54.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/papaparse": "^5.3.15",
     "@types/pg": "^8.11.11",
@@ -48,6 +53,8 @@
     "dotenv": "^17.2.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"
