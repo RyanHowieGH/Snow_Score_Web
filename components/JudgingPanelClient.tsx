@@ -302,7 +302,7 @@ export default function JudgingPanelClient({
         <div className="w-[60%] pt-[2%] pb-[2%] mr-0 flex flex-col items-center h-full">
           <div className="h-[30%] w-[100%] flex justify-center ">
             {/* Left side arrows */}
-            <div className="flex flex-col items-center justify-center gap-[5%] mr-[5%] ml-[2%] w-[20%] border-solid border-black border-1">
+            <div className="flex flex-col items-center justify-center gap-[5%] ml-[2%] w-[20%]">
               <button
                 className="p-[2%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
                 aria-label="Previous Bib"
@@ -318,7 +318,7 @@ export default function JudgingPanelClient({
             </div>
 
             {/* Score Display */}
-            <div className="border-solid border-black border-1 mb-4 w-[50%]">
+            <div className="border-solid border-black border-1 mb-4 w-[50%] ml-[2%] mr-[2%]">
               {selected?.bib != null && selected?.run_num != null ? (
                 <div className="flex">
                   <div className="text-3xl font-bold bg-green-100 text-center h-[20%] border-black border-solid border-b-1 flex items-center justify-center w-1/2">
@@ -344,7 +344,7 @@ export default function JudgingPanelClient({
             </div>
 
           {/* Right side arrows */}
-          <div className="flex flex-col items-center justify-center gap-[5%] ml-[5%] mr-[2%] w-[20%] border-solid border-black border-1">
+          <div className="flex flex-col items-center justify-center gap-[5%] mr-[2%] w-[20%]">
             <button
               className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
               aria-label="Right side competitor"
