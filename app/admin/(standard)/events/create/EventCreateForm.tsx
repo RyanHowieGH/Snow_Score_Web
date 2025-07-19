@@ -50,11 +50,12 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
             {/* Event Name Input */}
             <label className="form-control w-full">
                 <div className="label">
-                    <span className="label-text">Event Name*</span>
+                    <span className="label-text">Event Name</span>
                 </div>
                 <input
                     type="text"
                     name="name"
+                    maxLength={60}
                     placeholder="e.g., Annual Slope Jam"
                     required
                     className={`input input-bordered w-full ${state?.fieldErrors?.name ? 'input-error' : ''}`}
@@ -71,11 +72,12 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
             {/* Location Input */}
             <label className="form-control w-full">
                 <div className="label">
-                    <span className="label-text">Location*</span>
+                    <span className="label-text">Location</span>
                 </div>
                 <input
                     type="text"
                     name="location"
+                    maxLength={60}
                     placeholder="e.g., Big White Resort"
                     required
                     className={`input input-bordered w-full ${state?.fieldErrors?.location ? 'input-error' : ''}`}
@@ -93,7 +95,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <label className="form-control w-full">
                     <div className="label">
-                        <span className="label-text">Start Date*</span>
+                        <span className="label-text">Start Date</span>
                     </div>
                     <input
                         type="date"
@@ -111,7 +113,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
                 </label>
                  <label className="form-control w-full">
                     <div className="label">
-                        <span className="label-text">End Date*</span>
+                        <span className="label-text">End Date</span>
                     </div>
                     <input
                         type="date"
@@ -132,7 +134,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
              {/* Discipline Dropdown */}
             <label className="form-control w-full">
                 <div className="label">
-                    <span className="label-text">Discipline*</span>
+                    <span className="label-text">Discipline</span>
                 </div>
                 <select
                     name="discipline_id"
@@ -160,7 +162,7 @@ export default function EventCreateForm({ disciplines, divisions }: EventCreateF
             {/* Division Checkboxes */}
             <div className="form-control w-full">
                 <label className="label" id="division-label"> {/* Added id for better accessibility if needed by aria-labelledby */}
-                    <span className="label-text font-semibold">Assign Divisions*</span>
+                    <span className="label-text font-semibold">Assign Divisions</span>
                     <span className="label-text-alt">(Select at least one, if applicable for draft)</span>
                 </label>
                 <div
