@@ -98,7 +98,7 @@ const HeadJudgePanel = () => {
         );
       })
       .catch((err) => {
-        console.error("Failed to load round heat id", err);
+        console.error("Failed to fetch head judge panel data", err);
         setHeats([]);
         setStandings([]);
       });  
