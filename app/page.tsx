@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     description: "The new way to track, manage, and follow snowboarding and skiing events. Score tracking, live updates, and more.",
     // Add more metadata tags here if needed (e.g., OpenGraph for social sharing)
 };
+// .
 
 export default async function HomePage() {
   const events = await fetchEvents(); // Fetches SnowEvent[] with Date objects
