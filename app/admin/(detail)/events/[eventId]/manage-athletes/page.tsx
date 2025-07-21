@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, ChangeEvent, useTransition, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Papa, { ParseResult } from 'papaparse';
 import { checkAthletesAgainstDb, addAndRegisterAthletes, getEventDivisions, deleteRegistrationAction, getEventRoster } from './actions';
 import Link from 'next/link';
-import { TrashIcon, PencilSquareIcon, InformationCircleIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, InformationCircleIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import type { Division, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision } from '@/lib/definitions';
 
 // --- Promise-based PapaParse wrapper ---
@@ -23,7 +23,6 @@ function parseCsv(file: File): Promise<ParseResult<Record<string, unknown>>> {
 
 export default function ManageAthletesPage() {
     const params = useParams();
-    const router = useRouter();
     const eventIdParam = params.eventId as string;
     const [eventId, setEventId] = useState<number | null>(null);
 
@@ -57,7 +56,6 @@ export default function ManageAthletesPage() {
         });
     }, [eventIdParam]);
     
-    // --- FULLY IMPLEMENTED HANDLERS ---
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
             setFile(e.target.files[0]);
@@ -79,7 +77,8 @@ export default function ManageAthletesPage() {
                 const response = await checkAthletesAgainstDb(eventId, results.data);
                 if (response.success && response.data) {
                     setCheckedAthletes(response.data.athletes.map(a => ({
-                        ...a, isSelected: a.status !== 'error',
+                        ...a, 
+                        isSelected: a.status !== 'error' && a.status !== 'conflict',
                         assigned_division_id: a.suggested_division_id ?? null,
                     })));
                     setEventDivisions(response.data.divisions);
@@ -94,7 +93,7 @@ export default function ManageAthletesPage() {
     };
 
     const handleDeleteRegistration = (athleteId: number, divisionId: number) => {
-        if (!eventId || !confirm("Are you sure?")) return;
+        if (!eventId || !confirm("Are you sure? This will remove the athlete's registration from this event.")) return;
         startRegisterTransition(async () => {
             const response = await deleteRegistrationAction(eventId, athleteId, divisionId);
             if (response.success) {
@@ -106,16 +105,25 @@ export default function ManageAthletesPage() {
     
     const handleRegisterAthletes = () => {
         if (eventId === null) return;
-        const athletesToSubmit: AthleteToRegister[] = checkedAthletes
-            .filter(a => a.isSelected && a.status !== 'error' && a.assigned_division_id)
-            .map(a => ({
-                csvIndex: a.csvIndex, status: a.status as 'matched'|'new',
-                division_id: a.assigned_division_id as number,
-                last_name: a.csvData.last_name, first_name: a.csvData.first_name, dob: a.csvData.dob, gender: a.csvData.gender,
-                nationality: a.csvData.nationality, stance: a.csvData.stance,
-                fis_num: a.csvData.fis_num ? parseInt(a.csvData.fis_num, 10) : null,
-                dbAthleteId: a.dbAthleteId,
-            }));
+
+        const validSelectedAthletes = checkedAthletes.filter(a => 
+            a.isSelected && a.status !== 'error' && a.assigned_division_id
+        );
+
+        const athletesToSubmit: AthleteToRegister[] = validSelectedAthletes.map(a => ({
+            csvIndex: a.csvIndex,
+            status: a.status as 'matched' | 'new',
+            division_id: a.assigned_division_id as number,
+            last_name: a.csvData.last_name!,
+            first_name: a.csvData.first_name!,
+            dob: a.csvData.dob!,
+            gender: a.csvData.gender!,
+            nationality: a.csvData.nationality || null,
+            stance: a.csvData.stance || null,
+            fis_num: a.csvData.fis_num ? parseInt(a.csvData.fis_num, 10) : null,
+            dbAthleteId: a.dbAthleteId,
+            isOverwrite: a.isOverwrite,
+        }));
 
         if (athletesToSubmit.length === 0) {
             setPageError("No valid athletes are selected for registration."); return;
@@ -138,10 +146,52 @@ export default function ManageAthletesPage() {
         });
     };
     
+    const handleConflictResolution = (csvIndex: number, resolution: 'keep_existing' | 'overwrite') => {
+        setCheckedAthletes(prev => prev.map(athlete => {
+            if (athlete.csvIndex !== csvIndex) return athlete;
+    
+            if (resolution === 'keep_existing') {
+                const conflictingAthlete = athlete.conflictDetails!.conflictingAthlete;
+                // We construct a new object that perfectly matches the CheckedAthleteClient type
+                return { 
+                    ...athlete, 
+                    status: 'matched',
+                    isSelected: true,
+                    // Rebuild the csvData object using the correct data from the DB
+                    csvData: { 
+                        first_name: conflictingAthlete.first_name,
+                        last_name: conflictingAthlete.last_name,
+                        dob: conflictingAthlete.dob,
+                        gender: conflictingAthlete.gender,
+                        nationality: conflictingAthlete.nationality,
+                        stance: conflictingAthlete.stance, // This now matches the type 'Regular' | 'Goofy' | null
+                        fis_num: conflictingAthlete.fis_num?.toString() ?? null,
+                    },
+                    dbAthleteId: conflictingAthlete.athlete_id,
+                    dbDetails: conflictingAthlete,
+                    isOverwrite: false, // Not an overwrite
+                    assigned_division_id: athlete.suggested_division_id ?? null, 
+                    // We can clear conflictDetails as it's been resolved
+                    conflictDetails: undefined, 
+                };
+            } else { // 'overwrite'
+                return {
+                    ...athlete,
+                    status: 'new',
+                    isSelected: true,
+                    isOverwrite: true,
+                    assigned_division_id: athlete.suggested_division_id ?? null,
+                    // We can clear conflictDetails as it's been resolved
+                    conflictDetails: undefined,
+                };
+            }
+        }));
+    };
+    
     const handleSelectionChange = (csvIndex: number) => setCheckedAthletes(p => p.map(a => a.csvIndex === csvIndex ? { ...a, isSelected: !a.isSelected } : a));
     const handleDivisionChange = (csvIndex: number, newId: string) => setCheckedAthletes(p => p.map(a => a.csvIndex === csvIndex ? { ...a, assigned_division_id: parseInt(newId) || null } : a));
-    const handleEditAthlete = (csvIndex: number) => alert(`Editing for CSV Index ${csvIndex} is not yet implemented.`);
-
+    
+    const conflictCount = checkedAthletes.filter(a => a.status === 'conflict').length;
     const selectedCount = checkedAthletes.filter(a => a.isSelected && a.status !== 'error').length;
     const allSelectedHaveDivision = checkedAthletes.filter(a => a.isSelected && a.status !== 'error').every(a => !!a.assigned_division_id);
     const errorCount = checkedAthletes.filter(a => a.status === 'error').length;
@@ -159,9 +209,9 @@ export default function ManageAthletesPage() {
             <div className="card bg-base-100 shadow-xl">
                  <div className="card-body">
                     <h3 className="card-title text-xl">1. Import Roster from CSV</h3>
-                    <div className="flex items-end gap-4">
+                    <div className="flex flex-col sm:flex-row items-end gap-4">
                          <div className="form-control w-full"><label htmlFor="csv-file-input" className="label"><span className="label-text">Select CSV File:</span></label><input id="csv-file-input" type="file" accept=".csv" onChange={handleFileChange} className="file-input file-input-bordered w-full" disabled={isLoading} /></div>
-                         <button className="btn btn-primary" onClick={handleProcessFile} disabled={!file || isLoading}>{isChecking ? 'Checking...' : 'Process & Review'}</button>
+                         <button className="btn btn-primary w-full sm:w-auto" onClick={handleProcessFile} disabled={!file || isLoading}>{isChecking ? <span className="loading loading-spinner"></span> : 'Process & Review'}</button>
                     </div>
                 </div>
             </div>
@@ -170,35 +220,96 @@ export default function ManageAthletesPage() {
                 <div className="card bg-base-100 shadow-xl">
                     <div className="card-body">
                         <h3 className="card-title text-xl">2. Review & Confirm Athletes</h3>
-                        {errorCount > 0 && (<div role="alert" className="alert alert-warning text-sm mb-4"><InformationCircleIcon className="h-5 w-5 mr-2"/><span>{errorCount} row(s) had validation errors.</span></div>)}
+                        {errorCount > 0 && (<div role="alert" className="alert alert-warning text-sm mb-4"><InformationCircleIcon className="h-5 w-5 mr-2"/><span>{errorCount} row(s) had validation errors or conflicts and will be ignored unless resolved.</span></div>)}
+                        {conflictCount > 0 && (<div role="alert" className="alert alert-info text-sm mb-4"><InformationCircleIcon className="h-5 w-5 mr-2"/><span>{conflictCount} conflict(s) found. Please resolve them below before registering.</span></div>)}
+
                         <div className="overflow-x-auto border border-base-300 rounded-lg">
                              <table className="table table-sm w-full">
-                                 <thead className="bg-base-200"><tr><th><input type="checkbox" className="checkbox checkbox-xs" onChange={(e) => setCheckedAthletes(p => p.map(a => a.status !== 'error' ? {...a, isSelected: e.target.checked} : a))} checked={selectedCount > 0 && selectedCount === checkedAthletes.filter(a => a.status !== 'error').length} /></th><th>Status</th><th>CSV Data</th><th>Database Match</th><th>Assign Division</th></tr></thead>
+                                 <thead className="bg-base-200"><tr><th><input type="checkbox" className="checkbox checkbox-xs" onChange={(e) => setCheckedAthletes(p => p.map(a => (a.status !== 'error' && a.status !== 'conflict') ? {...a, isSelected: e.target.checked} : a))} checked={selectedCount > 0 && selectedCount === checkedAthletes.filter(a => a.status !== 'error' && a.status !== 'conflict').length} /></th><th>Status</th><th>CSV Data</th><th>Database Match / Conflict</th><th>Assign Division</th></tr></thead>
                                  <tbody>
                                      {checkedAthletes.map(athlete => (
-                                         <tr key={athlete.csvIndex} className={athlete.status === 'error' ? 'bg-error/10 opacity-60' : ''}>
-                                             <td><input type="checkbox" className="checkbox checkbox-xs" checked={!!athlete.isSelected} onChange={() => handleSelectionChange(athlete.csvIndex)} disabled={athlete.status === 'error'} /></td>
-                                             <td><span className={`badge badge-sm ${athlete.status === 'matched' ? 'badge-success' : athlete.status === 'new' ? 'badge-info' : 'badge-error'}`}>{athlete.status}</span></td>
+                                         <tr key={athlete.csvIndex} className={ athlete.status === 'error' ? 'bg-error/10 opacity-60' : athlete.status === 'conflict' ? 'bg-warning/10' : '' }>
+                                             <td><input type="checkbox" className="checkbox checkbox-xs" checked={!!athlete.isSelected} onChange={() => handleSelectionChange(athlete.csvIndex)} disabled={athlete.status === 'error' || athlete.status === 'conflict'} /></td>
+                                             <td><span className={`badge badge-sm ${athlete.status === 'matched' ? 'badge-success' : athlete.status === 'new' ? 'badge-info' : athlete.status === 'conflict' ? 'badge-warning' : 'badge-error'}`}>{athlete.status}</span></td>
                                              <td><strong>{athlete.csvData.first_name} {athlete.csvData.last_name}</strong><div className="text-xs opacity-70">DOB: {athlete.csvData.dob}<br/>FIS: {athlete.csvData.fis_num || 'N/A'}</div></td>
-                                             <td>{athlete.dbDetails ? <div className='text-xs'><strong>{athlete.dbDetails.first_name} {athlete.dbDetails.last_name}</strong><br/><span className='opacity-70'>DOB: {athlete.dbDetails.dob}<br/>FIS: {athlete.dbDetails.fis_num || 'N/A'}</span></div> : <span className="text-xs italic opacity-70">New Profile</span>}</td>
-                                             <td>{athlete.status !== 'error' && (<select className="select select-xs select-bordered w-full" value={athlete.assigned_division_id?.toString() ?? ''} onChange={(e) => handleDivisionChange(athlete.csvIndex, e.target.value)}><option value="" disabled>{athlete.suggested_division_name ? `Suggested: ${athlete.suggested_division_name}` : 'Select...'}</option>{eventDivisions.map(div => <option key={div.division_id} value={String(div.division_id)}>{div.division_name}</option>)}</select>)}</td>
+                                             
+                                             <td>
+                                                {athlete.status === 'matched' && athlete.dbDetails && <div className='text-xs'><strong>{athlete.dbDetails.first_name} {athlete.dbDetails.last_name}</strong><br/><span className='opacity-70'>DOB: {athlete.dbDetails.dob}<br/>FIS: {athlete.dbDetails.fis_num || 'N/A'}</span></div>}
+                                                {athlete.status === 'new' && <span className="text-xs italic opacity-70">New Profile</span>}
+                                                {athlete.status === 'conflict' && athlete.conflictDetails && (
+                                                    <div className="text-xs p-2 rounded-md border border-warning bg-base-100">
+                                                        <p className="font-bold text-warning-content">Conflict on `{athlete.conflictDetails.conflictOn.replace('_', ' ')}`</p>
+                                                        <p className='mt-1'>This value is already used by:</p>
+                                                        <p className="font-semibold mt-1">{athlete.conflictDetails.conflictingAthlete.first_name} {athlete.conflictDetails.conflictingAthlete.last_name}</p>
+                                                        <div className="mt-2 flex gap-2">
+                                                            <button className="btn btn-xs btn-outline" onClick={() => handleConflictResolution(athlete.csvIndex, 'keep_existing')}>Keep Existing</button>
+                                                            <button className="btn btn-xs btn-warning" onClick={() => handleConflictResolution(athlete.csvIndex, 'overwrite')}>Overwrite with CSV</button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {athlete.status === 'error' && <span className='text-xs text-error'>{athlete.validationError}</span>}
+                                             </td>
+                                             
+                                             <td>{athlete.status !== 'error' && athlete.status !== 'conflict' && (<select className="select select-xs select-bordered w-full" value={athlete.assigned_division_id?.toString() ?? ''} onChange={(e) => handleDivisionChange(athlete.csvIndex, e.target.value)}><option value="" disabled>{athlete.suggested_division_name ? `Suggested: ${athlete.suggested_division_name}` : 'Select...'}</option>{eventDivisions.map(div => <option key={div.division_id} value={String(div.division_id)}>{div.division_name}</option>)}</select>)}</td>
                                          </tr>
                                      ))}
                                  </tbody>
                              </table>
                         </div>
-                        <div className="card-actions justify-between items-center mt-4"><p className="text-sm font-semibold">{selectedCount} athletes selected.</p><button className="btn btn-success" onClick={handleRegisterAthletes} disabled={selectedCount === 0 || !allSelectedHaveDivision || isLoading}>{isRegistering ? 'Registering...' : `Confirm & Register ${selectedCount} Athletes`}</button></div>
+                        <div className="card-actions justify-between items-center mt-4">
+                            <p className="text-sm font-semibold">{selectedCount} athletes selected.</p>
+                            <button 
+                                className="btn btn-success" 
+                                onClick={handleRegisterAthletes} 
+                                disabled={selectedCount === 0 || !allSelectedHaveDivision || isLoading || conflictCount > 0}
+                                title={conflictCount > 0 ? "Please resolve all conflicts before registering" : !allSelectedHaveDivision ? "All selected athletes must have a division assigned" : ""}
+                            >
+                                {isRegistering ? <span className="loading loading-spinner"></span> : `Confirm & Register ${selectedCount} Athletes`}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
             <div className="card bg-base-100 shadow-xl">
-                <div className="card-body"><h3 className="card-title text-xl">Current Roster ({currentRoster.length})</h3>{isRosterLoading ? (<div className="text-center py-4"><span className="loading loading-spinner"></span><p className="text-xs">Loading...</p></div>) : currentRoster.length > 0 ? (<div className="overflow-x-auto max-h-96"><table className="table table-sm table-pin-rows"><thead className='bg-base-200'><tr><th>Bib #</th><th>Name</th><th>Division</th><th>Actions</th></tr></thead><tbody>{currentRoster.map(athlete => (<tr key={`${athlete.athlete_id}-${athlete.division_id}`}><td>{athlete.bib_num || 'N/A'}</td><td>{athlete.first_name} {athlete.last_name}</td><td>{athlete.division_name}</td><td><button className="btn btn-xs btn-ghost text-error" onClick={() => handleDeleteRegistration(athlete.athlete_id, athlete.division_id)} disabled={isLoading}><TrashIcon className="h-4 w-4" /></button></td></tr>))}</tbody></table></div>) : (<p className="text-sm italic text-base-content/70 py-4">No athletes registered.</p>)}</div>
+                <div className="card-body">
+                    <h3 className="card-title text-xl">Current Roster ({currentRoster.length})</h3>
+                    {isRosterLoading ? (
+                        <div className="text-center py-4"><span className="loading loading-spinner"></span><p className="text-xs">Loading...</p></div>
+                    ) : currentRoster.length > 0 ? (
+                        <div className="overflow-x-auto max-h-96">
+                            <table className="table table-sm table-pin-rows">
+                                <thead className='bg-base-200'><tr><th>Bib #</th><th>Name</th><th>Division</th><th>Actions</th></tr></thead>
+                                <tbody>
+                                    {currentRoster.map(athlete => (
+                                        <tr key={`${athlete.athlete_id}-${athlete.division_id}`}>
+                                            <td>{athlete.bib_num || 'N/A'}</td>
+                                            <td>{athlete.first_name} {athlete.last_name}</td>
+                                            <td>{athlete.division_name}</td>
+                                            <td><button className="btn btn-xs btn-ghost text-error" onClick={() => handleDeleteRegistration(athlete.athlete_id, athlete.division_id)} disabled={isLoading}><TrashIcon className="h-4 w-4" /></button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <p className="text-sm italic text-base-content/70 py-4">No athletes registered for this event.</p>
+                    )}
+                </div>
             </div>
 
             {registrationDetails && (
                 <div className="card bg-base-100 shadow-xl">
-                    <div className="card-body"><h3 className="card-title text-xl">Last Registration Summary</h3><ul className="list-disc list-inside text-sm space-y-1 max-h-48 overflow-y-auto">{registrationDetails.map((detail, index) => <li key={index} className={detail.error ? 'text-error' : detail.status.includes('Already') ? 'text-info' : 'text-success'}><strong>{detail.athleteName}:</strong> {detail.status} {detail.error && `(${detail.error})`}</li>)}</ul></div>
+                    <div className="card-body">
+                        <h3 className="card-title text-xl">Last Registration Summary</h3>
+                        <ul className="list-disc list-inside text-sm space-y-1 max-h-48 overflow-y-auto">
+                            {registrationDetails.map((detail, index) => 
+                                <li key={index} className={detail.error ? 'text-error' : detail.status.includes('Already') ? 'text-info' : detail.status.includes('Overwritten') ? 'text-warning' : 'text-success'}>
+                                    <strong>{detail.athleteName}:</strong> {detail.status} {detail.error && `(${detail.error})`}
+                                </li>
+                            )}
+                        </ul>
+                    </div>
                 </div>
             )}
         </div>
