@@ -81,17 +81,6 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
              WHERE ej.event_id = $1 AND u.role_id = 5 AND (LOWER(ej.event_role) = 'head judge' OR LOWER(ej.event_role) = 'headjudge');
          `;
 
-         const judgingPanelQuery = `
-            SELECT rd.event_id, rd.division_id, rd.division_name, rd.round_id, hd.round_heat_id, ej.personnel_id
-            FROM ss_round_details rd JOIN ss_heat_details hd ON rd.round_id = hd.round_id
-            JOIN ss_heats_results hr ON hr.round_heat_id = hd.round_heat_id
-            JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
-            JOIN ss_event_judges ej ON rd.event_id = ej.event_id
-            WHERE ej.event_id = $1;
-         `;
-         // TO FINISH
-         // judgingPanelQuery + judgeQuery to create the Judging Panel and to create the QRCodes > then map it to create the pages, can we create the pages from a mapping function?
-
          const [divisionResult, athleteResult, judgeResult, headJudgeResult] = await Promise.all([
              client.query<Division>(divisionQuery, [eventId]),
              client.query<RegisteredAthlete>(athleteQuery, [eventId]),
@@ -398,18 +387,19 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
                 hd.heat_num,
                 hd.round_heat_id,
                 ej.personnel_id,
-                ej.header AS judge_header,
-                ej.name AS judge_name,
-                e.name,
+                ej.header    AS judge_header,
+                ej.name      AS judge_name,
                 ej.passcode,
+                e.name       AS event_name,
                 rd.round_name
             FROM   ss_round_details   rd
-            JOIN   ss_heat_details    hd ON rd.round_id      = hd.round_id
-            JOIN   ss_heat_results    hr ON hr.round_heat_id = hd.round_heat_id
-            JOIN   ss_event_divisions ed ON ed.division_id   = rd.division_id            
-            JOIN   ss_event_judges    ej ON rd.event_id      = ej.event_id
-            JOIN   ss_events          e  ON e.event_id       = rd.event_id
-            JOIN   ss_division        d  ON ed.division_id   = d.division_id
+            JOIN   ss_heat_details    hd     ON rd.round_id       = hd.round_id
+            JOIN   ss_heat_results    hr     ON hr.round_heat_id  = hd.round_heat_id
+            JOIN   ss_event_divisions ed     ON ed.division_id    = rd.division_id 
+            JOIN   ss_heat_judges     hj     ON hj.round_heat_id  = hd.round_heat_id
+            JOIN   ss_event_judges    ej     ON ej.personnel_id   = hj.personnel_id
+            JOIN   ss_events          e      ON e.event_id        = rd.event_id
+            JOIN   ss_division        d      ON d.division_id     = ed.division_id
             WHERE  ej.event_id = $1;
          `;
 
