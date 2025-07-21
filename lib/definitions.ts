@@ -67,81 +67,63 @@ export interface Athlete {
     dob: Date;
     gender: string;
     nationality: string | null;
-    stance: string | null;
-    fis_num: number | null; // The database stores this as a number
+    stance: 'Regular' | 'Goofy' | null;
+    fis_num: number | null;
 }
 
-// Represents a simple view of an athlete registered for an event.
-//export interface RegisteredAthlete {
- //   athlete_id: number;
- //   first_name: string;
- //   last_name: string;
- //   bib_num?: string | null;
-//}
-
-// Extends RegisteredAthlete to include their specific division for roster lists.
 export interface RegisteredAthleteWithDivision extends RegisteredAthlete {
     division_id: number;
     division_name: string;
 }
 
-
 // --- Athlete Registration Workflow Types ---
 
-// Represents an athlete after the CSV is parsed and checked against the DB.
-// This is what the server sends to the client for the review table.
+// Helper type for what an athlete from the DB looks like when stringified for the UI
+type AthleteAsString = Omit<Athlete, 'dob' | 'fis_num'> & { dob: string, fis_num: string | null };
+
 export interface CheckedAthleteClient {
     csvIndex: number;
-    status: 'matched' | 'new' | 'error';
-    
-    // Data as it appeared in the CSV file
+    status: 'matched' | 'new' | 'error' | 'conflict';
     csvData: {
-        last_name?: string;
-        first_name?: string;
-        dob?: string;
-        gender?: string;
-        nationality?: string | null;
-        stance?: 'Regular' | 'Goofy' | '' | null;
-        fis_num?: string | null;
-    };
-
-    // Details from the server's check
-    validationError?: string;
-    dbAthleteId?: number | null;
-    dbDetails?: { // Data as it exists in the database
-        first_name: string;
         last_name: string;
+        first_name: string;
         dob: string;
         gender: string;
         nationality: string | null;
-        stance: string | null;
-        fis_num: number | null;
+        stance: 'Regular' | 'Goofy' | null;
+        fis_num: string | null;
     };
-    
-    // UI state, managed on the client
+    validationError?: string;
+    dbAthleteId?: number | null;
+    dbDetails?: AthleteAsString;
+    conflictDetails?: {
+        conflictOn: 'fis_num' | 'name+dob';
+        conflictingAthlete: AthleteAsString;
+    };
+    // UI state
     isSelected?: boolean;
+    isOverwrite?: boolean;
     assigned_division_id?: number | null;
     suggested_division_id?: number | null;
     suggested_division_name?: string | null;
 }
 
-// Represents the final, cleaned data sent to the registration server action.
 export interface AthleteToRegister {
     csvIndex: number;
     status: 'matched' | 'new';
     division_id: number;
-    // We send the CSV data back, as it might have been corrected by the user.
-    last_name?: string;
-    first_name?: string;
-    dob?: string;
-    gender?: string;
-    nationality?: string | null;
-    stance?: string | null;
-    fis_num?: number | null; // Note: number, as expected by the DB
-    dbAthleteId?: number | null; // The ID if the athlete was matched
+    last_name: string;
+    first_name: string;
+    dob: string;
+    gender: string;
+    nationality: string | null;
+    stance: 'Regular' | 'Goofy' | null;
+    fis_num: number | null;
+    dbAthleteId?: number | null;
+    isOverwrite?: boolean;
 }
 
-// Represents the outcome of a single athlete's registration attempt.
+
 export interface RegistrationResultDetail {
     athleteName: string;
     status: string;
