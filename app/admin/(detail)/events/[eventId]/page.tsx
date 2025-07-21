@@ -1,4 +1,7 @@
 // app\admin\(detail)\events\[eventId]\page.tsx
+
+export const dynamic = 'force-dynamic';
+
 import React from "react";
 import Link from "next/link";
 import { fetchEventById } from "@/lib/data";

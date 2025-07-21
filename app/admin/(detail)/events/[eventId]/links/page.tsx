@@ -1,4 +1,6 @@
 // app/admin/(detail)/events/[eventId]/manage-divisions/page.tsx
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import Link from 'next/link';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';

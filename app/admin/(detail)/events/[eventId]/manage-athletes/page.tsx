@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, ChangeEvent, useTransition, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Papa, { ParseResult } from 'papaparse';
