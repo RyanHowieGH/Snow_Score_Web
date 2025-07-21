@@ -159,8 +159,7 @@ export default async function AdminEventDetailPage({
                         return `${division.division_name} (${count})`;
                       })
                       .join(", ")
-                  : 
-                  "None"}
+                  : 0}
                 </span>
               
             </p>
