@@ -19,7 +19,8 @@ export async function GET(request: Request) {
         reg.bib_num AS bib,
         rr.event_id,
         rr.round_heat_id,
-        array_agg(rr.calc_score ORDER BY rr.calc_score) AS runs
+        array_agg(rr.calc_score ORDER BY rr.calc_score) AS runs,
+        MAX(rr.calc_score) AS best
       FROM ss_run_results rr
       JOIN ss_event_registrations reg 
         ON rr.athlete_id = reg.athlete_id AND rr.event_id = reg.event_id
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
         ON a.athlete_id = reg.athlete_id
       WHERE rr.event_id = $1
       GROUP BY rr.athlete_id, reg.bib_num, rr.event_id, rr.round_heat_id, a.first_name, a.last_name
-      ORDER BY runs;
+      ORDER BY best DESC;
     `,
       [eventId]
     );

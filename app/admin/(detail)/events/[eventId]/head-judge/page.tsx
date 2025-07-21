@@ -7,15 +7,15 @@ import React from "react";
 import RefreshSwitchButton from "./components/RefreshSwitchButton";
 
 type DivisionData = {
-  divisionId: number,
-  divisionName: string,
-  rounds: RoundData[], 
+  divisionId: number;
+  divisionName: string;
+  rounds: RoundData[];
 };
 
 type RoundData = {
-  roundId: number,
-  roundName: string,
-  heats: HeatData[],
+  roundId: number;
+  roundName: string;
+  heats: HeatData[];
 };
 
 type HeatData = {
@@ -44,31 +44,29 @@ const HeadJudgePanel = () => {
 
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
   const [liveSwitch, setLiveSwitch] = useState<boolean>(false);
-  
+
   const handleOnLiveToggle = () => {
-        setLiveSwitch(prev => !prev);
-    }
-    
-      let refreshInterval: NodeJS.Timeout | null;
+    setLiveSwitch((prev) => !prev);
+  };
+
+  let refreshInterval: NodeJS.Timeout | null;
 
   // Data refresh at every second
   useEffect(() => {
-
-      if (liveSwitch){
-        refreshInterval = setInterval(() => {
-        setRefreshPageFlag(prev => !prev);
-        }, 1000);
-        console.log("Panel is online");
-      }
-      if (liveSwitch === false) {
-        refreshInterval = null;
-        console.log("Panel is offline");
-      }
+    if (liveSwitch) {
+      refreshInterval = setInterval(() => {
+        setRefreshPageFlag((prev) => !prev);
+      }, 1000);
+      console.log("Panel is online");
+    }
+    if (liveSwitch === false) {
+      refreshInterval = null;
+      console.log("Panel is offline");
+    }
 
     return () => {
-      if (refreshInterval)
-        clearInterval(refreshInterval);
-      };
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
   }, [liveSwitch]);
 
   useEffect(() => {
@@ -101,10 +99,8 @@ const HeadJudgePanel = () => {
         console.error("Failed to fetch head judge panel data", err);
         setHeats([]);
         setStandings([]);
-      });  
-      
-  }, [refreshPageFlag]);  
-
+      });
+  }, [refreshPageFlag]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -112,7 +108,7 @@ const HeadJudgePanel = () => {
       <div className="flex justify-end p-4">
         <RefreshSwitchButton onLiveToggle={handleOnLiveToggle} />
       </div>
-              {/* <div>
+      {/* <div>
                 <div>
                   <select
                     className="select select-bordered font-normal w-full text-black"
@@ -135,63 +131,67 @@ const HeadJudgePanel = () => {
                     ))}
                   </select>
                 </div> */}
-        <div className="flex flex-1">
-            {/* Left: heat tables */}
-            <div className="flex-1 p-6 bg-gray-100 grid grid-cols-1 gap-6">
-              {Array.from(
-                new Set(
-                  heats.flatMap((h) =>
-                    Array.isArray(h.round_heat_id) ? h.round_heat_id : [h.round_heat_id]
-                  )
+      <div className="flex flex-1">
+        {/* Left: heat tables */}
+        <div className="flex-1 p-6 bg-gray-100 grid grid-cols-1 gap-6">
+          {Array.from(
+            new Set(
+              heats.flatMap((h) =>
+                Array.isArray(h.round_heat_id)
+                  ? h.round_heat_id
+                  : [h.round_heat_id]
+              )
+            )
+          ).map((roundHeatId) => (
+            <HeatTable
+              key={roundHeatId}
+              title={`Heat ${roundHeatId} Judge Scores`}
+              data={heats
+                .filter((h) =>
+                  Array.isArray(h.round_heat_id)
+                    ? h.round_heat_id.includes(roundHeatId)
+                    : h.round_heat_id === roundHeatId
                 )
-              ).map((roundHeatId) => (
-                <HeatTable
-                  key={roundHeatId}
-                  title={`Heat ${roundHeatId} Judge Scores`}
-                  data={heats
-                    .filter((h) =>
-                      Array.isArray(h.round_heat_id)
-                        ? h.round_heat_id.includes(roundHeatId)
-                        : h.round_heat_id === roundHeatId
-                    )
-                    .map((heat, i) => ({
-                      bib: heat.bib,
-                      athlete: heat.athlete,
-                      rank: i + 1,
-                      runs: heat.runs,
-                      best: heat.best,
-                    }))}
-                />
-              ))}
-            </div>
-
-            {/* Right: standings */}
-            <aside className="w-96 p-6 bg-white space-y-6">
-              {Array.from(
-                new Set(
-                  standings.flatMap((s) =>
-                    Array.isArray(s.round_heat_id) ? s.round_heat_id : [s.round_heat_id]
-                  )
-                )
-              ).map((roundHeatId) => (
-                <Standing
-                  key={roundHeatId}
-                  title={`Heat ${roundHeatId} Standings`}
-                  data={standings
-                    .filter((s) =>
-                      Array.isArray(s.round_heat_id)
-                        ? s.round_heat_id.includes(roundHeatId)
-                        : s.round_heat_id === roundHeatId
-                    )
-                    .map((s) => ({
-                      athlete: s.athlete,
-                      best: s.runs,
-                    }))}
-                />
-              ))}
-            </aside>
-          </div>
+                .map((heat, i) => ({
+                  bib: heat.bib,
+                  athlete: heat.athlete,
+                  rank: i + 1,
+                  runs: heat.runs,
+                  best: heat.best,
+                }))}
+            />
+          ))}
         </div>
+
+        {/* Right: standings */}
+        <aside className="w-96 p-6 bg-white space-y-6">
+          {Array.from(
+            new Set(
+              standings.flatMap((s) =>
+                Array.isArray(s.round_heat_id)
+                  ? s.round_heat_id
+                  : [s.round_heat_id]
+              )
+            )
+          ).map((roundHeatId) => (
+            <Standing
+              key={roundHeatId}
+              title={`Heat ${roundHeatId} Standings`}
+              data={standings
+                .filter((s) =>
+                  Array.isArray(s.round_heat_id)
+                    ? s.round_heat_id.includes(roundHeatId)
+                    : s.round_heat_id === roundHeatId
+                )
+                .map((s) => ({
+                  athlete: s.athlete,
+                  best: s.runs,
+                }))}
+            />
+          ))}
+        </aside>
+      </div>
+    </div>
   );
 };
 
