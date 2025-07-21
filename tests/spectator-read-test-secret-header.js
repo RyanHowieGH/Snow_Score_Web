@@ -25,7 +25,7 @@ export default function () {
   };
 
   const randomHeatId = roundHeatIds[Math.floor(Math.random() * roundHeatIds.length)];
-  const targetUrl = `http://localhost:3000/api/athletes-and-score?round_heat_id=${randomHeatId}&personnel_id=${defaultJudgeId}`;
+  const targetUrl = `http://localhost:3000/api/athletes-and-score-1y781dy7821867d12gf3lp00?round_heat_id=${randomHeatId}&personnel_id=${defaultJudgeId}`;
 
   // Pass the headers object as the second argument to http.get
   const res = http.get(targetUrl, params);
