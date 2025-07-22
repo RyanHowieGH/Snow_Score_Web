@@ -201,7 +201,8 @@ export default async function AdminEventDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2">
         {" "}
         {/* Removed margin-top that was for the header */}
-        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+        {allowedRolesToManageTheEvent.includes(user.roleName) ||
+        'Head Judge' == user.roleName && (
           <ManagementActionCard
           title="Manage Schedule"
           description="Set and adjust start and end times for all heats in the event."
