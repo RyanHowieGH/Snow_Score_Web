@@ -106,15 +106,6 @@ export default function JudgingPanelClient({
     setInputCode(sanitized);
   };
 
-  function getSpecificScore (round_heat_id: number, personnel_id: number, athlete_id: number, run_num: number) {
-      fetch(`/api/athlete-run-score-per-judge-31ks192kncs12kml8d73h7d3g?round_heat_id=${round_heat_id}&personnel_id=${personnel_id}&run_num=${run_num}&=${athlete_id}`)
-      .then((res => res.ok ? res.json() : null))
-      .then((data: Record<string, number>) => setSubmittedScores(data))
-      .catch(err => {
-        console.error("Failed to load scores from database", err);
-      });
-  }
-
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -202,8 +193,6 @@ export default function JudgingPanelClient({
       return;
     }
 
-
-    
     console.log("SUBMITTING:", {
       roundHeatId,
       runNum,
@@ -289,7 +278,7 @@ export default function JudgingPanelClient({
                               : "bg-gray-200 hover:bg-gray-300 border-r-1 border-black border-solid border-b-1"}
                           `}
                         >
-                          {score ?? (submittedScores[key] ?? (submittedScores[key] ?? "+"))}
+                          {submittedScores[key] ?? (score ?? "+")}
                         </button>
                       );
                   })}
