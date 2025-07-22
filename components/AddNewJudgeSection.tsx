@@ -101,7 +101,7 @@ export default function AddNewJudgeSection({
                                     id="judge_header"
                                     type="text"
                                     value={newJudgeHeader}
-                                    onChange={e => setNewJudgeHeader(e.target.value.trim())}
+                                    onChange={e => setNewJudgeHeader(e.target.value)}
                                     className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
                                     placeholder="Enter header"/>
                                 </div>
@@ -116,7 +116,7 @@ export default function AddNewJudgeSection({
                                     id="judge_name"
                                     type="text"
                                     value={newJudgeName}
-                                    onChange={e => setNewJudgeName(e.target.value.trim())}
+                                    onChange={e => setNewJudgeName(e.target.value)}
                                     className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
                                     placeholder="Enter name"/>
                                 </div>
