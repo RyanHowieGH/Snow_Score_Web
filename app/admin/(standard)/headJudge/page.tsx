@@ -27,7 +27,7 @@ export default async function HeadJudge () {
   ]
 
     const events: SnowEvent[] = user?.roleId !== undefined
-      ? await fetchEventsFilteredByRoleId(user.roleId)
+      ? await fetchEventsFilteredByRoleId(63)
       : [];
 
     return(
@@ -47,6 +47,7 @@ export default async function HeadJudge () {
               // Head Judge view
                 <div>
                   <div className="min-h-screen bg-base-300">
+                    {user.name}
                       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                           <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
                               <h2 className="text-2xl md:text-3xl font-bold text-base-content">Events Dashboard</h2>

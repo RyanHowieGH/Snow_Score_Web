@@ -45,6 +45,7 @@ export default async function JudgingPanelPage({ params }: JudgingPanelPageProps
           roundId={round_id}
           roundHeatId={round_heat_id}
           personnelId={personnel_id}
+          eventName={judgingPanels[0].name}
         />
   );
 }
