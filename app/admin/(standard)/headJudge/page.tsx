@@ -68,7 +68,7 @@ export default async function HeadJudge () {
                                   className="space-y-6"
                                   itemGridCols="grid-cols-1 md:grid-cols-2 lg:grid-cols-3" // Or your preferred admin list layout
                                   titleTextColor="text-base-content" // Or specific admin theme color
-                                  isAdminView={true} // <<< CRUCIAL: Indicates this is an admin view
+                                  isAdminView={false} // <<< CRUCIAL: Indicates this is an admin view
                               />
                             </div>
                           )}
