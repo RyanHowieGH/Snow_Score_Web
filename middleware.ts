@@ -16,6 +16,10 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/api/webhooks/clerk(.*)',
   '/events/(.*)',
+  '/api/athlete-run-score-per-judge-31ks192kncs12kml8d73h7d3g(.*)',
+  '/api/athletes-and-score-1y781dy7821867d12gf3lp00(.*)',
+  '/api/best-run-score-per-judge-dh12cm214v98b71ss(.*)',
+  '/api/scores-dj18dh12gpdi1yd89178tsadji1289(.*)',
 ]);
 
 // Ensure this is the correct URL PATH for your admin page

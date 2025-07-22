@@ -5,15 +5,16 @@ export async function POST(req: Request) {
   const pool = getDbPool();
 
   try {
+
     const { round_heat_id, run_num, personnel_id, score, athlete_id } = await req.json();
 
     // Step 1: Get the correct run_result_id
     const result = await pool.query(
       `SELECT run_result_id 
        FROM ss_run_results rr
-       WHERE round_heat_id = $1
-               AND run_num = $2
-               AND athlete_id = $3
+       WHERE round_heat_id       = $1
+               AND run_num       = $2
+               AND athlete_id    = $3
       `,
       [round_heat_id, run_num, athlete_id]
     );
@@ -24,23 +25,27 @@ export async function POST(req: Request) {
         { status: 404 }
       );
     }
+
     const run_result_id = result.rows[0].run_result_id;
 
     // Step 2: Insert into ss_run_scores
     //I changed the order of the parameters to match the database schema
     await pool.query(
       `
-        INSERT INTO ss_run_scores (personnel_id, run_result_id, score)
-        VALUES ($1, $2, $3)
+        INSERT INTO ss_run_scores (personnel_id, run_result_id, score, round_heat_id)
+        VALUES ($1, $2, $3, $4)
         ON CONFLICT (personnel_id, run_result_id)
         DO UPDATE SET score = $3
       `,
-      [personnel_id, run_result_id, score]
+      [personnel_id, run_result_id, score, round_heat_id]
     );
 
-    return NextResponse.json({ success: true }, { status: 200 });
+     return NextResponse.json({ success: true }, { status: 200 });
+
   } catch (err: unknown) {
+    
     console.error("Error saving score:", err);
+    
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

@@ -71,7 +71,7 @@ export default function JudgingPanelClient({
   useEffect(() => {
     if (!eventId) return;
 
-    fetch(`/api/athletes-and-score?personnel_id=${personnelId}&round_heat_id=${roundHeatId}`)
+    fetch(`/api/athletes-and-score-1y781dy7821867d12gf3lp00?personnel_id=${personnelId}&round_heat_id=${roundHeatId}`)
       .then(async (res) => {
         const ct = res.headers.get('content-type');
         if (ct && ct.includes('application/json')) {
@@ -92,7 +92,7 @@ export default function JudgingPanelClient({
 
   useEffect(() => {
     if (!roundHeatId) return;
-    fetch(`/api/best-run-score-per-judge?round_heat_id=${roundHeatId}&personnel_id=${personnelId}`)
+    fetch(`/api/best-run-score-per-judge-dh12cm214v98b71ss?round_heat_id=${roundHeatId}&personnel_id=${personnelId}`)
       .then((res => res.ok ? res.json() : []))
       .then((data: BestScore[]) => setBestScores(data))
       .catch(err => {
@@ -105,15 +105,6 @@ export default function JudgingPanelClient({
     const sanitized = e.target.value.replace(/\D/g, '');
     setInputCode(sanitized);
   };
-
-  function getSpecificScore (round_heat_id: number, personnel_id: number, athlete_id: number, run_num: number) {
-      fetch(`/api/athlete-run-score-per-judge?round_heat_id=${round_heat_id}&personnel_id=${personnel_id}&run_num=${run_num}&=${athlete_id}`)
-      .then((res => res.ok ? res.json() : null))
-      .then((data: Record<string, number>) => setSubmittedScores(data))
-      .catch(err => {
-        console.error("Failed to load scores from database", err);
-      });
-  }
 
   const handlePasscodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,8 +193,6 @@ export default function JudgingPanelClient({
       return;
     }
 
-
-    
     console.log("SUBMITTING:", {
       roundHeatId,
       runNum,
@@ -211,7 +200,7 @@ export default function JudgingPanelClient({
       score,
     });
 
-    const response = await fetch("/api/scores", {
+    const response = await fetch("/api/scores-dj18dh12gpdi1yd89178tsadji1289", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -289,7 +278,7 @@ export default function JudgingPanelClient({
                               : "bg-gray-200 hover:bg-gray-300 border-r-1 border-black border-solid border-b-1"}
                           `}
                         >
-                          {score ?? (submittedScores[key] ?? (submittedScores[key] ?? "+"))}
+                          {submittedScores[key] ?? (score ?? "+")}
                         </button>
                       );
                   })}
