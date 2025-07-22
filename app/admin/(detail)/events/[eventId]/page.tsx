@@ -201,8 +201,7 @@ export default async function AdminEventDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2">
         {" "}
         {/* Removed margin-top that was for the header */}
-        {allowedRolesToManageTheEvent.includes(user.roleName) ||
-        'Head Judge' == user.roleName && (
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
           <ManagementActionCard
           title="Manage Schedule"
           description="Set and adjust start and end times for all heats in the event."
@@ -228,8 +227,8 @@ export default async function AdminEventDetailPage({
           icon={<UsersIcon className="h-7 w-7 text-secondary" />} // Slightly smaller icon
         />)}
 
-        {allowedRolesToManageTheEvent.includes(user.roleName) ||
-        allowedRolesToView.includes(user.roleName) && (
+        {(allowedRolesToManageTheEvent.includes(user.roleName) ||
+        allowedRolesToView.includes(user.roleName)) && (
         <ManagementActionCard
           title="Judges & Officials"
           description="Assign and manage judges and other event personnel."
@@ -237,13 +236,15 @@ export default async function AdminEventDetailPage({
           icon={<UserGroupIcon className="h-7 w-7 text-accent" />} // Slightly smaller icon
         />
         )}
-        <ArticleGenerator eventId={eventId} />
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+          <ArticleGenerator eventId={eventId} />
+        )}
 
       </div>
 
       {/* Optional: Publish button */}
-      {event.status?.toLowerCase() === "draft" &&
-      allowedRolesToManageTheEvent.includes(user.roleName) && (
+      {(event.status?.toLowerCase() === "draft" &&
+      allowedRolesToManageTheEvent.includes(user.roleName)) && (
         <div className="mt-8 pt-6 border-t border-base-300 text-center">
     <PublishEventButton eventId={eventId} />
     <p className="text-xs text-base-content/60 mt-2">
