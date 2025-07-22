@@ -107,56 +107,47 @@ export async function createUserAction(
     if (roleId === 2 && !['Executive Director'].includes(callingUser.roleName)) return { success: false, message: "Only the Executive Director can create Administrators.", error: "Forbidden" };
     if (roleId === 3 && !['Executive Director', 'Administrator'].includes(callingUser.roleName)) return { success: false, message: "Only Exec Director or Admin can create Chief of Competition.", error: "Forbidden" };
 
-    // 4. Generate Temporary Password
-    const tempPassword = crypto.randomBytes(10).toString('base64url').slice(0, 10);
-    console.log(`Generated temporary password for ${email}: ${tempPassword}`);
-
     try {
-        console.log(`Admin ${callingUser.email} attempting to create user: ${email} with initial password.`);
-        console.log(`[${uniqueRequestId}] Admin ${callingUser.email} attempting to create user: ${email}`);
+        console.log(`[${uniqueRequestId}] Admin ${callingUser.email} attempting to create and invite user: ${email}`);
 
-        // 5. Call Clerk Backend API
-        const client = await clerkClient(); // Get client instance
-        const newUser = await client.users.createUser({
-            emailAddress: [email.toLowerCase()],
-            firstName: firstName,
-            lastName: lastName,
-            password: tempPassword,
-            publicMetadata: { initial_role_id: roleId } // Pass role for webhook
+    // 4. *** GET THE CLIENT INSTANCE FIRST ***
+        const client = await clerkClient();
+
+        // 5. *** USE THE INSTANCE TO CALL THE INVITATION API ***
+        await client.invitations.createInvitation({
+            emailAddress: email.toLowerCase(),
+            publicMetadata: {
+                initial_role_id: roleId,
+                // Add the first and last name here
+                firstName: firstName,
+                lastName: lastName
+            },
+            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/sign-up`
+
         });
 
-        console.log(`User created successfully in Clerk with ID: ${newUser.id}`);
-        console.log(`[${uniqueRequestId}] User created successfully in Clerk. Response ID: ${newUser.id}`);
+        console.log(`[${uniqueRequestId}] Invitation sent successfully via Clerk to ${email}.`);
 
-        // 6. Linking & Role Assignment (Handled by Webhook)
-
+        // 6. Revalidate and return success message
         revalidatePath('/admin/users');
         return {
             success: true,
-            message: `User ${email} created. Role assignment relies on webhook.`,
-            tempPassword: tempPassword
+            message: `Invitation sent to ${email}. The user must follow the link in the email to create their account and set a password.`,
         };
 
-    } catch (error: unknown) { // Use unknown type
-        console.error(`[${uniqueRequestId}] Error creating user via Clerk API:`, error);
-
-        console.error("Error creating user via Clerk API:", error);
-        let errorMessage = "Failed to create user.";
+    } catch (error: unknown) {
+        // Your existing error handling is perfect and will catch any issues here too.
+        console.error(`[${uniqueRequestId}] Error sending invitation via Clerk API:`, error);
+        let errorMessage = "Failed to send invitation.";
         let clerkErrorCode: string | undefined = undefined;
 
-         // --- Use Type Guard ---
-         if (isClerkApiError(error) && error.errors && error.errors.length > 0) {
-            const clerkErrors = error.errors;
-            console.error("Detailed Clerk Errors:", JSON.stringify(clerkErrors, null, 2));
-            const firstError = clerkErrors[0];
+        if (isClerkApiError(error) && error.errors && error.errors.length > 0) {
+            const firstError = error.errors[0];
             errorMessage = firstError.longMessage || firstError.message || errorMessage;
             clerkErrorCode = firstError.code;
-            if (clerkErrorCode === 'duplicate_record' || errorMessage.includes('is taken')) { /*...*/ }
-            if (clerkErrorCode === 'form_data_missing' && firstError.longMessage?.includes('password')) { /*...*/ }
-       } else if (error instanceof Error) { // Fallback for generic errors
+        } else if (error instanceof Error) {
             errorMessage = error.message;
-       }
-       // --- End Type Guard Usage ---
+        }
         return { success: false, message: errorMessage, error: clerkErrorCode || "API Error" };
     }
 }
