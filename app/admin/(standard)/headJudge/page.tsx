@@ -27,7 +27,7 @@ export default async function HeadJudge () {
   ]
 
     const events: SnowEvent[] = user?.roleId !== undefined
-      ? await fetchEventsFilteredByRoleId(7)
+      ? await fetchEventsFilteredByRoleId(user.roleId)
       : [];
 
     return(
