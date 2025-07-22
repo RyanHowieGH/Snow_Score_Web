@@ -145,6 +145,44 @@ export async function fetchEvents(): Promise<SnowEvent[]> {
     }
 }
 
+export async function fetchEventsFilteredByRoleId(roleId: number): Promise<SnowEvent[]> {
+    console.log("Fetching all events...");
+    const placeholderUrl = "postgres://user:pass@localhost:5432/db";
+    if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL === placeholderUrl) {
+        console.warn("fetchEvents: database is not configured, returning empty list.");
+        return [];
+    }
+
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query(
+          `SELECT e.event_id, name, start_date, end_date, location, status 
+          FROM ss_events e
+          JOIN ss_event_personnel ep ON e.event_id = ep.event_id
+          WHERE user_id = $1
+          ORDER BY start_date DESC`, 
+          [roleId]
+        );
+        const events: SnowEvent[] = result.rows.map(row => ({
+            event_id: row.event_id,
+            name: row.name,
+            start_date: new Date(row.start_date),
+            end_date: new Date(row.end_date),
+            location: row.location,
+            status: row.status,
+        }));
+        console.log(`Fetched ${events.length} events.`);
+        return events;
+    } catch (error) {
+        console.error("Error fetching all events:", error);
+        return [];
+    } finally {
+        if (client) client.release();
+    }
+}
+
 export async function fetchDisciplines(): Promise<Discipline[]> {
      console.log("Fetching disciplines...");
      const pool = getDbPool();

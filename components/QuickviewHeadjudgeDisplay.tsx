@@ -8,9 +8,10 @@ type QuickviewHeadjudgeDisplayProps = {
     event: EventDetails,
     eventId: number;
     userRoleId?: number;
+    permissionToEdit: boolean;
 }
 
-export default function QuickviewHeadjudgeDisplay ({event, eventId, userRoleId} : QuickviewHeadjudgeDisplayProps) {
+export default function QuickviewHeadjudgeDisplay ({event, eventId, userRoleId, permissionToEdit} : QuickviewHeadjudgeDisplayProps) {
 
     const [selectedJudge, setSelectedJudge] = useState (
         event.headJudge && event.headJudge.length > 0
@@ -31,8 +32,10 @@ export default function QuickviewHeadjudgeDisplay ({event, eventId, userRoleId} 
                 <span className="font-normal">
                   {selectedJudge}
                 </span>
-              
-              <EditHeadJudgeButton eventId={eventId} userRoleId={userRoleId} onAssignHeadjudge={handleAssignHeadjudge}/>
+              {permissionToEdit ? 
+                <EditHeadJudgeButton eventId={eventId} userRoleId={userRoleId} onAssignHeadjudge={handleAssignHeadjudge}/>
+                : <></>
+              }
             </div>
     )
 }

@@ -8,7 +8,7 @@ import { getAuthenticatedUserWithRole } from '@/lib/auth/user'
 import JudgeEventSepecificSection from "components/JudgeEventSpecificSection"
 import type { JudgingPanelPerEvent } from '@/lib/definitions'
 import { Toaster } from 'react-hot-toast'
-
+    
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const eventIdString = params?.eventId;
     if (typeof eventIdString !== 'string') return { title: 'Invalid Event ID Type' };
@@ -27,7 +27,7 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
         notFound();
     }
     const user = await getAuthenticatedUserWithRole();
-    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
+    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition', 'Head Judge'];
     if (!user || !allowedRoles.includes(user.roleName)) {
         redirect('/admin');
     }
