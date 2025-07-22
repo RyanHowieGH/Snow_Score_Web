@@ -179,7 +179,11 @@ export default async function AdminEventDetailPage({
                   {event.judges?.length || 0}
                 </span>
             </p>
-            <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} />
+            {(!user || !allowedRoles.includes(user.roleName)) ? 
+              <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} permissionToEdit={false} />
+              :
+              <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} permissionToEdit={true}/>
+              }
           </div>
         </div>
       </div>
