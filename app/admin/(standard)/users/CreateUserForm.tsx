@@ -131,22 +131,17 @@ export default function CreateUserForm({ assignableRoles }: CreateUserFormProps)
                  </div>
             )}
              {/* Display Success Message (Including Temp Password) - Access state.message/state.success/state.tempPassword correctly */}
-             {state?.message && state.success && (
-                 <div role="alert" className="alert alert-success mt-4 text-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      <div>
-                          <h3 className="font-bold">Success!</h3>
-                          <div className="text-xs">{state.message}</div>
-                          {state.tempPassword && ( // Check tempPassword exists
-                             <div className="mt-2 p-2 rounded bg-base-100/50">
-                                 <p className="text-xs font-semibold">Temporary Password:</p>
-                                 <p className="font-mono select-all text-sm">{state.tempPassword}</p>
-                                 <p className="text-xs opacity-70 mt-1">User must change this on first login.</p>
-                             </div>
-                          )}
-                      </div>
-                  </div>
-             )}
+             {/* UPDATED: Display Success Message - Simplified */}
+            {state?.message && state.success && (
+                <div role="alert" className="alert alert-success mt-4 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div>
+                        <h3 className="font-bold">Success!</h3>
+                        {/* The message from the server action now contains all the info */}
+                        <div className="text-xs">{state.message}</div>
+                    </div>
+                </div>
+            )}
         </form>
     );
 }
