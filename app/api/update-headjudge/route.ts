@@ -30,9 +30,8 @@ export async function POST(req: NextRequest) {
     await pool.query(
       `DELETE FROM ss_event_personnel
          WHERE event_id = $1
-           AND LOWER(event_role) IN ('head judge','headjudge')
-           AND user_id = $2;`,
-      [eventId, userId]
+           AND LOWER(event_role) IN ('head judge','headjudge')`,
+      [eventId]
     );
 
     // look up the role name

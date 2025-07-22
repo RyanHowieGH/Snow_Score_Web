@@ -61,6 +61,7 @@ export default async function AdminEventDetailPage({
     "Executive Director",
     "Administrator",
     "Chief of Competition",
+    "Head Judge",
   ];
   if (!user || !allowedRoles.includes(user.roleName)) {
     console.warn(
