@@ -5,7 +5,9 @@ import Modal from "./PopUpModal";
 import Image from 'next/image';
 import AddNewJudgeSection from './AddNewJudgeSection';
 import {Toaster, toast} from 'react-hot-toast';
+import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
 
+ 
 // Judge Interface
 export interface Judge {
     personnel_id: string;
