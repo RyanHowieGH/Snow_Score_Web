@@ -1,3 +1,5 @@
+// app\events\[eventId]\page.tsx
+
 import React from 'react';
 import Link from 'next/link';
 import { fetchEventById } from '@/lib/data'; // Your main data fetching function
@@ -19,6 +21,7 @@ import {
     InformationCircleIcon,
     ArrowUturnLeftIcon
 } from '@heroicons/react/24/outline';
+import EventStatusBadge from '@/components/EventStatusBadge';
 
 // Props type for the page component
 type PublicEventDetailPageProps = {
@@ -147,18 +150,15 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                     {/* Core Event Info Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                         <InfoCard icon={<CalendarDaysIcon className="h-6 w-6 text-secondary" />} title="Dates" value={formatDateRange(startDate, endDate)} />
-                        <InfoCard
-                            icon={<FlagIcon className="h-6 w-6 text-secondary" />}
-                            title="Status"
-                            value={event.status || 'N/A'}
-                            isBadge={true}
-                            badgeClass={
-                                event.status?.toLowerCase() === 'scheduled' ? 'badge-success' :
-                                event.status?.toLowerCase() === 'completed' ? 'badge-primary' :
-                                event.status?.toLowerCase() === 'cancelled' ? 'badge-error' :
-                                'badge-ghost'
-                            }
-                        />
+                        {/* --- VVV THIS IS THE POLISHED INTEGRATION VVV --- */}
+                        {/* We now wrap the EventStatusBadge inside an InfoCard for visual consistency */}
+                        <InfoCard icon={<FlagIcon className="h-6 w-6 text-secondary" />} title="Status">
+                            {/* Instead of passing a 'value' prop, we pass the badge as a child */}
+                            <div className="mt-1"> {/* Adds a little space to align with the text in other cards */}
+                                <EventStatusBadge startDate={startDate} endDate={endDate} size="lg" />
+                            </div>
+                        </InfoCard>
+                        {/* --- ^^^ END OF POLISHED INTEGRATION ^^^ --- */}
                         <InfoCard icon={<TrophyIcon className="h-6 w-6 text-secondary" />} title="Discipline" value={event.discipline_name || 'Not Specified'} />
                     </div>
 
@@ -208,16 +208,21 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
 // --- Helper Components (defined in the same file for simplicity of this example) ---
 
 // Helper component for consistent info card styling
-const InfoCard: React.FC<{ icon: React.ReactNode; title: string; value: string; isBadge?: boolean; badgeClass?: string }> = ({ icon, title, value, isBadge, badgeClass }) => (
+const InfoCard: React.FC<{ 
+  icon: React.ReactNode; 
+  title: string; 
+  value?: string; // value is now optional
+  children?: React.ReactNode; // children is now an option
+}> = ({ icon, title, value, children }) => (
+// --- ^^^ END OF FIX ^^^ ---
     <div className="bg-base-200/40 p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
         <div className="flex items-center mb-1.5">
             {icon}
             <h3 className="ml-2.5 text-xs font-bold uppercase text-base-content/70 tracking-wider">{title}</h3>
         </div>
-        {isBadge ? (
-            <p className="mt-1 text-lg">
-                <span className={`badge ${badgeClass || 'badge-ghost'} py-3 px-3 text-sm`}>{value}</span>
-            </p>
+        {/* If children are provided, render them. Otherwise, fall back to rendering the value prop. */}
+        {children ? (
+            children
         ) : (
             <p className="mt-1 text-lg text-base-content font-semibold">{value}</p>
         )}
