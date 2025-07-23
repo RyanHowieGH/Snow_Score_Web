@@ -27,6 +27,7 @@ import {
   UserGroupIcon,
   WrenchScrewdriverIcon,
   ClockIcon,
+  TableCellsIcon,
 } from "@heroicons/react/24/outline";
 
 type AdminEventDetailPageProps = {
@@ -218,6 +219,14 @@ export default async function AdminEventDetailPage({
           icon={<WrenchScrewdriverIcon className="h-7 w-7 text-primary" />} // Slightly smaller icon
         />
         )}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+        <ManagementActionCard
+          title="Rounds and Heats"
+          description="Add, edit and manage rounds and heats."
+          linkHref={`/admin/events/${eventId}/manage-rounds-heats`}
+          icon={<TableCellsIcon className="h-7 w-7" />} // Slightly smaller icon
+        />)}
 
         {allowedRolesToManageTheEvent.includes(user.roleName) && (
         <ManagementActionCard
