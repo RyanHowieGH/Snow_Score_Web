@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { Athlete } from '@/lib/definitions';
 import DeleteAthleteButton from './DeleteAthleteButton';
+import EditAthleteModal from './EditAthleteModal'; 
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ArrowUpIcon as ArrowUpSolid, ArrowDownIcon as ArrowDownSolid } from '@heroicons/react/24/solid';
 import { ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 
@@ -19,6 +21,7 @@ export default function AthleteList({ athletes: initialAthletes, currentSortBy, 
     // We use state to manage the list for instant optimistic UI updates on delete.
     const [athletes, setAthletes] = useState(initialAthletes);
     const [errorMessages, setErrorMessages] = useState<Record<number, string>>({});
+    const [editingAthlete, setEditingAthlete] = useState<Athlete | null>(null);
     const pathname = usePathname();
 
     // This effect ensures that if the sorted list from the server changes, our component's state updates.
@@ -82,6 +85,7 @@ export default function AthleteList({ athletes: initialAthletes, currentSortBy, 
     }
 
     return (
+        <>
         <div className="overflow-x-auto w-full">
             {/* Display error messages above the table */}
              {Object.entries(errorMessages).map(([id, msg]) => (
@@ -116,17 +120,36 @@ export default function AthleteList({ athletes: initialAthletes, currentSortBy, 
                             <td>{athlete.fis_num || '-'}</td>
                             <td>{athlete.stance || '-'}</td>
                             <td className='text-center'>
-                                <DeleteAthleteButton
-                                    athleteId={athlete.athlete_id}
-                                    athleteName={`${athlete.first_name} ${athlete.last_name}`}
-                                    onDeleted={handleSuccessfulDeletion}
-                                    onError={handleDeletionError}
-                                />
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+                                <div className="flex items-center justify-center gap-1">
+                                        {/* --- VVV NEW EDIT BUTTON VVV --- */}
+                                        <button 
+                                            onClick={() => setEditingAthlete(athlete)}
+                                            className="btn btn-xs btn-ghost text-info hover:bg-info hover:text-info-content p-1"
+                                            title="Edit Athlete"
+                                        >
+                                            <PencilSquareIcon className="h-4 w-4" />
+                                        </button>
+                                        
+                                        <DeleteAthleteButton
+                                            athleteId={athlete.athlete_id}
+                                            athleteName={`${athlete.first_name} ${athlete.last_name}`}
+                                            onDeleted={handleSuccessfulDeletion}
+                                            onError={handleDeletionError}
+                                        />
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* --- VVV NEW MODAL COMPONENT RENDER VVV --- */}
+            {/* The modal will only be visible when `editingAthlete` is not null */}
+            <EditAthleteModal
+                athlete={editingAthlete}
+                onClose={() => setEditingAthlete(null)} 
+            />
+        </>
     );
 }
