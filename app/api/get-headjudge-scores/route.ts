@@ -22,27 +22,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing round_heat_id or round_id' }, { status: 400 });
     }
 
-    const baseQuery = `
-      SELECT
-        rr.run_num,
-        rr.athlete_id,
-        rs.score,
-        ej.header,
-        ej.name,
-        rr.calc_score       AS run_average,
-        hr.best             AS best_heat_average,
-        rs.personnel_id,
-        rs.run_result_id
-      FROM ss_run_results rr
-      JOIN ss_run_scores   rs ON rr.run_result_id = rs.run_result_id
-      JOIN ss_heat_results hr
-        ON hr.round_heat_id = rr.round_heat_id
-       AND hr.event_id      = rr.event_id
-       AND hr.division_id   = rr.division_id
-       AND hr.athlete_id    = rr.athlete_id
-      JOIN ss_event_judges ej ON rs.personnel_id = ej.personnel_id
-    `;
-
     // 1) Specific heat
     if (roundHeatIdParam) {
       const rhId = parseInt(roundHeatIdParam, 10);
@@ -61,8 +40,28 @@ export async function GET(req: NextRequest) {
         personnel_id: number;
         run_result_id: number;
       }>(
-        baseQuery + `
-        WHERE rr.event_id = $1
+        `
+        SELECT
+          rr.run_num,
+          rr.athlete_id,
+          rs.score,
+          ej.header,
+          ej.name,
+          rr.calc_score AS run_average,
+          hr.best AS best_heat_average,
+          rs.personnel_id,
+          rs.run_result_id
+        FROM ss_run_results rr
+        JOIN ss_run_scores rs
+          ON rr.run_result_id = rs.run_result_id
+        JOIN ss_heat_results hr
+          ON hr.round_heat_id = rr.round_heat_id
+          AND hr.event_id = rr.event_id
+          AND hr.division_id = rr.division_id
+          AND hr.athlete_id = rr.athlete_id
+        JOIN ss_event_judges ej
+          ON rs.personnel_id = ej.personnel_id
+          WHERE rr.event_id = $1
           AND rr.round_heat_id = $2
         ORDER BY rr.athlete_id, rr.run_num;
         `,
@@ -116,13 +115,33 @@ export async function GET(req: NextRequest) {
         personnel_id: number;
         run_result_id: number;
       }>(
-        baseQuery + `
-        JOIN ss_heat_details hd 
-          ON hr.round_heat_id = hd.round_heat_id
-        WHERE rr.event_id = $1
-          AND hd.round_id  = $2
-        ORDER BY rr.athlete_id, rr.round_heat_id, rr.run_num;
-        `,
+          `
+          SELECT
+            rr.run_num,
+            rr.athlete_id,
+            rs.score,
+            ej.header,
+            ej.name,
+            rr.calc_score AS run_average,
+            hr.best AS best_heat_average,
+            rs.personnel_id,
+            rs.run_result_id
+          FROM ss_run_results rr
+          JOIN ss_run_scores rs
+            ON rr.run_result_id = rs.run_result_id
+          JOIN ss_heat_results hr
+            ON hr.round_heat_id = rr.round_heat_id
+            AND hr.event_id = rr.event_id
+            AND hr.division_id = rr.division_id
+            AND hr.athlete_id = rr.athlete_id
+          JOIN ss_event_judges ej
+            ON rs.personnel_id = ej.personnel_id
+          JOIN ss_heat_details hd
+            ON hr.round_heat_id = hd.round_heat_id
+            WHERE rr.event_id = $1
+            AND hd.round_id = $2
+          ORDER BY rr.athlete_id, rr.run_num;
+          `,
         [eventId, rId]
       );
 
