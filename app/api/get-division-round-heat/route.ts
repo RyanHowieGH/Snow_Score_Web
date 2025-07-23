@@ -1,32 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
-
-type CompetitionHJData = {
-    event_name: string,
-    divisions: DivisionHJData[], 
-}
-
-type DivisionHJData = {
-  division_id: number;
-  division_name: string;
-  rounds: RoundHJData[];
-};
-
-type RoundHJData = {
-  round_id: number;
-  round_name: string;
-  num_heats: number;
-  heats: HeatHJData[];
-};
-
-type HeatHJData = {
-    round_heat_id: number,
-    heat_num: number,
-    num_runs: number,
-    start_time: Date,
-    end_time: Date,
-}
-
+import type { CompetitionHJData, DivisionHJData, RoundHJData, HeadJudge } from "@/lib/definitions";
 
 export async function GET(req: NextRequest) {
   const pool = getDbPool();
@@ -34,11 +8,11 @@ export async function GET(req: NextRequest) {
   try {
   const eventIdParam = req.nextUrl.searchParams.get('event_id');
   if (!eventIdParam) {
-    return NextResponse.json({ error: 'Missing event_id' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing data for get-division-round-heat API request' }, { status: 400 });
   }
-  const eventId = parseInt(eventIdParam, 10);
+  const eventId = parseInt(eventIdParam);
   if (isNaN(eventId)) {
-    return NextResponse.json({ error: 'Invalid event_id' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid request for get-division-round-heat API request' }, { status: 400 });
   }
 
   const { rows } = await pool.query<{
@@ -84,13 +58,13 @@ export async function GET(req: NextRequest) {
   );
 
   if (rows.length === 0) {
-    return NextResponse.json({ error: 'No data for that event_id' }, { status: 404 });
+    return NextResponse.json({ error: 'No data for the get-division-round-heat API request' }, { status: 404 });
   }
 
   // Build nested structure
   const competition: CompetitionHJData = {
     event_name: rows[0].event_name,
-    divisions: [],
+    divisions:  [],
   };
 
   const divisionMap = new Map<number, DivisionHJData>();
@@ -99,9 +73,9 @@ export async function GET(req: NextRequest) {
     let div = divisionMap.get(row.division_id);
     if (!div) {
       div = {
-        division_id: row.division_id,
+        division_id:   row.division_id,
         division_name: row.division_name,
-        rounds: [],
+        rounds:        [],
       };
       divisionMap.set(row.division_id, div);
       competition.divisions.push(div);
@@ -110,27 +84,27 @@ export async function GET(req: NextRequest) {
     let round = div.rounds.find(r => r.round_id === row.round_id);
     if (!round) {
       round = {
-        round_id: row.round_id,
+        round_id:   row.round_id,
         round_name: row.round_name,
-        num_heats: row.num_heats,
-        heats: [],
+        num_heats:  row.num_heats,
+        heats:      [],
       };
       div.rounds.push(round);
     }
 
     round.heats.push({
       round_heat_id: row.round_heat_id,
-      heat_num:     row.heat_num,
-      num_runs:     row.num_runs,
-      start_time:   row.start_time,
-      end_time:     row.end_time,
+      heat_num:      row.heat_num,
+      num_runs:      row.num_runs,
+      start_time:    row.start_time,
+      end_time:      row.end_time,
     });
   }
 
     return NextResponse.json(competition);
     
   } catch (err) {
-    console.error("Error fetching competition data to build the head judge panel:", err);
+    console.error("Error fetching data for the get-division-round-heat API request", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
