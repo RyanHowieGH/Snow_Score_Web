@@ -1,3 +1,5 @@
+// app\admin\(detail)\events\[eventId]\manage-schedule\page.tsx
+
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { fetchScheduleHeats, fetchEventById } from '@/lib/data';
