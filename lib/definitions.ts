@@ -244,10 +244,10 @@ export type ScoresHJData = {
     athlete_id: number;
     run_average: number;
     best_heat_average: number;
-    scores: RunScoresHJData[];
+    scores: ScoresPerRunHJData[];
 }
 
-export type RunScoresHJData = {
+export type ScoresPerRunHJData = {
     run_result_id: number;
     personnel_id: number;
     header: string;

@@ -5,7 +5,11 @@ export default function TestPage() {
 
     return(
         <div>
-        <RunCell
+        <RunCell                   
+            athlete_name= {`Tim Smith`}
+            bib_num={2}
+            run_num= {1} 
+            run_result_id= { 123 }
             run_average={ 40 }
             judgesScore={
                 [{
