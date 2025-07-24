@@ -1,9 +1,9 @@
 // app/admin/events/[eventId]/manage-athletes/page.tsx
+
 import React from 'react';
 import Link from 'next/link';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { fetchEventById } from '@/lib/data'; // Assuming this fetches basic event details
-// You will need a new function to fetch athletes for an event:
 import { fetchRegisteredAthletesForEvent } from '@/lib/data';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';

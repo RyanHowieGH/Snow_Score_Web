@@ -1,3 +1,5 @@
+// lib\definitions.ts
+
 // --- Core Application Models ---
 
 export interface SnowEvent {
@@ -121,6 +123,10 @@ export interface AthleteToRegister {
     fis_num: number | null;
     dbAthleteId?: number | null;
     isOverwrite?: boolean;
+    fis_hp_points?: number | null;
+    fis_ss_points?: number | null;
+    fis_ba_points?: number | null;
+    wspl_points?: number | null;
 }
 
 

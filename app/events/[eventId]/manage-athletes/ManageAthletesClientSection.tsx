@@ -1,195 +1,129 @@
-// app/admin/events/[eventId]/manage-athletes/ManageAthletesClientSection.tsx
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import type { RegisteredAthlete } from '@/lib/data';
-import {
-    getEventAthletesAction,
-    removeAthleteFromEventAction,
-    importAthletesFromCsvAction
-} from './actions'; // Assuming actions.ts is in the same directory
+import { useFormStatus, useFormState } from 'react-dom';
+import { importAthletesFromCsvAction, removeAthleteFromEventAction, getEventAthletesAction, type ImportAthletesActionResult } from './actions';import type { RegisteredAthlete } from '@/lib/definitions'; // Import the correct result type
+import { TrashIcon, InformationCircleIcon, ArrowUpOnSquareIcon } from '@heroicons/react/24/outline';
 
-interface ManageAthletesClientSectionProps {
-    eventId: number;
-    initialAthletes: RegisteredAthlete[]; // Now expecting this prop
+
+function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+        <button type="submit" className="btn btn-primary w-full sm:w-auto" disabled={pending}>
+            {pending ? (
+                <> <span className="loading loading-spinner loading-xs mr-2"></span> Importing... </>
+            ) : (
+                <> <ArrowUpOnSquareIcon className="h-5 w-5 mr-2" /> Upload and Import Roster </>
+            )}
+        </button>
+    );
 }
 
-// Destructure initialAthletes from props
-export default function ManageAthletesClientSection({ eventId, initialAthletes }: ManageAthletesClientSectionProps) {
-    // Initialize 'athletes' state with 'initialAthletes' prop
-    const [athletes, setAthletes] = useState<RegisteredAthlete[]>(initialAthletes || []);
-    const [csvFile, setCsvFile] = useState<File | null>(null);
-    const [isProcessing, startTransition] = useTransition(); // Renamed from isPending for clarity
-    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string; errors?: any[] } | null>(null);
+export default function ManageAthletesClientSection({ eventId, initialAthletes }: {
+    eventId: number;
+    initialAthletes: RegisteredAthlete[];
+}) {
+    const [athletes, setAthletes] = useState(initialAthletes);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    const initialState: ImportAthletesActionResult | null = null;
+    const [importState, importFormAction] = useFormState(importAthletesFromCsvAction, initialState);
 
     useEffect(() => {
-        // This effect runs when 'initialAthletes' prop changes.
-        // It ensures the component's local 'athletes' state stays in sync
-        // with the data passed from the server component.
-        setAthletes(initialAthletes || []);
-    }, [initialAthletes]); // Dependency array: re-run effect if initialAthletes changes
+        if (importState?.success) {
+            getEventAthletesAction(eventId).then(result => {
+                if (result.success && result.data) {
+                    setAthletes(result.data);
+                }
+            });
+            const fileInput = document.getElementById('csvFile') as HTMLInputElement;
+            if (fileInput) fileInput.value = '';
+        }
+    }, [importState, eventId]);
 
-    const refreshAthletesList = async () => {
-        startTransition(async () => {
-            setFeedback(null);
-            const result = await getEventAthletesAction(eventId);
-            if (result.success && result.data) {
-                setAthletes(result.data);
-            } else {
-                setFeedback({ type: 'error', message: result.error || 'Could not refresh athletes list.' });
-            }
-        });
-    };
-
-    // This useEffect might be redundant if initialAthletes is always provided and up-to-date.
-    // However, if you want to ensure a fresh fetch on mount or eventId change, you could use it.
-    // For now, relying on the prop and the above useEffect for initial data.
-    // useEffect(() => {
-    //    refreshAthletesList();
-    // }, [eventId]);
-
-
-    const handleCsvImportSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const currentForm = event.currentTarget;
-        if (!csvFile) {
-            setFeedback({ type: 'error', message: 'Please select a CSV file.' });
+    const handleRemoveAthlete = async (athleteId: number) => {
+        if (!confirm('Are you sure you want to remove this athlete from the event? This will not delete their main profile.')) {
             return;
         }
-        setFeedback(null);
-        const formData = new FormData();
-        formData.append('csvFile', csvFile);
-        formData.append('eventId', String(eventId));
-
-        startTransition(async () => {
-            const result = await importAthletesFromCsvAction(formData);
-            if (result.success) {
-                setFeedback({ type: 'success', message: result.message || 'Athletes imported successfully!' });
-                refreshAthletesList();
-            } else {
-                setFeedback({ type: 'error', message: result.error || 'Failed to import athletes.', errors: result.errors });
-            }
-            setCsvFile(null);
-            currentForm.reset();
-        });
-    };
-
-    const handleRemoveAthleteClick = (athleteId: number) => {
-        if (!confirm("Are you sure you want to remove this athlete from the event registration?")) {
-            return;
+        setDeletingId(athleteId);
+        setDeleteError(null);
+        const result = await removeAthleteFromEventAction(eventId, athleteId);
+        if (result.success) {
+            setAthletes(currentAthletes => currentAthletes.filter(a => a.athlete_id !== athleteId));
+        } else {
+            setDeleteError(result.error || 'Failed to remove athlete.');
         }
-        setFeedback(null);
-        startTransition(async () => {
-            const result = await removeAthleteFromEventAction(eventId, athleteId);
-            if (result.success) {
-                setFeedback({ type: 'success', message: result.message || 'Athlete removed.' });
-                refreshAthletesList();
-            } else {
-                setFeedback({ type: 'error', message: result.error || 'Failed to remove athlete.' });
-            }
-        });
+        setDeletingId(null);
     };
 
     return (
         <div className="space-y-8">
-            {/* CSV Import Section */}
-            <div className="card bg-base-200 shadow-lg">
-                <form onSubmit={handleCsvImportSubmit} className="card-body">
-                    <h3 className="card-title text-lg">Import Athletes from CSV</h3>
-                    <p className="text-xs opacity-70 mb-2">
-                        Required columns: first_name, last_name, dob (YYYY-MM-DD), gender. Optional: bib_num, nationality, stance, fis_num. (Header row expected)
-                    </p>
-                    <div className="form-control">
-                        <input
-                            type="file"
-                            accept=".csv"
-                            key={csvFile ? 'file-selected' : 'no-file'} // To help with visual reset
-                            onChange={(e) => {
-                                setCsvFile(e.target.files ? e.target.files[0] : null);
-                                setFeedback(null); // Clear feedback when new file is selected
-                            }}
-                            className="file-input file-input-bordered file-input-primary file-input-sm w-full max-w-md"
-                            required // Make file input required for form submission
-                        />
-                    </div>
-                    <div className="card-actions justify-start mt-2">
-                        <button type="submit" className="btn btn-secondary btn-sm" disabled={isProcessing || !csvFile}>
-                            {isProcessing ? 'Importing...' : 'Upload and Process CSV'}
-                        </button>
-                    </div>
-                </form>
+            <div className="card bg-base-100 shadow-xl">
+                <div className="card-body">
+                    <h3 className="card-title">Import Roster from CSV</h3>
+                    <p className="text-sm text-base-content/70 mb-4">Upload a CSV file to add or update athletes. Existing athletes will be matched by FIS Number or Name+DOB and their profiles will be updated.</p>
+                    
+                    <form action={importFormAction}>
+                        <input type="hidden" name="eventId" value={eventId} />
+                        <div className="flex flex-col sm:flex-row items-end gap-4">
+                            <div className="form-control w-full">
+                                <label htmlFor="csvFile" className="label"><span className="label-text">Select CSV File</span></label>
+                                <input type="file" name="csvFile" id="csvFile" required className="file-input file-input-bordered w-full" />
+                            </div>
+                            <SubmitButton />
+                        </div>
+                    </form>
+                    
+                    {importState && (
+                        <div className="mt-4">
+                            {importState.message && (
+                                <div role="alert" className={`alert text-sm ${importState.success ? 'alert-success' : 'alert-error'}`}>
+                                    <InformationCircleIcon className="h-5 w-5" />
+                                    <span>{importState.message}</span>
+                                </div>
+                            )}
+                            {importState.errors && importState.errors.length > 0 && (
+                                <div className="mt-4 p-4 bg-warning/10 rounded-md">
+                                    <h4 className="font-bold text-warning">Import Errors/Skipped Rows:</h4>
+                                    <ul className="list-disc list-inside text-xs mt-2 space-y-1">
+                                        {importState.errors.map((err, index) => (
+                                            <li key={index}><strong>Row {err.row}:</strong> {err.message}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
-             {/* Feedback Display */}
-            {feedback && (
-                <div className={`alert ${feedback.type === 'success' ? 'alert-success' : 'alert-error'} shadow-sm text-sm my-4`}>
-                    <div>
-                        <span>{feedback.message}</span>
-                        {feedback.errors && feedback.errors.length > 0 && (
-                            <div className="mt-2">
-                                <p className="font-semibold text-xs">Specific row errors:</p>
-                                <ul className="list-disc list-inside text-xs max-h-32 overflow-y-auto">
-                                    {feedback.errors.map((err, index) => (
-                                        <li key={index}>
-                                            Row {err.row}: {err.message}
-                                            {err.data && <pre className="whitespace-pre-wrap bg-base-300 p-1 rounded text-xs mt-1">{JSON.stringify(err.data, null, 2)}</pre>}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Registered Athletes List Section */}
-            <div className="card bg-base-100 shadow-lg">
+            <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="card-title text-lg">Registered Athletes ({athletes.length})</h3>
-                        <button 
-                            onClick={refreshAthletesList} 
-                            className="btn btn-xs btn-outline btn-primary" 
-                            disabled={isProcessing}
-                        >
-                            {isProcessing && !csvFile ? 'Refreshing...' : 'Refresh List'}
-                        </button>
-                    </div>
-
-                    {isProcessing && athletes.length === 0 && <div className="flex justify-center py-4"><span className="loading loading-dots loading-md"></span></div>}
-                    {!isProcessing && athletes.length === 0 && (
-                        <p className="italic py-4 text-center">No athletes are currently registered for this event.</p>
-                    )}
-                    {athletes.length > 0 && (
-                        <div className="overflow-x-auto">
-                            <table className="table table-zebra table-sm w-full">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Bib #</th>
-                                        <th className="text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {athletes.map((athlete) => (
-                                        <tr key={athlete.athlete_id}>
+                    <h3 className="card-title">Current Roster ({athletes.length})</h3>
+                    {deleteError && <p className="text-sm text-error">{deleteError}</p>}
+                    <div className="overflow-x-auto">
+                        <table className="table table-sm">
+                            <thead><tr><th>Bib #</th><th>Name</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                {athletes.length > 0 ? (
+                                    athletes.map(athlete => (
+                                        <tr key={athlete.athlete_id} className="hover">
+                                            <td>{athlete.bib_num || 'N/A'}</td>
                                             <td>{athlete.first_name} {athlete.last_name}</td>
-                                            <td>{athlete.bib_num || <span className="italic text-xs">N/A</span>}</td>
-                                            <td className="text-right">
-                                                <button
-                                                    onClick={() => handleRemoveAthleteClick(athlete.athlete_id)}
-                                                    className="btn btn-xs btn-error btn-outline"
-                                                    disabled={isProcessing}
-                                                >
-                                                    Remove
+                                            <td>
+                                                <button onClick={() => handleRemoveAthlete(athlete.athlete_id)} className="btn btn-xs btn-ghost text-error" disabled={deletingId === athlete.athlete_id}>
+                                                    {deletingId === athlete.athlete_id ? <span className="loading loading-spinner loading-xs"></span> : <TrashIcon className="h-4 w-4" />}
                                                 </button>
                                             </td>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                    ))
+                                ) : (
+                                    <tr><td colSpan={3} className="text-center italic">No athletes are currently registered for this event.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
