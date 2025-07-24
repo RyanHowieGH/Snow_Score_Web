@@ -27,6 +27,7 @@ import {
   UserGroupIcon,
   WrenchScrewdriverIcon,
   ClockIcon,
+  TableCellsIcon,
 } from "@heroicons/react/24/outline";
 
 type AdminEventDetailPageProps = {
@@ -57,12 +58,21 @@ export default async function AdminEventDetailPage({
   const eventId = Number(params.eventId);
 
   const user = await getAuthenticatedUserWithRole();
-  const allowedRoles = [
+  const allowedRolesToView = [
+    "Executive Director",
+    "Administrator",
+    "Chief of Competition",
+    "Head Judge",
+  ];
+
+   const allowedRolesToManageTheEvent = [
     "Executive Director",
     "Administrator",
     "Chief of Competition",
   ];
-  if (!user || !allowedRoles.includes(user.roleName)) {
+
+ 
+  if (!user || !allowedRolesToView.includes(user.roleName)) {
     console.warn(
       `Unauthorized access attempt to /admin/events/${eventId} by user: ${user?.email} with role: ${user?.roleName}`
     );
@@ -179,7 +189,7 @@ export default async function AdminEventDetailPage({
                   {event.judges?.length || 0}
                 </span>
             </p>
-            {(!user || !allowedRoles.includes(user.roleName)) ? 
+            {(!user || !allowedRolesToView.includes(user.roleName)) ? 
               <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} permissionToEdit={false} />
               :
               <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} permissionToEdit={true}/>
@@ -192,36 +202,58 @@ export default async function AdminEventDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2">
         {" "}
         {/* Removed margin-top that was for the header */}
-        <ManagementActionCard
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+          <ManagementActionCard
           title="Manage Schedule"
           description="Set and adjust start and end times for all heats in the event."
           linkHref={`/admin/events/${eventId}/manage-schedule`}
           icon={<ClockIcon className="h-7 w-7 text-info" />}
         />
+        )}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
         <ManagementActionCard
           title="Event Setup"
           description="Modify core details, dates, location, discipline, status, and assigned divisions."
           linkHref={`/admin/events/${eventId}/edit-details`}
           icon={<WrenchScrewdriverIcon className="h-7 w-7 text-primary" />} // Slightly smaller icon
         />
+        )}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+        <ManagementActionCard
+          title="Rounds and Heats"
+          description="Add, edit and manage rounds and heats."
+          linkHref={`/admin/events/${eventId}/manage-rounds-heats`}
+          icon={<TableCellsIcon className="h-7 w-7" />} // Slightly smaller icon
+        />)}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
         <ManagementActionCard
           title="Athlete Roster"
           description="Register, view, and manage athlete participation and bib numbers."
           linkHref={`/admin/events/${eventId}/manage-athletes`}
           icon={<UsersIcon className="h-7 w-7 text-secondary" />} // Slightly smaller icon
-        />
+        />)}
+
+        {(allowedRolesToManageTheEvent.includes(user.roleName) ||
+        allowedRolesToView.includes(user.roleName)) && (
         <ManagementActionCard
           title="Judges & Officials"
           description="Assign and manage judges and other event personnel."
           linkHref={`/admin/events/${eventId}/manage-judges`}
           icon={<UserGroupIcon className="h-7 w-7 text-accent" />} // Slightly smaller icon
         />
-        <ArticleGenerator eventId={eventId} />
+        )}
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+          <ArticleGenerator eventId={eventId} />
+        )}
 
       </div>
 
       {/* Optional: Publish button */}
-      {event.status?.toLowerCase() === "draft" && (
+      {(event.status?.toLowerCase() === "draft" &&
+      allowedRolesToManageTheEvent.includes(user.roleName)) && (
         <div className="mt-8 pt-6 border-t border-base-300 text-center">
     <PublishEventButton eventId={eventId} />
     <p className="text-xs text-base-content/60 mt-2">

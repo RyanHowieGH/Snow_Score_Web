@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from 'next/image';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Toaster, toast } from "react-hot-toast";
+import { eventNames } from "process";
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -12,6 +13,7 @@ type JudgingPanelClientProps = {
   roundId: number;
   roundHeatId: number;
   personnelId: number;
+  eventName: string;
 };
 
 type AthleteRun = {
@@ -37,6 +39,7 @@ export default function JudgingPanelClient({
   roundId,
   roundHeatId,
   personnelId,
+  eventName,
 }: JudgingPanelClientProps) {
   const [inputCode, setInputCode] = useState('');
   const [verified, setVerified] = useState(false);
@@ -67,6 +70,7 @@ export default function JudgingPanelClient({
   const [submittedScores, setSubmittedScores] = useState<Record<string, number>>({}); 
   const [bestScores, setBestScores] = useState<BestScore[]>([]);
   const [submissionFlag, setSubmissionFlag] = useState<boolean>(false);
+
 
   useEffect(() => {
     if (!eventId) return;
@@ -237,6 +241,13 @@ export default function JudgingPanelClient({
 
   return (
     <div>
+      <div className="bg-gray-100 border-b-1 border-solid">
+        <div></div>
+        <div className="flex items-center justify-end bg-white border border-gray-300">
+          {eventName}
+        ONLINE/OFFLINE
+        </div>
+      </div>
       <Toaster />
       <div className="flex w-full h-screen">
 
@@ -397,7 +408,6 @@ export default function JudgingPanelClient({
             ))}
           </div>
         </div>
-
       </div>
     </div>
   )

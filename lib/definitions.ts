@@ -212,3 +212,46 @@ export type UserWithRole = {
   role_name: string;
   auth_provider_user_id: string; // This is the Clerk ID needed for deletion
 };
+
+
+export type CompetitionHJData = {
+    event_name: string,
+    divisions: DivisionHJData[], 
+}
+
+export type DivisionHJData = {
+  division_id: number;
+  division_name: string;
+  rounds: RoundHJData[];
+};
+
+export type RoundHJData = {
+  round_id: number;
+  round_name: string;
+  num_heats: number;
+  heats: HeatHJData[];
+};
+
+export type HeatHJData = {
+    round_heat_id: number,
+    heat_num: number,
+    num_runs: number,
+    start_time: Date,
+    end_time: Date,
+}
+
+export type ScoresHJData = {
+    athlete_id: number;
+    run_average: number;
+    best_heat_average: number;
+    scores: RunScoresHJData[];
+}
+
+export type RunScoresHJData = {
+    run_result_id: number;
+    personnel_id: number;
+    header: string;
+    name: string;
+    run_num: number;
+    score: number;
+}

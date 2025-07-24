@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default async function AdminEventsListPage() {
     const user = await getAuthenticatedUserWithRole();
-    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
+    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition', 'Head Judge'];
     if (!user || !allowedRoles.includes(user.roleName)) {
         redirect('/sign-in?redirectUrl=/admin/events');
     }
