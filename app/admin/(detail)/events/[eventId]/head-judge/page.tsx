@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import React from "react";
 import RefreshSwitchButton from "./components/RefreshSwitchButton";
-import type { HeatHJData, ScoresHJData } from "@/lib/definitions";\
+import type { HeatHJData, ScoresHJData } from "@/lib/definitions";
 
 type StandingData = {
   athlete: string;
