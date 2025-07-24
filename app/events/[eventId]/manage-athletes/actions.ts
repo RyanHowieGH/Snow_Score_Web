@@ -94,10 +94,34 @@ const CsvAthleteRowSchema = z.object({
     nationality: z.preprocess((val) => (val === '' || val === null ? null : String(val).trim()), z.string().optional().nullable()),
     stance: z.preprocess((val) => (val === '' ? null : val), z.enum(['Regular', 'Goofy']).optional().nullable()),
     fis_num: z.preprocess((val) => (val === '' || val === null ? null : Number(val)), z.number().int().optional().nullable()),
-    fis_hp_points: z.preprocess((val) => (val === '' || val === null ? null : Number(val)), z.number().optional().nullable()),
-    fis_ss_points: z.preprocess((val) => (val === '' || val === null ? null : Number(val)), z.number().optional().nullable()),
-    fis_ba_points: z.preprocess((val) => (val === '' || val === null ? null : Number(val)), z.number().optional().nullable()),
-    wspl_points: z.preprocess((val) => (val === '' || val === null ? null : Number(val)), z.number().optional().nullable()),
+    fis_hp_points: z.preprocess((val) => {
+        if (val === null || val === undefined || val === '') return null;
+        const trimmed = String(val).trim();
+        if (trimmed === '') return null;
+        const num = Number(trimmed);
+        return isNaN(num) ? null : num;
+    }, z.number().optional().nullable()),
+    fis_ss_points: z.preprocess((val) => {
+        if (val === null || val === undefined || val === '') return null;
+        const trimmed = String(val).trim();
+        if (trimmed === '') return null;
+        const num = Number(trimmed);
+        return isNaN(num) ? null : num;
+    }, z.number().optional().nullable()),
+    fis_ba_points: z.preprocess((val) => {
+        if (val === null || val === undefined || val === '') return null;
+        const trimmed = String(val).trim();
+        if (trimmed === '') return null;
+        const num = Number(trimmed);
+        return isNaN(num) ? null : num;
+    }, z.number().optional().nullable()),
+    wspl_points: z.preprocess((val) => {
+        if (val === null || val === undefined || val === '') return null;
+        const trimmed = String(val).trim();
+        if (trimmed === '') return null;
+        const num = Number(trimmed);
+        return isNaN(num) ? null : num;
+    }, z.number().optional().nullable()),
 });
 
 export async function importAthletesFromCsvAction(
@@ -176,6 +200,15 @@ export async function importAthletesFromCsvAction(
 
             if (existingAthleteResult && existingAthleteResult.rows.length > 0) {
                 athleteId = existingAthleteResult.rows[0].athlete_id;
+                
+                // Debug logging for point fields before UPDATE
+                console.log(`[DEBUG] Updating athlete ${athleteId} with point values:`, {
+                    fis_hp_points: validatedData.fis_hp_points,
+                    fis_ss_points: validatedData.fis_ss_points,
+                    fis_ba_points: validatedData.fis_ba_points,
+                    wspl_points: validatedData.wspl_points
+                });
+                
                 await client.query(
                     `UPDATE ss_athletes SET
                         first_name = $1, last_name = $2, dob = $3, gender = $4,
@@ -192,6 +225,14 @@ export async function importAthletesFromCsvAction(
                     ]
                 );
             } else {
+                // Debug logging for point fields before INSERT
+                console.log(`[DEBUG] Creating new athlete with point values:`, {
+                    fis_hp_points: validatedData.fis_hp_points,
+                    fis_ss_points: validatedData.fis_ss_points,
+                    fis_ba_points: validatedData.fis_ba_points,
+                    wspl_points: validatedData.wspl_points
+                });
+                
                 const insertAthleteResult = await client.query<{ athlete_id: number }>(
                     `INSERT INTO ss_athletes (
                         first_name, last_name, dob, gender, nationality, stance, fis_num,
