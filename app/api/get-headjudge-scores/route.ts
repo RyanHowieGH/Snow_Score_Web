@@ -18,14 +18,15 @@ export async function GET(req: NextRequest) {
 
     const roundHeatIdParam = req.nextUrl.searchParams.get('round_heat_id');
     const roundIdParam     = req.nextUrl.searchParams.get('round_id');
+    
     if (!roundHeatIdParam && !roundIdParam) {
       return NextResponse.json({ error: 'Missing round_heat_id or round_id' }, { status: 400 });
     }
 
     // 1) Specific heat
     if (roundHeatIdParam) {
-      const rhId = parseInt(roundHeatIdParam, 10);
-      if (isNaN(rhId)) {
+      const roundHeatId = parseInt(roundHeatIdParam, 10);
+      if (isNaN(roundHeatId)) {
         return NextResponse.json({ error: 'Invalid round_heat_id' }, { status: 400 });
       }
 
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
           AND rr.round_heat_id = $2
         ORDER BY rr.athlete_id, rr.run_num;
         `,
-        [eventId, rhId]
+        [eventId, roundHeatId]
       );
 
       if (rows.length === 0) {
