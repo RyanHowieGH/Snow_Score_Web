@@ -213,65 +213,66 @@ export type UserWithRole = {
   auth_provider_user_id: string; // This is the Clerk ID needed for deletion
 };
 
-// --- Head Judge Panel ---
+// --- HEAD JUDGE PANEL DATA TYPES ---
 
-export interface CompetitionHJData {
-  event_name: string;
-  divisions: DivisionHJData[];
+export type CompetitionHJData = {
+    event_name: string,
+    divisions: DivisionHJData[], 
 }
-export interface DivisionHJData {
+
+export type DivisionHJData = {
   division_id: number;
   division_name: string;
   rounds: RoundHJData[];
-}
-export interface RoundHJData {
+};
+
+export type RoundHJData = {
   round_id: number;
   round_name: string;
   num_heats: number;
   heats: HeatHJData[];
-}
-export interface HeatHJData {
-  round_heat_id: number;
-  heat_num: number;
-  num_runs: number;
-  start_time: Date;
-  end_time: Date;
+};
+
+export type HeatHJData = {
+    round_heat_id: number,
+    heat_num: number,
+    num_runs: number,
+    start_time: Date,
+    end_time: Date,
 }
 
-// headjudge‐scores.ts
-export interface ScoresPerRunHJData {
-  run_result_id: number;
-  personnel_id: number;
-  header: string;
-  name: string;
-  run_num: number;
-  score: number | null;
-}
-export interface ScoresHJData {
-  athlete_id: number;
-  run_average: number;        // calc_score for *that* run
-  best_heat_average: number;  // best across all runs in this heat
-  scores: ScoresPerRunHJData[]; 
+export type ResultsHJDataMap = {
+    [round_heat_id: number]: {
+        athlete_id: number;
+        run_average: number;
+        best_heat_average: number;
+        scores: RunHJData[];
+    }
 }
 
-// table‐shape.ts
-export interface JudgeScore {
-  personnel_id: number;
-  header: string;
-  name: string;
-  score: number | null;
+export type RunHJData = {
+    [run_num: number]: {
+        run_result_id: number;
+        personnel_id: number;
+        header: string;
+        name: string;
+        score: number;
+    }
 }
 
-export interface RunCellData {
-  runNum: number;
-  run_average: number | null;
-  judgeScores: JudgeScore[];
+export type RunCell = {
+    athlete_name: string,
+    bib_num: number,
+    run_num: number,
+    run_average: number | null,
+    judgesScore: JudgeScorePerRunPerAthlete[];
 }
 
-export interface AthleteHeatRow {
-  bib:           number;
-  athleteName:   string;
-  best:          number;
-  runs:          RunCellData[];
-  rank?:         number;
+export type JudgeScorePerRunPerAthlete = {
+    personnel_id: number;
+    header: string;
+    name: string;
+    score: number | null;
 }
+
+

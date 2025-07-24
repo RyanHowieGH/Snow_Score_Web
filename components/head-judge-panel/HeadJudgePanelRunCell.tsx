@@ -1,29 +1,14 @@
 'use client'
 import React from 'react';
-import type { ScoresPerRunHJData } from '@/lib/definitions';
 import { useState, useEffect, FormEvent } from 'react';
 import Modal from '@/components/PopUpModal';
 import {Info} from 'lucide-react';
+import type { RunCell } from '@/lib/definitions';
 
-type RunCellProps = {
-    run_result_id: number,
-    athlete_name: string,
-    bib_num: number,
-    run_num: number,
-    run_average: number | null,
-    judgesScore: JudgeScore[];
-}
 
-type JudgeScore = {
-    personnel_id: number;
-    header: string;
-    name: string;
-    score: number | null;
-}
+export default function RunCell (run_result_id: number, scorePerRun: RunCell) {
 
-export default function RunCell (scorePerRun: RunCellProps) {
-
-    const [scores, setScores] = useState<RunCellProps>();
+    const [scores, setScores] = useState<RunCell>();
     const [average, setAverage] = useState<number>();
     const [openCheckScores, setOpenCheckScores] = useState<boolean>(false);
     const [modifier, setModifier] = useState<string>();

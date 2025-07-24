@@ -1,7 +1,7 @@
 // app/api/get-division-round-heat/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
-import type { ScoresHJData, ScoresPerRunHJData } from "@/lib/definitions";
+import type { ResultsHJDataMap, RunHJData } from "@/lib/definitions";
 
 export async function GET(req: NextRequest) {
   const pool = getDbPool();
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'No data for that heat' }, { status: 404 });
       }
 
-      const mapSingle = new Map<number, ScoresHJData>();
+      const mapSingle = new Map<number, ResultsHJDataMap>();
       for (const r of rows) {
         let entry = mapSingle.get(r.athlete_id);
         if (!entry) {
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'No data for that round' }, { status: 404 });
       }
 
-      const mapMulti = new Map<number, ScoresHJData>();
+      const mapMulti = new Map<number, ResultsHJDataMap>();
       for (const r of rows) {
         let entry = mapMulti.get(r.athlete_id);
         if (!entry) {

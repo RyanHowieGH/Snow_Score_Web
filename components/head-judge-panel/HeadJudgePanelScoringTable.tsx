@@ -1,5 +1,5 @@
 import React from 'react';
-import RunCell from '@/components/HeadJudgePanelRunCell';
+import RunCell from '@/components/head-judge-panel/HeadJudgePanelRunCell';
 
 interface Score {
   bib: number;
@@ -42,7 +42,7 @@ const JudgeScoresTable: React.FC = () => {
               <td className="px-4 py-2">{score.bib}</td>
               <td className="px-4 py-2">{score.seeding}</td>
 
-              {/* Run 1 cell using HeadJudgePanelRunCell */}
+              {/* Run 1 */}
               <td className="px-4 py-2">
                 {score.run1 !== undefined ? (
                   <RunCell

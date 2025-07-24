@@ -1,5 +1,5 @@
 import React from 'react';
-import RunCell from '@/components/HeadJudgePanelRunCell'
+import RunCell from '@/components/head-judge-panel/HeadJudgePanelRunCell'
 
 export default function TestPage() {
 
