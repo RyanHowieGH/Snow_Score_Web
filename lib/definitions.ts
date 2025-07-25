@@ -1,3 +1,5 @@
+// lib\definitions.ts
+
 // --- Core Application Models ---
 
 export interface SnowEvent {
@@ -69,6 +71,11 @@ export interface Athlete {
     nationality: string | null;
     stance: 'Regular' | 'Goofy' | null;
     fis_num: number | null;
+    // ADDED POINTS
+    fis_hp_points: number | null;
+    fis_ss_points: number | null;
+    fis_ba_points: number | null;
+    wspl_points: number | null;
 }
 
 export interface RegisteredAthleteWithDivision extends RegisteredAthlete {
@@ -79,7 +86,20 @@ export interface RegisteredAthleteWithDivision extends RegisteredAthlete {
 // --- Athlete Registration Workflow Types ---
 
 // Helper type for what an athlete from the DB looks like when stringified for the UI
-type AthleteAsString = Omit<Athlete, 'dob' | 'fis_num'> & { dob: string, fis_num: string | null };
+export type AthleteAsString = {
+    athlete_id: number;
+    last_name: string;
+    first_name: string;
+    dob: string; // dob is a string here
+    gender: string;
+    nationality: string | null;
+    stance: 'Regular' | 'Goofy' | null;
+    fis_num: number | null; // Keep as number to match Athlete type
+    fis_hp_points: number | null;
+    fis_ss_points: number | null;
+    fis_ba_points: number | null;
+    wspl_points: number | null;
+};
 
 export interface CheckedAthleteClient {
     csvIndex: number;
@@ -90,8 +110,12 @@ export interface CheckedAthleteClient {
         dob: string;
         gender: string;
         nationality: string | null;
-        stance: 'Regular' | 'Goofy' | null;
+        stance: 'Regular' | 'Goofy' | '' | null;
         fis_num: string | null;
+        fis_hp_points?: any;
+        fis_ss_points?: any;
+        fis_ba_points?: any;
+        wspl_points?: any;
     };
     validationError?: string;
     dbAthleteId?: number | null;
@@ -121,6 +145,11 @@ export interface AthleteToRegister {
     fis_num: number | null;
     dbAthleteId?: number | null;
     isOverwrite?: boolean;
+    // ADDED POINTS
+    fis_hp_points?: number | null;
+    fis_ss_points?: number | null;
+    fis_ba_points?: number | null;
+    wspl_points?: number | null;
 }
 
 
