@@ -8,24 +8,21 @@ import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import { getDivisionsForEvent, fetchAllAthletes, fetchRosterForEvent } from '@/lib/data';
-import type { Division, Athlete, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision } from '@/lib/definitions';
+import type { Division, Athlete, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision, AthleteAsString } from '@/lib/definitions';
 
-// --- Zod Schema (no changes needed) ---
+// --- Zod Schema  ---
 const AthleteCsvSchema = z.object({
     last_name: z.string().min(1, "Last name is required."),
     first_name: z.string().min(1, "First name is required."),
-    dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "DOB must be YYYY-MM-DD.").transform((dateStr, ctx) => {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) {
-            ctx.addIssue({ code: z.ZodIssueCode.invalid_date, message: "Invalid date." });
-            return z.NEVER;
-        }
-        return date;
-    }),
+    dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "DOB must be YYYY-MM-DD.").transform((dateStr) => new Date(dateStr)),
     gender: z.string().min(1, "Gender is required."),
-    nationality: z.string().length(3, "Nationality must be 3 letters.").toUpperCase().nullable().optional().transform(val => val === '' ? null : val),
-    stance: z.enum(['Regular', 'Goofy', '']).nullable().optional().transform(val => val === '' ? null : val),
-    fis_num: z.preprocess((val) => (typeof val === 'string' && val.trim() !== '') ? val.trim() : null, z.string().regex(/^\d{7}$/, "FIS number must be 7 digits.").nullable().optional()),
+    nationality: z.string().length(3).toUpperCase().optional().transform(val => val === '' ? null : val).nullable(),
+    stance: z.enum(['Regular', 'Goofy', '']).optional().transform(val => val === '' ? null : val).nullable(),
+    fis_num: z.preprocess((val) => (val === '' ? null : val), z.string().regex(/^\d{7}$/).optional().nullable()),
+    fis_hp_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
+    fis_ss_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
+    fis_ba_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
+    wspl_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
 });
 
 // --- Helper Authorization Function (no changes needed) ---
@@ -59,7 +56,7 @@ export async function checkAthletesAgainstDb(
         
         const [allAthletesInDb, eventDivisions] = await Promise.all([ fetchAllAthletes(), getDivisionsForEvent(eventId) ]);
         if (eventDivisions.length === 0) {
-            return { success: false, error: "This event has no assigned divisions. Please add divisions in 'Event Setup' first." };
+            return { success: false, error: "This event has no assigned divisions." };
         }
 
         const checkedAthletes: CheckedAthleteClient[] = parsedAthletesFromCsv.map((row, index) => {
@@ -92,10 +89,9 @@ export async function checkAthletesAgainstDb(
                 suggestedDivision = eventDivisions.find(d => d.division_name.toUpperCase() === 'FEMALE') || eventDivisions.find(d => d.division_name.toUpperCase() === 'WOMEN');
             }
             
-            const formatAthleteForUI = (athlete: Athlete) => ({
+            const formatAthleteForUI = (athlete: Athlete): AthleteAsString => ({
                 ...athlete,
                 dob: new Date(athlete.dob).toISOString().split('T')[0],
-                fis_num: athlete.fis_num?.toString() ?? null
             });
 
             // This object now perfectly matches the `CheckedAthleteClient['csvData']` type
@@ -164,7 +160,6 @@ export async function addAndRegisterAthletes(
     } catch(err) {
         return { success: false, error: 'Unauthorized.' };
     }
-
     if (!eventId || !athletesToRegister || athletesToRegister.length === 0) {
         return { success: false, error: "Missing or invalid event ID or athlete data." };
     }
@@ -182,14 +177,31 @@ export async function addAndRegisterAthletes(
 
             try {
                 if (athlete.isOverwrite && athleteId) {
+                    // UPDATE statement now includes the new points fields
                     await client.query(
-                        `UPDATE ss_athletes SET last_name = $1, first_name = $2, dob = $3, gender = $4, nationality = $5, stance = $6, fis_num = $7 WHERE athlete_id = $8;`,
-                        [athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, athlete.stance, athlete.fis_num, athleteId]
+                        `UPDATE ss_athletes SET 
+                            last_name = $1, first_name = $2, dob = $3, gender = $4, nationality = $5, stance = $6, fis_num = $7,
+                            fis_hp_points = $8, fis_ss_points = $9, fis_ba_points = $10, wspl_points = $11 
+                         WHERE athlete_id = $12;`,
+                        [
+                            athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, 
+                            athlete.stance, athlete.fis_num,
+                            athlete.fis_hp_points, athlete.fis_ss_points, athlete.fis_ba_points, athlete.wspl_points,
+                            athleteId
+                        ]
                     );
                 } else if (athlete.status === 'new' && !athleteId) {
+                    // INSERT statement now includes the new points fields
                     const insertAthleteResult = await client.query(
-                        `INSERT INTO ss_athletes (last_name, first_name, dob, gender, nationality, stance, fis_num) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING athlete_id;`,
-                        [athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, athlete.stance, athlete.fis_num]
+                        `INSERT INTO ss_athletes (
+                            last_name, first_name, dob, gender, nationality, stance, fis_num,
+                            fis_hp_points, fis_ss_points, fis_ba_points, wspl_points
+                         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING athlete_id;`,
+                        [
+                            athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, 
+                            athlete.stance, athlete.fis_num,
+                            athlete.fis_hp_points, athlete.fis_ss_points, athlete.fis_ba_points, athlete.wspl_points
+                        ]
                     );
                     athleteId = insertAthleteResult.rows[0].athlete_id;
                 }
@@ -227,7 +239,6 @@ export async function addAndRegisterAthletes(
     } catch (error) {
         await client.query('ROLLBACK');
         const message = error instanceof Error ? error.message : "A critical server error occurred.";
-        console.error("CRITICAL error in addAndRegisterAthletes transaction:", error);
         return { success: false, error: message, details: registrationDetails };
     } finally {
         client.release();
