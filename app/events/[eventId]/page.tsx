@@ -169,7 +169,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             value={disciplineDisplay || 'Not Specified'} 
                         /></div>
 
-                    {/* Divisions Section */}
+                    {/* Divisions Section
                     {event.divisions && event.divisions.length > 0 && (
                         <Section title="Event Divisions">
                             <div className="flex flex-wrap gap-3">
@@ -180,7 +180,27 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                 ))}
                             </div>
                         </Section>
-                    )}
+                    )} */}
+
+                    {/* Live Scores by Division / Heat */}
+                    <Section title="Event Divisions">
+                        <p className="text-base-content/70 mb-4">
+                            Click on a division below to view live scores and judging panels.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {event.divisions.map((division) => (
+                                <Link
+                                    key={division.division_id}
+                                    //Change the href to appropriately link to the division's live scores page
+                                    href={`/events/${eventId}/${division.division_id}`}
+                                    className="btn btn-secondary btn-outline btn-sm w-full"
+                                >
+                                    {division.division_name}
+                                </Link>
+                            ))}
+                            
+                        </div>
+                    </Section>
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">
@@ -205,7 +225,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         )}
                     </Section>
-                    {/* You could add more sections here: Schedule, Results (if completed), etc. */}
+                    {/* You could add more sections here: Schedule, etc. */}
                 </div>
             </div>
         </main>
