@@ -5,8 +5,12 @@ import Modal from '@/components/PopUpModal';
 import {Info} from 'lucide-react';
 import type { RunCell } from '@/lib/definitions';
 
+type RunCellProps = {
+    run_result_id: number,
+    scorePerRun: RunCell
+}
 
-export default function RunCell (run_result_id: number, scorePerRun: RunCell) {
+export default function RunCell ( props : RunCellProps ) {
 
     const [scores, setScores] = useState<RunCell>();
     const [average, setAverage] = useState<number>();
@@ -14,7 +18,7 @@ export default function RunCell (run_result_id: number, scorePerRun: RunCell) {
     const [modifier, setModifier] = useState<string>();
 
     useEffect (()=> {
-        setScores(scorePerRun);
+        setScores(props.scorePerRun);
     },[])
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) =>{
@@ -40,10 +44,10 @@ export default function RunCell (run_result_id: number, scorePerRun: RunCell) {
             <button
             className='w-full'
             onClick={() => setOpenCheckScores(true)}>
-                <div className="border border-black flex flex-col items-center">
+                <div className="flex flex-col items-center">
                     {/* average */}
-                    <div className="w-full border-b border-black text-xl font-bold text-center pb-1">
-                        {scorePerRun.run_average != null ? scorePerRun.run_average.toFixed(2) : '-'}
+                    <div className="w-full text-xl font-bold text-center pb-1">
+                        {props.scorePerRun.run_average != null ? props.scorePerRun.run_average.toFixed(2) : '-'}
                     </div>
 
                     {/* individual judge scores */}
@@ -94,7 +98,7 @@ export default function RunCell (run_result_id: number, scorePerRun: RunCell) {
                                         className='text-2xl mb-5'>Athlete: {scores?.athlete_name} {`(BIB #`}{scores?.bib_num}{`)`}</h2>
                                         {/* average */}
                                         <div className="w-full border-b border-black text-xl font-semibold pb-1">
-                                            Average: {scorePerRun.run_average != null ? scorePerRun.run_average.toFixed(2) : '-'}
+                                            Average: {props.scorePerRun.run_average != null ? props.scorePerRun.run_average.toFixed(2) : '-'}
                                         </div>
 
                                         {/* individual judge scores */}

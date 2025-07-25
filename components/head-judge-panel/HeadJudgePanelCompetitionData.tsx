@@ -25,7 +25,7 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
         console.error("Failed to load competition data.", err);
         notFound();
       });
-  }, [event_id]);
+  }, []);
 
   // derive options
   const divisions: DivisionHJData[] = competitionData?.divisions || [];
@@ -69,7 +69,6 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
     return selectedHeatIds[0].toString();
   })();
 
-  
 
   return (
     <div className="flex flex-col">
@@ -93,7 +92,6 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
               </select>
           </div>
 
-
           {/* Round */}
           <div>
               <div
@@ -114,7 +112,6 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
               ))}
               </select>
           </div>
-
 
           {/* Heat (with “All”) */}
           <div>
@@ -149,16 +146,14 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
       </div>
 
       <div>
-        {selectedHeatIds.length > 0 && (
+        {selectedHeatIds.length > 0 && competitionData && (
         <HeadJudgePanelRefresher
           event_id={event_id}
           round_heat_ids={selectedHeatIds}
+          tableHeaders={competitionData}
         />      
         )}
-
       </div>
-
-
     </div>
   );
 }
