@@ -100,13 +100,12 @@ const resultsHJDataMap: ResultsHJDataMap = {};
       }
 
       const singleRun: RunHJData = {
-        [run_num]: {
-          run_result_id,
-          personnel_id,
-          header,
-          name,
-          score,
-        },
+        run_num,
+        run_result_id,
+        personnel_id,
+        header,
+        name,
+        score,
       };
 
       resultsHJDataMap[round_heat_id].scores.push(singleRun);

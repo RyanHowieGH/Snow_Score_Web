@@ -251,13 +251,13 @@ export type ResultsHJDataMap = {
 }
 
 export type RunHJData = {
-    [run_num: number]: {
-        run_result_id: number;
-        personnel_id: number;
-        header: string;
-        name: string;
-        score: number;
-    }
+    run_num: number
+    run_result_id: number;
+    personnel_id: number;
+    header: string;
+    name: string;
+    score: number;
+    
 }
 
 export type RunCell = {

@@ -6,15 +6,18 @@ import { useState, useEffect } from "react";
 import RefreshSwitchButton from "@/components/RefreshSwitchButton";
 import HeadJudgeHeatScoringPanel from "@/components/head-judge-panel/HeadJudgeHeatScoringPanel"
 import RunCell from "@/components/head-judge-panel/HeadJudgePanelRunCell"
+import { table } from "console";
 
 type PageProps = {
-    event_id: number,
-    round_heat_ids: number[],
+    eventId: number,
+    divisionId: number,
+    roundId: number,
+    roundHeatIds: number[],
     tableHeaders: CompetitionHJData,
 }
 
-export default function HeadJudgePanelCoreLive ({ event_id, round_heat_ids, tableHeaders }: PageProps) {
-    const [scoreData, setScoreData] = useState<ResultsHJDataMap>();
+export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHeaders, divisionId, roundId }: PageProps) {
+    const [scoreData, setScoreData] = useState<ResultsHJDataMap>([]);
 
   // --- Data refresh ---
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
@@ -42,10 +45,10 @@ export default function HeadJudgePanelCoreLive ({ event_id, round_heat_ids, tabl
     };
   }, [liveSwitch]);
 
-    let round_heat_ids_API = round_heat_ids.map(id => `round_heat_id=${id}`).join(`&`);
+    let round_heat_ids_API = roundHeatIds.map(id => `round_heat_id=${id}`).join(`&`);
     
     useEffect(()=> {
-        fetch(`/api/get-headjudge-scores?event_id=${event_id}&${round_heat_ids_API}`)
+        fetch(`/api/get-headjudge-scores?event_id=${eventId}&${round_heat_ids_API}`)
         .then(async (res) => {
             return (await res.json()) as CompetitionHJData;
         })
@@ -189,7 +192,57 @@ const scores: Score[] = [
             </tbody>
           </table>
 
+<div>
+  {roundHeatIds.map(roundHeatId => {
+    const heat = tableHeaders
+      .divisions.find(d => d.division_id === divisionId)
+      ?.rounds.find(r => r.round_id === roundId)
+      ?.heats.find(h => h.round_heat_id === roundHeatId);
+      // We find each round heat id and create a table for each one of them
+    return (
+      <div 
+      key={roundHeatId}
+      className="border-1 border-black mb-[5%]">
 
+        {/* Heat table title*/}
+        <div className="flex w-full border-1 border-black">
+          <div className="font-bold text-2xl">        
+            {heat ? `HEAT ${heat.heat_num}` : '—'}
+          </div>
+          <div className="flex gap-10 ml-auto items-center">
+            <div className="flex">
+              <div className="font-bold mr-1">
+                START:{` `}
+              </div>
+              <div>
+                {heat?.start_time ? heat.start_time.toLocaleString() : 'TBD'}
+              </div>
+            </div>
+            <div className="flex">
+              <div className="font-bold mr-1">
+                END:{` `}
+              </div>
+              <div>
+                {heat?.end_time ? heat.end_time.toLocaleString() : 'TBD'}
+              </div>
+            </div>
+          </div> 
+        </div>
+
+        {/* Heat table headers */}
+       
+      </div>
+    );
+  })}
+</div>
+              {/* <div>
+                {round_heat_ids.map((rhi) =>                 
+                  // scoreData[rhi]?.athlete_id ?? "" // loading until it finds it
+
+
+              )}
+
+              </div> */}
 
 
 

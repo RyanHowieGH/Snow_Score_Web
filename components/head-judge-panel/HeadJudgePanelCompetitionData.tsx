@@ -146,10 +146,16 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
       </div>
 
       <div>
-        {selectedHeatIds.length > 0 && competitionData && (
+        {selectedHeatIds.length > 0 &&
+        competitionData &&
+        typeof selectedDivisionId === "number" &&
+        typeof selectedRoundId === "number" && (
+
         <HeadJudgePanelRefresher
-          event_id={event_id}
-          round_heat_ids={selectedHeatIds}
+          eventId={event_id}
+          roundHeatIds={selectedHeatIds}
+          divisionId = {selectedDivisionId}
+          roundId = {selectedRoundId}
           tableHeaders={competitionData}
         />      
         )}
