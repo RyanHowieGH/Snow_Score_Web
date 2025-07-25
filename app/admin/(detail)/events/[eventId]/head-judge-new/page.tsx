@@ -2,12 +2,12 @@ import React from "react";
 import { notFound, redirect} from "next/navigation";
 import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
 import { checkEventExistanceById } from "@/lib/data";
-import HeadJudgePanelCoreLive from "@/components/head-judge-panel/HeadJudgePanelCoreLive"
-
+import type { CompetitionHJData, DivisionHJData, RoundHJData, HeatHJData } from "@/lib/definitions";
+import HeadJudgePanelCompetitionData from "@/components/head-judge-panel/HeadJudgePanelCompetitionData";
 
 export default async function HeadJudgePanelPage ({ params }: { params: { eventId: string } }) {
     const eventIdString = params.eventId;
-    const eventId = parseInt(eventIdString, 10);
+    const eventId = parseInt(eventIdString);
     if (isNaN(eventId)) {
         notFound();
     }
@@ -21,17 +21,11 @@ export default async function HeadJudgePanelPage ({ params }: { params: { eventI
         notFound();
     }
 
-    const competitionData = fetch(`/api/best-run-score-per-judge-dh12cm214v98b71ss?round_heat_id=${roundHeatId}&personnel_id=${personnelId}`)
-      .then((res => res.ok ? res.json() : []))
-      .then((data: BestScore[]) => setBestScores(data))
-      .catch(err => {
-        console.error("Failed to load best scores", err);
-        setBestScores([]);
-      });
-
     return(
         <div>
-            <HeadJudgePanelCoreLive />
+            <HeadJudgePanelCompetitionData 
+                event_id={eventId}
+            />
         </div>
     )
 }
