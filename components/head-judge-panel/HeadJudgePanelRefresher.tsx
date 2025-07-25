@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import type { CompetitionHJData, ResultsHJDataMap } from "@/lib/definitions";
+import type { CompetitionHJData, ResultsHJDataMap, RunHJData } from "@/lib/definitions";
 import { notFound } from "next/navigation";
 import { useState, useEffect } from "react";
 import RefreshSwitchButton from "@/components/RefreshSwitchButton";
@@ -86,7 +86,10 @@ const scores: Score[] = [
   { bib: 74, athlete: 'Kobe Cantelon', seeding: 7, run1: 68.67, best: 68.67, judgesScoreRun1: [], judgesScoreBest: [] },
 ];
 
-    /////////
+    // Heat table column design
+    const columnTextSize = "";
+
+
     return(
       <div className="flex min-h-screen flex-col border-1 border-black">
         {/* Top bar with button on the right */}
@@ -229,8 +232,30 @@ const scores: Score[] = [
           </div> 
         </div>
 
+        {/* Scrolling area*/}
+        <div className="flex">
         {/* Heat table headers */}
-       
+        <div className="w-[10%]">BIB</div>
+        <div className="w-[10%]">SEEDING</div>
+
+        {/* get the raw array of scores (or empty array if undefined) */}
+        {(() => {
+          const runs = scoreData[roundHeatId]?.scores ?? [];
+          // 1) pull out all run_num values
+          const runNums = runs.map(r => r.run_num);
+          // 2) dedupe via a Set, then turn back into an array
+          const uniqueRunNums = Array.from(new Set(runNums));
+          // 3) render one <div> per unique run_num
+          return uniqueRunNums.map(runNum => (
+            <div 
+            key={runNum} className={`text-${columnTextSize} w-[10%]`}>
+              RUN {runNum}
+            </div>
+          ));
+        })()}
+        <div className="w-[10%]">BEST</div>
+
+        </div>
       </div>
     );
   })}
