@@ -138,7 +138,7 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
         </div>
       </div>
       <div
-      className="w-full flex justify-end items-center border-1 border-solid border-black">
+      className="w-full flex justify-end items-center">
         <button
         className="block w-50 px-4 py-2 bg-white text-black border-1 rounded disabled:opacity-50"
         disabled={selectedHeatIds.length === 0}>
@@ -146,14 +146,11 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
         </button>
       </div>
 
-      {/*
       {selectedHeatIds.length > 0 && (
         <HeadJudgePanelRefresher
-          division_id={selectedDivisionId as number}
-          round_id={selectedRoundId as number}
           round_heat_ids={selectedHeatIds}
         />
-      )} */}
+      )}
     </div>
   );
 }

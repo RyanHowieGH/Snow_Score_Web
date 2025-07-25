@@ -7,6 +7,7 @@ import RefreshSwitchButton from "@/components/RefreshSwitchButton";
 
 type PageProps = {
     event_id: number,
+    round_heat_ids: number[],
 }
 
 export default function HeadJudgePanelCoreLive ({ event_id }: PageProps) {
@@ -33,9 +34,14 @@ export default function HeadJudgePanelCoreLive ({ event_id }: PageProps) {
       refreshInterval = null;
       console.log("Panel is offline");
     }
+    return () => {
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
+  }, [liveSwitch]);
+
 
     useEffect(()=> {
-        fetch(`/api/get-division-round-heat?event_id=${event_id}`)
+        fetch(`/api/get-headjudge-scores?event_id=${event_id}`)
         .then(async (res) => {
             return (await res.json()) as CompetitionHJData;
         })
