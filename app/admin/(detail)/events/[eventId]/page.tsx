@@ -97,6 +97,9 @@ export default async function AdminEventDetailPage({
     event.end_date instanceof Date ? event.end_date : new Date(event.end_date);
     const eventState = getEventState(startDate, endDate);
 
+  const disciplineDisplay = [event.category_name, event.subcategory_name]
+    .filter(Boolean) // Removes any null or undefined values
+    .join(' - '); // Joins the parts with a space, e.g., "Freestyle Big Air"
 
   return (
     // VVV --- REDUCED TOP PADDING for less headroom --- VVV
@@ -156,7 +159,7 @@ export default async function AdminEventDetailPage({
             <p className="font-medium text-base-content/70">
                 Discipline:{" "}
                 <span className="font-normal">
-                  {event.discipline_name || "Not Specified"}
+                  {disciplineDisplay || "Not Specified"}
                 </span>
             </p>
             <p className="font-medium text-base-content/70">

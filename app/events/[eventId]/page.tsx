@@ -84,6 +84,10 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
     const authResult = await auth(); // Clerk's auth() returns a Promise of AuthObject
     const clerkUserId = authResult.userId;
 
+    const disciplineDisplay = [event.category_name, event.subcategory_name]
+        .filter(Boolean) // Removes any null or undefined values
+        .join(' - ');     // Joins the parts with a space, e.g., "Freestyle Big Air"
+
     let isAdmin = false;
     if (clerkUserId) {
         // Assuming getAuthenticatedUserWithRole internally uses clerkUserId or fetches based on current session
@@ -159,8 +163,11 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         </InfoCard>
                         {/* --- ^^^ END OF POLISHED INTEGRATION ^^^ --- */}
-                        <InfoCard icon={<TrophyIcon className="h-6 w-6 text-secondary" />} title="Discipline" value={event.discipline_name || 'Not Specified'} />
-                    </div>
+                        <InfoCard 
+                            icon={<TrophyIcon className="h-6 w-6 text-secondary" />} 
+                            title="Discipline" 
+                            value={disciplineDisplay || 'Not Specified'} 
+                        /></div>
 
                     {/* Divisions Section */}
                     {event.divisions && event.divisions.length > 0 && (

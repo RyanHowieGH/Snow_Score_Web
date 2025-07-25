@@ -13,8 +13,12 @@ export interface SnowEvent {
 
 export interface EventDetails extends SnowEvent {
     status: string;
-    discipline_id?: number;
+    discipline_id?: string; // Discipline ID can be a string
     discipline_name?: string;
+    // --- VVV ADD THESE NEW OPTIONAL FIELDS VVV ---
+    category_name?: string;
+    subcategory_name?: string;
+    // --- ^^^ END OF NEW FIELDS ^^^ ---
     divisions: Division[];
     athletes: RegisteredAthlete[];
     judges: Judge[];

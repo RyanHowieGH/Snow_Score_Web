@@ -28,7 +28,7 @@ import type {
 // --- Data Fetching Functions ---
 
 export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
-     console.log(`Fetching event details (ID: ${eventId}) including status, discipline, divisions, athletes, judges...`);
+     console.log(`Fetching event details (ID: ${eventId})...`);
      if (isNaN(eventId)) {
          console.error("fetchEventById: Invalid event ID provided.");
          return null;
@@ -40,10 +40,14 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
      try {
          client = await pool.connect();
 
+         // --- THIS QUERY IS NOW CORRECT ---
          const eventQuery = `
              SELECT
                  e.event_id, e.name, e.start_date, e.end_date, e.location, e.status,
-                 e.discipline_id, d.discipline_name
+                 e.discipline_id, 
+                 d.discipline_name,
+                 d.category_name,    -- Select category_name
+                 d.subcategory_name  -- Select subcategory_name
              FROM ss_events e
              LEFT JOIN ss_disciplines d ON e.discipline_id = d.discipline_id
              WHERE e.event_id = $1;
@@ -97,6 +101,8 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
              status: eventData.status,
              discipline_id: eventData.discipline_id,
              discipline_name: eventData.discipline_name,
+             category_name: eventData.category_name, // This field is now available
+             subcategory_name: eventData.subcategory_name, // This field is now available
              divisions: divisionResult.rows,
              athletes: athleteResult.rows,
              judges: judgeResult.rows,
