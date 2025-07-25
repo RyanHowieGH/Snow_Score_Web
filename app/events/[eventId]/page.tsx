@@ -22,6 +22,8 @@ import {
     ArrowUturnLeftIcon
 } from '@heroicons/react/24/outline';
 import EventStatusBadge from '@/components/EventStatusBadge';
+import { fetchEventScheduleByEventId } from '@/lib/data'; // Add this import
+
 
 // Props type for the page component
 type PublicEventDetailPageProps = {
@@ -79,6 +81,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
         notFound();
     }
 
+    const schedule = await fetchEventScheduleByEventId(eventId);
     // --- ADMIN CHECK USING DATABASE ROLE ---
     // This part determines if an "Admin: Manage Event" button should be shown
     const authResult = await auth(); // Clerk's auth() returns a Promise of AuthObject
@@ -181,6 +184,35 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         </Section>
                     )}
+                    <section>
+                        <h2>Event Schedule</h2>
+                        {schedule && schedule.length > 0 ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sequence</th>
+                                        <th>Round</th>
+                                        <th>Heat</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {schedule.map((heat, idx) => (
+                                        <tr key={idx}>
+                                            <td>{heat.schedule_sequence}</td>
+                                            <td>{heat.round_name}</td>
+                                            <td>{heat.heat_num}</td>
+                                            <td>{heat.start_time || '-'}</td>
+                                            <td>{heat.end_time || '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <div>No schedule available for this event.</div>
+                        )}
+                    </section>
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">

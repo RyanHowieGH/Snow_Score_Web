@@ -26,6 +26,26 @@ import type {
 
 
 // --- Data Fetching Functions ---
+export async function fetchEventScheduleByEventId(eventId: number) {
+    const client = await getDbPool().connect();
+    try {
+        const result = await client.query(`
+            SELECT
+                rd.round_name,
+                hd.heat_num,
+                hd.start_time,
+                hd.end_time,
+                hd.schedule_sequence
+            FROM ss_heat_details hd
+            JOIN ss_round_details rd ON hd.round_id = rd.round_id
+            WHERE rd.event_id = $1
+            ORDER BY hd.schedule_sequence ASC;
+        `, [eventId]);
+        return result.rows;
+    } finally {
+        client.release();
+    }
+}
 
 export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
      console.log(`Fetching event details (ID: ${eventId})...`);
