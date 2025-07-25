@@ -72,85 +72,93 @@ export default function HeadJudgePanelCoreLive({ event_id }: PageProps) {
   
 
   return (
-    <div className="flex">
-      <div className="flex items-center space-x-4">
-        {/* Division */}
-        <div>
-            <div
-            className="font-semibold mb-2 ml-1">Division</div>
-            <select
-            value={selectedDivisionId}
-            onChange={handleDivisionChange}
-            className="px-2 py-1 border rounded"
-            >
-            <option value="">Select Division</option>
-            {divisions.map((d) => (
-                <option key={d.division_id} value={d.division_id}>
-                {d.division_name}
-                </option>
-            ))}
-            </select>
+    <div className="flex flex-col">
+      <div>
+        <div className="flex items-center space-x-4">
+          {/* Division */}
+          <div>
+              <div
+              className="font-semibold mb-2 ml-1">Division</div>
+              <select
+              value={selectedDivisionId}
+              onChange={handleDivisionChange}
+              className="px-2 py-1 border rounded"
+              >
+              <option value="" disabled>Select Division</option>
+              {divisions.map((d) => (
+                  <option key={d.division_id} value={d.division_id}>
+                  {d.division_name}
+                  </option>
+              ))}
+              </select>
+          </div>
+
+
+          {/* Round */}
+          <div>
+              <div
+              className="font-semibold ml-1 mb-2">
+                  Round
+              </div>
+              <select
+              value={selectedRoundId}
+              onChange={handleRoundChange}
+              disabled={!selectedDivisionId}
+              className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+              <option value="" disabled>Select Round</option>
+              {rounds.map((r) => (
+                  <option key={r.round_id} value={r.round_id}>
+                  {r.round_name}
+                  </option>
+              ))}
+              </select>
+          </div>
+
+
+          {/* Heat (with “All”) */}
+          <div>
+              <div
+              className="font-semibold ml-1 mb-2">
+                  Heat
+              </div>
+              <select
+              value={heatSelectValue}
+              onChange={handleHeatChange}
+              disabled={!selectedRoundId}
+              className="px-2 py-1 border rounded disabled:opacity-50"
+              >
+              <option value="">Select Heat</option>
+              <option value="all">Overview</option>
+              {heats.map((h) => (
+                  <option key={h.round_heat_id} value={h.round_heat_id}>
+                  {h.heat_num}
+                  </option>
+              ))}
+              </select>
+          </div>
         </div>
-
-
-        {/* Round */}
-        <div>
-            <div
-            className="font-semibold ml-1 mb-2">
-                Round
-            </div>
-            <select
-            value={selectedRoundId}
-            onChange={handleRoundChange}
-            disabled={!selectedDivisionId}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-            >
-            <option value="">Select Round</option>
-            {rounds.map((r) => (
-                <option key={r.round_id} value={r.round_id}>
-                {r.round_name}
-                </option>
-            ))}
-            </select>
-        </div>
-
-
-        {/* Heat (with “All”) */}
-        <div>
-            <div
-            className="font-semibold ml-1 mb-2">
-                Heat
-            </div>
-            <select
-            value={heatSelectValue}
-            onChange={handleHeatChange}
-            disabled={!selectedRoundId}
-            className="px-2 py-1 border rounded disabled:opacity-50"
-            >
-            <option value="">Select Heat</option>
-            <option value="all">All</option>
-            {heats.map((h) => (
-                <option key={h.round_heat_id} value={h.round_heat_id}>
-                {h.heat_num}
-                </option>
-            ))}
-            </select>
-        </div>
+        {/* <div
+        className="w-full flex justify-end items-center">
+          <button
+          className="block w-50 px-4 py-2 bg-white text-black border-1 rounded disabled:opacity-50"
+          disabled={selectedHeatIds.length === 0}>
+              Generate Panel
+          </button>
+        </div> */}
       </div>
-      <div
-      className="w-full flex justify-end items-center">
-        <button
-        className="block w-50 px-4 py-2 bg-white text-black border-1 rounded disabled:opacity-50"
-        disabled={selectedHeatIds.length === 0}>
-            Generate Panel
-        </button>
-      </div>
 
-      {selectedHeatIds.length > 0 && (
+      <div>
+        {selectedHeatIds.length > 0 && (
         <HeadJudgePanelRefresher
+          event_id={event_id}
           round_heat_ids={selectedHeatIds}
-        />
-      )}
+        />      
+        )}
+
+      </div>
+
+
     </div>
   );
 }

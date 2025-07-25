@@ -10,8 +10,8 @@ type PageProps = {
     round_heat_ids: number[],
 }
 
-export default function HeadJudgePanelCoreLive ({ event_id }: PageProps) {
-    const [competitionData, setCompetitionData] = useState<CompetitionHJData>();
+export default function HeadJudgePanelCoreLive ({ event_id, round_heat_ids }: PageProps) {
+    const [scoreData, setScoreData] = useState<CompetitionHJData>();
 
   // --- Data refresh ---
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
@@ -39,14 +39,15 @@ export default function HeadJudgePanelCoreLive ({ event_id }: PageProps) {
     };
   }, [liveSwitch]);
 
-
+    let round_heat_ids_API = round_heat_ids.map(id => `round_heat_id=${id}`).join(`&`);
+    
     useEffect(()=> {
-        fetch(`/api/get-headjudge-scores?event_id=${event_id}`)
+        fetch(`/api/get-headjudge-scores?event_id=${event_id}&${round_heat_ids_API}`)
         .then(async (res) => {
             return (await res.json()) as CompetitionHJData;
         })
         .then((res: CompetitionHJData) => {
-            setCompetitionData(res);
+            setScoreData(res);
         })
         .catch(err => {
             console.error("Failed to load competition data.", err);
@@ -55,8 +56,14 @@ export default function HeadJudgePanelCoreLive ({ event_id }: PageProps) {
     },[refreshPageFlag])
 
     return(
+      <div className="flex min-h-screen flex-col border-1 border-black">
+        {/* Top bar with button on the right */}
+        <div className="flex justify-end p-4">
+          <RefreshSwitchButton onLiveToggle={handleOnLiveToggle} />
+        </div>
         <div>
             
         </div>
+      </div>
     )
 }
