@@ -103,6 +103,10 @@ export async function checkAthletesAgainstDb(
                 nationality: csvAthlete.nationality ?? null,
                 stance: csvAthlete.stance ?? null,
                 fis_num: csvAthlete.fis_num ?? null,
+                fis_hp_points: csvAthlete.fis_hp_points ?? null,
+                fis_ss_points: csvAthlete.fis_ss_points ?? null,
+                fis_ba_points: csvAthlete.fis_ba_points ?? null,
+                wspl_points: csvAthlete.wspl_points ?? null,
             };
 
             if (nameDobMatch) {
