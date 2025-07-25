@@ -47,9 +47,11 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
                  e.discipline_id, 
                  d.discipline_name,
                  d.category_name,    -- Select category_name
-                 d.subcategory_name  -- Select subcategory_name
+                 d.subcategory_name,  -- Select subcategory_name
+                 rd.round_name AS rounds
              FROM ss_events e
              LEFT JOIN ss_disciplines d ON e.discipline_id = d.discipline_id
+             JOIN ss_round_details rd ON e.event_id = rd.event_id
              WHERE e.event_id = $1;
          `;
          const eventResult = await client.query(eventQuery, [eventId]);
@@ -107,6 +109,7 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
              athletes: athleteResult.rows,
              judges: judgeResult.rows,
              headJudge: headJudgeResult.rows,
+             rounds: eventData.rounds
          };
          return eventDetails;
 

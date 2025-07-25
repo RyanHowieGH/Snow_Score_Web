@@ -23,6 +23,7 @@ export interface EventDetails extends SnowEvent {
     athletes: RegisteredAthlete[];
     judges: Judge[];
     headJudge?: HeadJudge[];
+    rounds?: RoundWithHeats[];
 }
 
 export interface Division {
