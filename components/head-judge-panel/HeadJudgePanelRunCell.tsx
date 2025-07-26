@@ -54,7 +54,7 @@ export default function RunCell ( props : RunCellProps ) {
             onClick={() => setOpenCheckScores(true)}>
                 <div className="flex flex-col items-center">
                     {/* average */}
-                    <div className="w-full text-xl font-bold text-center pb-1">
+                    <div className="w-full text-2xl font-bold text-center pb-1">
                         {props.scorePerRun.run_average != null ? props.scorePerRun.run_average : '-'}
                     </div>
 

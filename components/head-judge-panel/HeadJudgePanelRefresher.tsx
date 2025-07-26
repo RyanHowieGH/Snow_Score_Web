@@ -7,6 +7,7 @@ import RefreshSwitchButton from "@/components/RefreshSwitchButton";
 import HeadJudgeHeatScoringPanel from "@/components/head-judge-panel/HeadJudgeHeatScoringPanel"
 import HeadJudgePanelRunCell from "@/components/head-judge-panel/HeadJudgePanelRunCell"
 import { table } from "console";
+import { formatHeatTime } from "@/lib/utils";
 
 type PageProps = {
     eventId: number,
@@ -59,14 +60,16 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
 
     // Heat table column design
     const columnTextSize = "";
-    const columnBibLayout = "w-[10%]";
-    const columnRunWidth = "w-[10%]";
-    const columnBestWidth = "w-[10%]";
-
+    const columnHeaderBibDesign = "w-[10%] mx-auto text-center";
+    const columnHeaderRunDesign = "w-[10%] mx-auto text-center";
+    const columnHeaderBestDesign = "w-[10%] mx-auto text-center";
+    const valuesBestDesign = "font-semibold text-3xl";
+    const valuesBibDesign = "font-semibold text-3xl";
+    const designBorder = "rounded-lg border-1 border-gray-500";
 
 
     return(
-      <div className="flex min-h-screen flex-col border-1 border-black">
+      <div className="flex min-h-screen flex-col">
         {/* Top bar with button on the right */}
         <div className="flex justify-end p-4">
           <RefreshSwitchButton onLiveToggle={handleOnLiveToggle} />
@@ -93,20 +96,20 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
             return (
               <div 
               key={roundHeatId}
-              className="border-1 border-black mb-[5%]">
+              className=" mb-[5%]">
 
-                {/* Heat table title*/}
-                <div className="flex w-full border-1 border-black">
-                  <div className="font-bold text-2xl">        
+                  <div className="font-bold text-2xl text-center">        
                     {heat ? `HEAT ${heat.heat_num}` : '—'}
                   </div>
-                  <div className="flex gap-10 ml-auto items-center">
+                {/* Heat table title*/}
+                <div className="flex w-full mb-[2%]">
+                  <div className="flex gap-10 mr-auto items-center">
                     <div className="flex">
                       <div className="font-bold mr-1">
                         START:{` `}
                       </div>
                       <div>
-                        {heat?.start_time ? heat.start_time.toLocaleString() : 'TBD'}
+                        {heat?.start_time ? formatHeatTime(heat.start_time) : 'TBD'}
                       </div>
                     </div>
                     <div className="flex">
@@ -114,7 +117,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                         END:{` `}
                       </div>
                       <div>
-                        {heat?.end_time ? heat.end_time.toLocaleString() : 'TBD'}
+                        {heat?.end_time ? formatHeatTime(heat.end_time) : 'TBD'}
                       </div>
                     </div>
                   </div> 
@@ -125,56 +128,53 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                 <div className="overflow-x-auto w-full">
 
                   {(() => {
-                    const athleteResults = scoreData[roundHeatId];
-
                     return (
-                      <div>
+                      <div
+                      className="">
                         {/* HEADER ROW */}
-                        <div className="flex">
-                            <div className={columnBibLayout}>BIB</div>
-                            <div className={columnBibLayout}>SEEDING</div>
+                        <div className="flex text-xl font-bold">
+                            <div className={`${columnHeaderBibDesign}`}>BIB</div>
+                            {/* <div className={columnBibLayout}>SEEDING</div> */}
                           {arrayOfRunNum.map(runNum => (
-                              <div key={runNum} className={columnRunWidth}>
+                              <div key={runNum} className={`${columnHeaderRunDesign}`}>
                                 RUN {runNum}
                               </div>
                           ))}
-                          <div className={columnBestWidth}>BEST</div>
+                          <div className={`${columnHeaderBestDesign}`}>BEST</div>
                         </div>
 
-                        {/* Athlete specific data */}
+                        {/* ATHLETE SPECIFIC DATA */}
                         {(scoreData[roundHeatId]?.athletes ?? []).map((athleteMap) =>
                           Object.entries(athleteMap).map(([athleteId, athlete]) => (
-                            <div key={athleteId} className="flex my-2 p-2 border">
-                              <div className={`${columnBibLayout}`}>{athlete.bib_num}</div>
-                              <div className={`${columnBibLayout}`}>{athlete.seeding}</div>
+                            <div key={athleteId} className={`flex ${designBorder} items-center justify-center mt-[1%]`}>
+                              <div className={`${columnHeaderBibDesign} ${valuesBibDesign}`}>{athlete.bib_num}</div>
+                              {/* <div className={`${columnBibLayout}`}>{athlete.seeding}</div> */}
                               
+                              {/* RUN DATA */}
                               {(() => {
-                                // 1) build the unique list of run numbers
                                 const runNums = Array.from(
                                   new Set(athlete.scores.map(s => Number(Object.keys(s)[0])))
                                 );
-
-                                // 2) map once per run
                                 return runNums.map(runNum => {
-                                  // 3) grab all judge‑scores for this run
+                                  
                                   const runScores = athlete.scores.filter(
                                     s => Number(Object.keys(s)[0]) === runNum
                                   );
-
-                                  // 4) pick one runData to pull run_result_id (they all share it)
+                                  
                                   const runData = runScores[0][runNum];
-
                                   return (
-                                    <div key={`${athleteId}-${runNum}`} className={columnRunWidth}>
+                                    <div key={`${athleteId}-${runNum}`} 
+                                    className={`${columnHeaderRunDesign}`}>
                                       <HeadJudgePanelRunCell
                                         run_result_id={runData.run_result_id}
                                         run_num={runNum}
                                         scorePerRun={{
-                                          run_num:     runNum,
-                                          athlete_name: "",                // or athlete.athlete_name
+                                          run_num:     runNum, 
+                                          // in case they change their mind and want it later (athlete_name)
+                                          athlete_name: "",
                                           bib_num:     athlete.bib_num,
                                           run_average: runData.run_average,
-                                          judgesScore: runScores,          // <-- only this run’s judges
+                                          judgesScore: runScores,
                                         }}
                                       />
                                     </div>
@@ -182,7 +182,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                                 });
                               })()}
 
-                              <div className={`${columnBibLayout}`}>{athlete.best_heat_average}</div>
+                              <div className={`${columnHeaderBibDesign} ${valuesBestDesign}`}>{athlete.best_heat_average}</div>
                             </div>
                           ))
                         )}
