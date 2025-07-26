@@ -1,11 +1,15 @@
 import React from 'react';
-import RunCell from '@/components/HeadJudgePanelRunCell'
+import RunCell from '@/components/head-judge-panel/HeadJudgePanelRunCell'
 
 export default function TestPage() {
 
     return(
         <div>
-        <RunCell
+        <RunCell                   
+            athlete_name= {`Tim Smith`}
+            bib_num={2}
+            run_num= {1} 
+            run_result_id= { 123 }
             run_average={ 40 }
             judgesScore={
                 [{
