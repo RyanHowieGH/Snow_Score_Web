@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
        AND er.athlete_id  = hr.athlete_id
       WHERE rr.event_id = $1
         AND rr.round_heat_id = ANY($2::int[])
-      ORDER BY hr.round_heat_id, hr.seeding, rr.athlete_id, rr.run_num;
+      ORDER BY hr.round_heat_id, hr.seeding, rr.athlete_id, rr.run_num, rs.personnel_id;
       `,
       [eventId, heatIds]
     );

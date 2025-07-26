@@ -117,7 +117,9 @@ export default function RunCell ( props : RunCellProps ) {
                                                 className="grid grid-cols-2"
                                             >
                                                 <span>
-                                                    {judgeScore[props.run_num].name ?? judgeScore[props.run_num].header}
+                                                    {judgeScore[props.run_num].name != "" 
+                                                    ? judgeScore[props.run_num].name :
+                                                    judgeScore[props.run_num].header }
                                                 </span>
                                                 <span>
                                                     {judgeScore[props.run_num].score != null ? judgeScore[props.run_num].score : '-'}
