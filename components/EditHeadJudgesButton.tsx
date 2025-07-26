@@ -47,13 +47,32 @@ const handleSave = async () => {
 
   return (
     <>
-      <button className="btn btn-xs btn-outline" onClick={() => setOpen(true)}>
+      <button className="
+         btn 
+         btn-xs 
+         btn-outline
+         md:text-sm
+         lg:text-md
+         lg:btn-sm
+         " onClick={() => setOpen(true)}>
         Edit
       </button>
       <Modal open={open} onClose={() => setOpen(false)}>
         <div className="space-y-4 w-64">
-          <h3 className="font-bold text-lg text-center">Edit head judge</h3>
-          <p className="text-sm text-center">Assign new head judge to this event</p>
+          <h3 className="font-bold text-lg text-center
+           s256:text-xs
+           s384:text-sm
+           s576:text-base
+           md:text-lg
+           lg:text-xl
+           xl:text-2xl">Edit head judge</h3>
+          <p className="text-sm text-center
+           s256:text-xs
+           s384:text-xs
+           s576:text-sm
+           md:text-base
+           lg:text-lg
+           xl:text-xl">Assign new head judge to this event</p>
           <select
             className="select select-bordered font-normal w-full text-black"
             value={selectedId}
@@ -75,10 +94,10 @@ const handleSave = async () => {
             ))}
           </select>
           <div className="flex justify-end gap-2">
-            <button className="btn btn-sm" onClick={() => setOpen(false)}>
+            <button className="btn btn-sm s256:text-xs" onClick={() => setOpen(false)}>
               Cancel
             </button>
-            <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={!selectedId}>
+            <button className="btn btn-primary btn-sm s256:text-xs" onClick={handleSave} disabled={!selectedId}>
               Save
             </button>
           </div>
