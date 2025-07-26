@@ -91,13 +91,10 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
               ? Array.from({ length: heat.num_runs }, (_, i) => i + 1)
               : [];
 
-
-              
             return (
               <div 
               key={roundHeatId}
               className=" mb-[5%]">
-
                   <div className="font-bold text-2xl text-center">        
                     {heat ? `HEAT ${heat.heat_num}` : '—'}
                   </div>
@@ -236,8 +233,6 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                     );
                   })()}
                 </div>
-
-
               </div>
             </div>
           );
