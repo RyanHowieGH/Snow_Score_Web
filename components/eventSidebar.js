@@ -35,7 +35,7 @@ export default function EventSidebar({ isOpen, toggleSidebar, eventId }) {
               Reports
             </Link>
             <Link href={`${eventBaseUrl}/head-judge`} className="hover:bg-primary-focus p-2 rounded block">
-              Head Judge
+              Head Judge Panel
             </Link>
              <Link href={`${eventBaseUrl}/links`} className="hover:bg-primary-focus p-2 rounded block">
               External Links
