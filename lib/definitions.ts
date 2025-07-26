@@ -246,6 +246,7 @@ export type UserWithRole = {
   auth_provider_user_id: string; // This is the Clerk ID needed for deletion
 };
 
+// --- HEAD JUDGE PANEL DATA TYPES ---
 
 export type CompetitionHJData = {
     event_name: string,
@@ -273,18 +274,41 @@ export type HeatHJData = {
     end_time: Date,
 }
 
-export type ScoresHJData = {
-    athlete_id: number;
-    run_average: number;
-    best_heat_average: number;
-    scores: RunScoresHJData[];
+export type ResultsHJDataMap = {
+    [round_heat_id: number]: {
+        athlete_id: number;
+        bib_num: number;
+        seeding: number;
+        run_average: number;
+        best_heat_average: number;
+        scores: RunHJData[];
+    }
 }
 
-export type RunScoresHJData = {
-    run_result_id: number;
-    personnel_id: number;
-    header: string;
-    name: string;
-    run_num: number;
-    score: number;
+export type RunHJData = {
+    [run_num: number] : {
+        run_result_id: number;
+        personnel_id: number;
+        header: string;
+        name: string;
+        score: number;
+    }
+
 }
+
+export type RunCell = {
+    athlete_name: string,
+    bib_num: number,
+    run_num: number,
+    run_average: number | null,
+    judgesScore: RunHJData[];
+}
+
+// export type RunHJData = {
+//     personnel_id: number;
+//     header: string;
+//     name: string;
+//     score: number | null;
+// }
+
+

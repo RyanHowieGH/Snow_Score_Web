@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
-import type { CompetitionHJData, DivisionHJData, RoundHJData, HeadJudge } from "@/lib/definitions";
+import type { CompetitionHJData, DivisionHJData, RoundHJData, HeatHJData } from "@/lib/definitions";
 
 export async function GET(req: NextRequest) {
   const pool = getDbPool();

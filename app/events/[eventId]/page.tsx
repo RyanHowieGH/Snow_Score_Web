@@ -1,16 +1,19 @@
-// app\events\[eventId]\page.tsx
+// app/events/[eventId]/page.tsx
+
+// app/events/[eventId]/page.tsx
 
 import React from 'react';
 import Link from 'next/link';
-import { fetchEventById } from '@/lib/data'; // Your main data fetching function
-import { formatDate, formatDateRange, formatScheduleTime } from '@/lib/utils'; // Date utilities
-import type { EventDetails } from '@/lib/definitions'; // Centralized type definitions
+import { fetchEventById, fetchEventScheduleByEventId } from '@/lib/data';
+import { formatDate, formatDateRange, formatScheduleTime } from '@/lib/utils';
+// --- VVV THIS IS THE FIX VVV ---
+import type { EventDetails, UserWithRole, PublicScheduleItem } from '@/lib/definitions';
+// --- ^^^ END OF FIX ^^^ ---
 import { notFound } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server'; // Clerk's server-side auth helper
-import { getAuthenticatedUserWithRole } from '@/lib/auth/user'; // Your function to get DB role
-import type { AppUserWithRole } from '@/lib/auth/user'; // Type for your app user with role
+import { auth } from '@clerk/nextjs/server';
+import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 import type { Metadata } from 'next';
-import BlankHeader from '@/components/blankHeader'; // Your public-facing header component
+import BlankHeader from '@/components/blankHeader';
 import {
     CalendarDaysIcon,
     MapPinIcon,
@@ -22,8 +25,6 @@ import {
     ArrowUturnLeftIcon
 } from '@heroicons/react/24/outline';
 import EventStatusBadge from '@/components/EventStatusBadge';
-import { fetchEventScheduleByEventId } from '@/lib/data'; // Add this import
-
 
 // Props type for the page component
 type PublicEventDetailPageProps = {
@@ -67,51 +68,34 @@ export async function generateMetadata({ params: paramsProp }: PublicEventDetail
 export default async function PublicEventDetailPage({ params: paramsProp }: PublicEventDetailPageProps) {
     const params = await paramsProp;
     const eventId = Number(params.eventId);
+    if (isNaN(eventId)) notFound();
 
-    if (isNaN(eventId)) {
-        console.warn(`PublicEventDetailPage: Invalid eventId param received: ${params.eventId}`);
-        notFound();
-    }
+    const [event, schedule]: [EventDetails | null, PublicScheduleItem[]] = await Promise.all([
+        fetchEventById(eventId),
+        fetchEventScheduleByEventId(eventId)
+    ]);
 
-    // Fetch all event details using your comprehensive fetchEventById
-    const event: EventDetails | null = await fetchEventById(eventId);
+    if (!event) notFound();
 
-    if (!event) {
-        console.warn(`PublicEventDetailPage: Event not found in database for ID: ${eventId}`);
-        notFound();
-    }
-
-    const schedule = await fetchEventScheduleByEventId(eventId);
-    // --- ADMIN CHECK USING DATABASE ROLE ---
-    // This part determines if an "Admin: Manage Event" button should be shown
-    const authResult = await auth(); // Clerk's auth() returns a Promise of AuthObject
-    const clerkUserId = authResult.userId;
-
-    const disciplineDisplay = [event.category_name, event.subcategory_name]
-        .filter(Boolean) // Removes any null or undefined values
-        .join(' - ');     // Joins the parts with a space, e.g., "Freestyle Big Air"
-
+    // --- ADMIN CHECK LOGIC ---
+    const { userId } = await auth(); 
     let isAdmin = false;
-    if (clerkUserId) {
-        // Assuming getAuthenticatedUserWithRole internally uses clerkUserId or fetches based on current session
-        const appUser: AppUserWithRole | null = await getAuthenticatedUserWithRole();
+    if (userId) {
+        const appUser = await getAuthenticatedUserWithRole();
         if (appUser) {
-            // console.log(`PublicEventDetailPage: Fetched app user: ${appUser.email}, DB Role: ${appUser.roleName}`);
-            const adminRoles = ['admin', 'Executive Director', 'Administrator', 'Chief of Competition']; // Define your admin roles
+            const adminRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
             isAdmin = adminRoles.includes(appUser.roleName);
-        } else {
-            // console.warn(`PublicEventDetailPage: User ${clerkUserId} authenticated with Clerk but no corresponding user/role found in application database.`);
         }
     }
     // --- END ADMIN CHECK ---
 
-    // Ensure dates are Date objects for formatting
-    const startDate = event.start_date instanceof Date ? event.start_date : new Date(event.start_date);
-    const endDate = event.end_date instanceof Date ? event.end_date : new Date(event.end_date);
+    const startDate = new Date(event.start_date);
+    const endDate = new Date(event.end_date);
+    const disciplineDisplay = [event.category_name, event.subcategory_name].filter(Boolean).join(' - ');
 
     return (
         <main className="bg-base-200 min-h-screen">
-            <BlankHeader /> {/* Your public header component */}
+            <BlankHeader />
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <div className="bg-base-100 p-6 md:p-10 rounded-2xl shadow-xl">
@@ -157,42 +141,25 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                     {/* Core Event Info Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                         <InfoCard icon={<CalendarDaysIcon className="h-6 w-6 text-secondary" />} title="Dates" value={formatDateRange(startDate, endDate)} />
-                        {/* --- VVV THIS IS THE POLISHED INTEGRATION VVV --- */}
-                        {/* We now wrap the EventStatusBadge inside an InfoCard for visual consistency */}
                         <InfoCard icon={<FlagIcon className="h-6 w-6 text-secondary" />} title="Status">
-                            {/* Instead of passing a 'value' prop, we pass the badge as a child */}
-                            <div className="mt-1"> {/* Adds a little space to align with the text in other cards */}
+                            <div className="mt-1">
                                 <EventStatusBadge startDate={startDate} endDate={endDate} size="lg" />
                             </div>
                         </InfoCard>
-                        {/* --- ^^^ END OF POLISHED INTEGRATION ^^^ --- */}
                         <InfoCard 
                             icon={<TrophyIcon className="h-6 w-6 text-secondary" />} 
                             title="Discipline" 
                             value={disciplineDisplay || 'Not Specified'} 
-                        /></div>
+                        />
+                    </div>
 
-                    {/* Divisions Section */}
-                    {event.divisions && event.divisions.length > 0 && (
-                        <Section title="Event Divisions" layout="inline">
-                            <div className="flex flex-wrap gap-3">
-                                {event.divisions.map((division) => (
-                                    <span key={division.division_id} className="badge badge-lg badge-outline border-base-content/30 text-base-content py-3 px-4">
-                                        {division.division_name}
-                                    </span>
-                                ))}
-                            </div>
-                        </Section> 
-                    )} {/* <-- The closing brace and parenthesis go here */}
-
-                    {/* Schedule Section (Now a sibling, not a child) */}
+                    {/* Schedule Section */}
                     <Section title="Event Schedule">
                         {schedule && schedule.length > 0 ? (
                             <div className="overflow-x-auto">
                                 <table className="table w-full">
                                     <thead className="text-xs uppercase bg-base-200">
                                         <tr>
-                                            {/* "Order" column is removed */}
                                             <th>Round</th>
                                             <th>Heat</th>
                                             <th>Start Time</th>
@@ -202,7 +169,6 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                     <tbody>
                                         {schedule.map((heat, idx) => (
                                             <tr key={idx} className="hover">
-                                                {/* Combine Division and Round Name */}
                                                 <td>{`${heat.division_name} - ${heat.round_name}`}</td>
                                                 <td>Heat {heat.heat_num}</td>
                                                 <td>{formatScheduleTime(heat.start_time)}</td>
@@ -220,8 +186,26 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                         )}
                     </Section>                    
                     
-
-                    {/* Event Description Section */}
+                    {/* Live Scores by Division Section */}
+                    {event.divisions && event.divisions.length > 0 && (
+                        <Section title="Live Scores by Division">
+                            <p className="text-base-content/70 mb-4 text-sm">
+                                Click on a division below to view live standings and results.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {event.divisions.map((division) => (
+                                    <Link
+                                        key={division.division_id}
+                                        // TODO: Update this href to the correct final path for division results
+                                        href={`/events/${eventId}/${division.division_id}`}
+                                        className="btn btn-outline btn-secondary w-full"
+                                    >
+                                        {division.division_name}
+                                    </Link>
+                                ))}
+                            </div>
+                        </Section>
+                    )}
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">
@@ -246,7 +230,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         )}
                     </Section>
-                    {/* You could add more sections here: Schedule, Results (if completed), etc. */}
+                    {/* You could add more sections here: Schedule, etc. */}
                 </div>
             </div>
         </main>

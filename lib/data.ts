@@ -750,3 +750,34 @@ export async function fetchUsersWithRoles(): Promise<UserWithRole[]> {
     return [];
   }
 }
+
+export async function checkEventExistanceById(eventId: number): Promise<number | null> {
+     if (isNaN(eventId)) {
+         console.error("Invalid event provided.");
+         return null;
+     }
+
+     const pool = getDbPool();
+     let client: PoolClient | null = null;
+
+     try {
+         client = await pool.connect();
+
+         const eventQuery = `
+             SELECT event_id
+             FROM ss_events
+             WHERE event_id = $1;
+         `;
+         const result = await client.query(eventQuery, [eventId]);
+         if (result.rows.length === 0) {
+             return null;
+         }
+         return result.rows[0].event_id as number;
+
+     } catch (error) {
+         console.error(`The event was not found:`, error);
+         return null;
+     } finally {
+         if (client) client.release();
+     }
+}

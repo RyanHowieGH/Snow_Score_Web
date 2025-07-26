@@ -1,5 +1,7 @@
 
-export default function aa () {
+
+export default async function aa () {
+    
     return (
         <div>aa</div>
     )
