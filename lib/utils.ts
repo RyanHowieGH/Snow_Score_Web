@@ -30,6 +30,31 @@ export const formatDateRange = (startInput: Date | string | undefined | null, en
 };
 
 /**
+ * Formats a Date object or string into a "Month Day, H:MM AM/PM" format.
+ * Example: "Feb 27, 9:30 AM"
+ * Handles timezones correctly for display.
+ * @param dateValue - The Date object or string to format.
+ * @returns A formatted string, or a fallback string if the date is invalid.
+ */
+export const formatScheduleTime = (dateValue: Date | string | null): string => {
+  if (!dateValue) return '-';
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return 'Invalid Time';
+
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short', // e.g., "Feb"
+      day: 'numeric',   // e.g., "27"
+      hour: 'numeric',  // e.g., "9"
+      minute: '2-digit',// e.g., "30"
+      hour12: true,     // Use AM/PM
+    }).format(date);
+  } catch (error) {
+    return 'Formatting Error';
+  }
+};
+
+/**
  * Calculates a dynamic, time-based status for an event.
  * @param startDate The event's start date.
  * @param endDate The event's end date.
