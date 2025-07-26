@@ -258,17 +258,6 @@ export type ResultsAthletesHJDataMap = {
     }
 }
 
-export type RunHJData = {
-    [run_num: number] : {
-        run_result_id: number;
-        personnel_id: number;
-        header: string;
-        name: string;
-        score: number | null;
-    }
-
-}
-
 export type RunCell = {
     athlete_name: string,
     bib_num: number,
@@ -276,6 +265,20 @@ export type RunCell = {
     run_average: number | null,
     judgesScore: RunHJData[];
 }
+
+export type RunHJData = {
+    [run_num: number] : {
+        run_result_id: number;
+        personnel_id: number;
+        header: string;
+        name: string;
+        score: number | null;
+        run_average:number;
+    }
+
+}
+
+
 
 // export type RunHJData = {
 //     personnel_id: number;

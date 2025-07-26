@@ -173,7 +173,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                                           run_num:     runNum,
                                           athlete_name: "",                // or athlete.athlete_name
                                           bib_num:     athlete.bib_num,
-                                          run_average: athlete.run_average,
+                                          run_average: runData.run_average,
                                           judgesScore: runScores,          // <-- only this run’s judges
                                         }}
                                       />

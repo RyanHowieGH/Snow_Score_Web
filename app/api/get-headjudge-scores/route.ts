@@ -150,6 +150,7 @@ export async function GET(req: NextRequest) {
           header: header,
           name: name ?? "",
           score,
+          run_average,
         },
       };
       athleteObj.scores.push(runEntry);
