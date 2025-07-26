@@ -32,14 +32,16 @@ export async function fetchEventScheduleByEventId(eventId: number) {
         const result = await client.query(`
             SELECT
                 rd.round_name,
+                d.division_name,
                 hd.heat_num,
                 hd.start_time,
                 hd.end_time,
                 hd.schedule_sequence
             FROM ss_heat_details hd
             JOIN ss_round_details rd ON hd.round_id = rd.round_id
+            JOIN ss_division d ON rd.division_id = d.division_id -- Join with ss_division
             WHERE rd.event_id = $1
-            ORDER BY hd.schedule_sequence ASC;
+            ORDER BY hd.schedule_sequence ASC, hd.start_time ASC;
         `, [eventId]);
         return result.rows;
     } finally {

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { fetchEventById } from '@/lib/data'; // Your main data fetching function
-import { formatDate, formatDateRange } from '@/lib/utils'; // Date utilities
+import { formatDate, formatDateRange, formatScheduleTime } from '@/lib/utils'; // Date utilities
 import type { EventDetails } from '@/lib/definitions'; // Centralized type definitions
 import { notFound } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server'; // Clerk's server-side auth helper
@@ -174,7 +174,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
 
                     {/* Divisions Section */}
                     {event.divisions && event.divisions.length > 0 && (
-                        <Section title="Event Divisions">
+                        <Section title="Event Divisions" layout="inline">
                             <div className="flex flex-wrap gap-3">
                                 {event.divisions.map((division) => (
                                     <span key={division.division_id} className="badge badge-lg badge-outline border-base-content/30 text-base-content py-3 px-4">
@@ -182,37 +182,46 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                     </span>
                                 ))}
                             </div>
-                        </Section>
-                    )}
-                    <section>
-                        <h2>Event Schedule</h2>
+                        </Section> 
+                    )} {/* <-- The closing brace and parenthesis go here */}
+
+                    {/* Schedule Section (Now a sibling, not a child) */}
+                    <Section title="Event Schedule">
                         {schedule && schedule.length > 0 ? (
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Sequence</th>
-                                        <th>Round</th>
-                                        <th>Heat</th>
-                                        <th>Start Time</th>
-                                        <th>End Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {schedule.map((heat, idx) => (
-                                        <tr key={idx}>
-                                            <td>{heat.schedule_sequence}</td>
-                                            <td>{heat.round_name}</td>
-                                            <td>{heat.heat_num}</td>
-                                            <td>{heat.start_time || '-'}</td>
-                                            <td>{heat.end_time || '-'}</td>
+                            <div className="overflow-x-auto">
+                                <table className="table w-full">
+                                    <thead className="text-xs uppercase bg-base-200">
+                                        <tr>
+                                            {/* "Order" column is removed */}
+                                            <th>Round</th>
+                                            <th>Heat</th>
+                                            <th>Start Time</th>
+                                            <th>End Time</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {schedule.map((heat, idx) => (
+                                            <tr key={idx} className="hover">
+                                                {/* Combine Division and Round Name */}
+                                                <td>{`${heat.division_name} - ${heat.round_name}`}</td>
+                                                <td>Heat {heat.heat_num}</td>
+                                                <td>{formatScheduleTime(heat.start_time)}</td>
+                                                <td>{formatScheduleTime(heat.end_time)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         ) : (
-                            <div>No schedule available for this event.</div>
+                            <div className="flex items-center text-base-content/70 italic p-4 bg-base-200/30 rounded-lg">
+                                <InformationCircleIcon className="h-5 w-5 mr-2"/>
+                                Detailed schedule is not yet available.
+                            </div>
                         )}
-                    </section>
+                    </Section>                    
+                    
+
+                    {/* Event Description Section */}
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">
@@ -269,11 +278,32 @@ const InfoCard: React.FC<{
 );
 
 // Helper component for consistent section styling
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="mb-8 md:mb-10">
-        <h2 className="text-2xl font-semibold mb-4 text-secondary border-b border-base-300 pb-2">
-            {title}
-        </h2>
-        {children}
-    </div>
-);
+const Section: React.FC<{ 
+  title: string; 
+  children: React.ReactNode;
+  layout?: 'stacked' | 'inline'; // New optional prop
+}> = ({ title, children, layout = 'stacked' }) => { // Default to 'stacked'
+    
+    if (layout === 'inline') {
+        return (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 md:mb-10">
+                <h2 className="text-2xl font-semibold text-secondary flex-shrink-0">
+                    {title}
+                </h2>
+                <div className="flex-grow">
+                    {children}
+                </div>
+            </div>
+        );
+    }
+
+    // Default 'stacked' layout for other sections
+    return (
+        <div className="mb-8 md:mb-10">
+            <h2 className="text-2xl font-semibold mb-4 text-secondary border-b border-base-300 pb-2">
+                {title}
+            </h2>
+            {children}
+        </div>
+    );
+};
