@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import type { CompetitionHJData, ResultsHJDataMap, RunHJData } from "@/lib/definitions";
+import type { CompetitionHJData, ResultsHeatsHJDataMap, RunHJData } from "@/lib/definitions";
 import { notFound } from "next/navigation";
 import { useState, useEffect } from "react";
 import RefreshSwitchButton from "@/components/RefreshSwitchButton";
@@ -17,7 +17,7 @@ type PageProps = {
 }
 
 export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHeaders, divisionId, roundId }: PageProps) {
-    const [scoreData, setScoreData] = useState<ResultsHJDataMap>({});
+    const [scoreData, setScoreData] = useState<ResultsHeatsHJDataMap>({});
 
   // --- Data refresh ---
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
@@ -49,7 +49,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
     
     useEffect(()=> {
         fetch(`/api/get-headjudge-scores?event_id=${eventId}&${round_heat_ids_API}`)
-    .then(res => res.json() as Promise<ResultsHJDataMap>)
+    .then(res => res.json() as Promise<ResultsHeatsHJDataMap>)
     .then((data) => setScoreData(data))
         .catch(err => {
             console.error("Failed to load competition data.", err);
@@ -59,7 +59,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
 
     // Heat table column design
     const columnTextSize = "";
-    const columnBibWidth = "w-[10%]";
+    const columnBibLayout = "w-[10%]";
     const columnRunWidth = "w-[10%]";
     const columnBestWidth = "w-[10%]";
 
@@ -76,7 +76,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
 
         <div>
           {roundHeatIds.map(roundHeatId => {      
-            
+          
             // We find each round heat id and create a table for each one of them
             const heat = tableHeaders
               .divisions.find(d => d.division_id === divisionId)
@@ -89,6 +89,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
               : [];
 
 
+              
             return (
               <div 
               key={roundHeatId}
@@ -130,8 +131,8 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                       <div>
                         {/* HEADER ROW */}
                         <div className="flex">
-                            <div className={columnBibWidth}>BIB</div>
-                            <div className={columnBibWidth}>SEEDING</div>
+                            <div className={columnBibLayout}>BIB</div>
+                            <div className={columnBibLayout}>SEEDING</div>
                           {arrayOfRunNum.map(runNum => (
                               <div key={runNum} className={columnRunWidth}>
                                 RUN {runNum}
@@ -140,33 +141,41 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                           <div className={columnBestWidth}>BEST</div>
                         </div>
 
+                        {/* Athlete specific data */}
+                        {(scoreData[roundHeatId]?.athletes ?? []).map((athleteMap) =>
+                          Object.entries(athleteMap).map(([athleteId, athlete]) => (
+                            <div key={athleteId} className="flex my-2 p-2 border">
+                              <div className={`${columnBibLayout}`}>{athlete.bib_num}</div>
+                              <div className={`${columnBibLayout}`}>{athlete.seeding}</div>
+                              {/* now you can loop their runs: */}
+                              {athlete?.scores.map(runObj => {
+                                const runNum = Number(Object.keys(runObj)[0]);
+                                const runData = runObj[runNum];
 
-                        <div className="flex">
-                            <div className={columnBibWidth}>{athleteResults?.bib_num}</div>
-                            <div className={columnBibWidth}>{athleteResults?.seeding}</div>
-                            {arrayOfRunNum.map(runNum => {
-                              
-                              const runCellData = athleteResults.scores?.[runNum];
-                              return(
-                                <div key={runNum}>
-                                {athleteResults && runCellData && runCellData[runNum] ? (
-                                  <HeadJudgePanelRunCell
-                                    run_result_id={runCellData[runNum]?.run_result_id}
-                                    run_num = {runNum}
-                                    scorePerRun={{
-                                      run_num: runNum,
-                                      athlete_name: "",
-                                      bib_num: athleteResults?.bib_num ?? 0,
-                                      run_average: athleteResults?.run_average ?? 0,
-                                      judgesScore: athleteResults?.scores,
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="text-center text-gray-400">—</div>
-                                )}
-                              </div>
-                              )})}
-                        </div>
+                                const runScores = athlete.scores.filter(
+  s => Number(Object.keys(s)[0]) === runNum
+);
+
+                                return (
+                                  <div key={`$${athleteId}-${runNum}-${runData.personnel_id}`}>
+                                      <HeadJudgePanelRunCell
+                                      run_result_id={runData.run_result_id}
+                                      run_num = {runNum}
+                                      scorePerRun={{
+                                        run_num: runNum,
+                                        athlete_name: "",
+                                        bib_num: athlete.bib_num ?? 0,
+                                        run_average: athlete?.run_average ?? 0,
+                                        judgesScore: runScores,
+                                      }}/>
+                                    </div>
+                                );
+                              })}
+                              <div className={`${columnBibLayout}`}>{athlete.best_heat_average}</div>
+                            </div>
+                          ))
+                        )}
+
                       </div>
                     )
                   })()}
