@@ -218,6 +218,14 @@ export type ScheduleHeatItem = {
   schedule_sequence: number | null;
 };
 
+export interface PublicScheduleItem {
+  round_name: string;
+  division_name: string;
+  heat_num: number;
+  start_time: Date | null;
+  end_time: Date | null;
+  schedule_sequence: number | null;
+}
 // --- Article Generation Types ---
 
 export interface PodiumAthlete {
