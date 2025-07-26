@@ -75,7 +75,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
           <RefreshSwitchButton onLiveToggle={handleOnLiveToggle} />
         </div>
 
-        <div className="overflow-x-auto w-[80%]">
+        <div className="overflow-x-auto">
 
         <div>
           {roundHeatIds.map(roundHeatId => {      
@@ -129,8 +129,11 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
 
                   {(() => {
                     return (
-                      <div
-                      className="">
+                      <div>
+                        {/* --------------------------- JUDGE SCORES ---------------------------*/}
+                        <div
+                          className="text-center text-2xl font-bold mb-[12]">JUDGE SCORES
+                        </div>
                         {/* HEADER ROW */}
                         <div className="flex text-xl font-bold">
                             <div className={`${columnHeaderBibDesign}`}>BIB</div>
@@ -186,11 +189,55 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                             </div>
                           ))
                         )}
-
                       </div>
                     )
                   })()}
                 </div>
+
+                {/* ----------------------------  STANDINGS  ---------------------------- */}
+                <div className="w-[30%] pl-[1%] mx-auto mt-[-5]">
+                  {(() => {
+                    // 1) pull & flatten the one‑key maps into an array
+                    const athletesRaw = scoreData[roundHeatId]?.athletes ?? [];
+                    const athletesList = athletesRaw.flatMap(m => Object.values(m));
+
+                    // 2) sort descending by best_heat_average
+                    const sorted = [...athletesList].sort(
+                      (a, b) => b.best_heat_average - a.best_heat_average
+                    );
+
+                    return (
+                      <div className="w-full">
+                        <div
+                        className="text-center text-2xl font-bold mb-[12]">
+                          STANDINGS
+                        </div>
+                        {/* HEADER ROW */}
+                        <div className={`grid grid-cols-3 w-full text-center font-semibold bg-gray-100 py-2`}>
+                          <div className={`text-xl font-bold`}>RANK</div>
+                          <div className="text-xl font-bold">BIB</div>
+                          <div className="text-xl font-bold">BEST</div>
+                        </div>
+
+                        {/* DATA ROWS */}
+                        <div className={`border-1 rounded-xl border-gray-700`}>
+                          {sorted.map((athlete, idx) => (
+                            <div
+                              key={athlete.athlete_id}
+                              className={`grid grid-cols-3 w-full text-center items-center p-[3%] mb-[5%] mt-[4%]`}
+                            >
+                              <div className={`text-2xl border-r-1 border-gray-700`}>{idx + 1}</div>
+                              <div className={`text-2xl border-r-1 border-gray-700`}>{athlete.bib_num}</div>
+                              <div className={`text-2xl`}>{athlete.best_heat_average ?? "-"}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+
               </div>
             </div>
           );
