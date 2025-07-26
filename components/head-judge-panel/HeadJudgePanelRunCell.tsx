@@ -7,7 +7,8 @@ import type { RunCell } from '@/lib/definitions';
 
 type RunCellProps = {
     run_result_id: number,
-    scorePerRun: RunCell
+    scorePerRun: RunCell,
+    run_num: number,
 }
 
 export default function RunCell ( props : RunCellProps ) {
@@ -47,17 +48,17 @@ export default function RunCell ( props : RunCellProps ) {
                 <div className="flex flex-col items-center">
                     {/* average */}
                     <div className="w-full text-xl font-bold text-center pb-1">
-                        {props.scorePerRun.run_average != null ? props.scorePerRun.run_average.toFixed(2) : '-'}
+                        {props.scorePerRun.run_average != null ? props.scorePerRun.run_average : '-'}
                     </div>
 
                     {/* individual judge scores */}
                     <div className="w-full space-y-1 pt-1">
                         {scores?.judgesScore.map((judgeScore) => (
                         <div
-                            key={judgeScore.personnel_id}
+                            key={judgeScore[props.run_num].personnel_id}
                             className="text-sm text-center"
                         >
-                            {judgeScore.score != null ? judgeScore.score.toFixed(1) : '-'}
+                            {judgeScore[props.run_num].score != null ? judgeScore[props.run_num].score : '-'}
                         </div>
                         ))}
                     </div>
@@ -98,21 +99,21 @@ export default function RunCell ( props : RunCellProps ) {
                                         className='text-2xl mb-5'>Athlete: {scores?.athlete_name} {`(BIB #`}{scores?.bib_num}{`)`}</h2>
                                         {/* average */}
                                         <div className="w-full border-b border-black text-xl font-semibold pb-1">
-                                            Average: {props.scorePerRun.run_average != null ? props.scorePerRun.run_average.toFixed(2) : '-'}
+                                            Average: {props.scorePerRun.run_average != null ? props.scorePerRun.run_average : '-'}
                                         </div>
 
                                         {/* individual judge scores */}
                                         <div className="">
                                             {scores?.judgesScore.map((judgeScore) => (
                                             <div
-                                                key={judgeScore.personnel_id}
+                                                key={judgeScore[props.run_num].personnel_id}
                                                 className="grid grid-cols-2"
                                             >
                                                 <span>
-                                                    {judgeScore.name ?? judgeScore.header}
+                                                    {judgeScore[props.run_num].name ?? judgeScore[props.run_num].header}
                                                 </span>
                                                 <span>
-                                                    {judgeScore.score != null ? judgeScore.score.toFixed(1) : '-'}
+                                                    {judgeScore[props.run_num].score != null ? judgeScore[props.run_num].score : '-'}
                                                 </span>
                                             </div>
                                             ))}

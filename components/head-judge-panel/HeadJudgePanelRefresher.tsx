@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { useState, useEffect } from "react";
 import RefreshSwitchButton from "@/components/RefreshSwitchButton";
 import HeadJudgeHeatScoringPanel from "@/components/head-judge-panel/HeadJudgeHeatScoringPanel"
-import RunCell from "@/components/head-judge-panel/HeadJudgePanelRunCell"
+import HeadJudgePanelRunCell from "@/components/head-judge-panel/HeadJudgePanelRunCell"
 import { table } from "console";
 
 type PageProps = {
@@ -17,7 +17,7 @@ type PageProps = {
 }
 
 export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHeaders, divisionId, roundId }: PageProps) {
-    const [scoreData, setScoreData] = useState<ResultsHJDataMap>([]);
+    const [scoreData, setScoreData] = useState<ResultsHJDataMap>({});
 
   // --- Data refresh ---
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
@@ -49,45 +49,20 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
     
     useEffect(()=> {
         fetch(`/api/get-headjudge-scores?event_id=${eventId}&${round_heat_ids_API}`)
-        .then(async (res) => {
-            return (await res.json()) as CompetitionHJData;
-        })
-        .then((res: CompetitionHJData) => {
-            setScoreData(res);
-        })
+    .then(res => res.json() as Promise<ResultsHJDataMap>)
+    .then((data) => setScoreData(data))
         .catch(err => {
             console.error("Failed to load competition data.", err);
             notFound();
         });
     },[refreshPageFlag])
 
-
-
-    /////////
-interface Score {
-  bib: number;
-  athlete: string;
-  seeding: number;
-  run1?: number;
-  run2?: number;
-  best?: number;
-  judgesScoreRun1?: any[];
-  judgesScoreRun2?: any[];
-  judgesScoreBest?: any[];
-}
-
-const scores: Score[] = [
-  { bib: 86, athlete: 'Harry Coleman', seeding: 1, best: 0, judgesScoreBest: [] },
-  { bib: 46, athlete: 'Eli Bouchard', seeding: 2, run1: 15.67, run2: 93.67, best: 93.67, judgesScoreRun1: [], judgesScoreRun2: [], judgesScoreBest: [] },
-  { bib: 47, athlete: 'Oliver Martin', seeding: 3, run1: 79, run2: 85, best: 85, judgesScoreRun1: [], judgesScoreRun2: [], judgesScoreBest: [] },
-  { bib: 43, athlete: 'Brooklyn DePriest', seeding: 4, run1: 60.5, run2: 70.67, best: 70.67, judgesScoreRun1: [], judgesScoreRun2: [], judgesScoreBest: [] },
-  { bib: 97, athlete: 'Maddox Matte', seeding: 5, run1: 23.67, run2: 69.33, best: 69.33, judgesScoreRun1: [], judgesScoreRun2: [], judgesScoreBest: [] },
-  { bib: 66, athlete: 'Lys Fedorowycz', seeding: 6, run1: 69, best: 69, judgesScoreRun1: [], judgesScoreBest: [] },
-  { bib: 74, athlete: 'Kobe Cantelon', seeding: 7, run1: 68.67, best: 68.67, judgesScoreRun1: [], judgesScoreBest: [] },
-];
-
     // Heat table column design
     const columnTextSize = "";
+    const columnBibWidth = "w-[10%]";
+    const columnRunWidth = "w-[10%]";
+    const columnBestWidth = "w-[10%]";
+
 
 
     return(
@@ -97,209 +72,113 @@ const scores: Score[] = [
           <RefreshSwitchButton onLiveToggle={handleOnLiveToggle} />
         </div>
 
-
-
         <div className="overflow-x-auto w-[80%]">
-          <table className="table-auto w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-2 text-center font-medium">BIB</th>
-                <th className="px-4 py-2 text-center font-medium">SEEDING</th>
-                <th className="px-4 py-2 text-center font-medium">RUN 1</th>
-                <th className="px-4 py-2 text-center font-medium">RUN 2</th>
-                <th className="px-4 py-2 text-center font-medium">BEST</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scores.map((score) => (
-                <tr key={score.bib} className="even:bg-white odd:bg-gray-50">
-                  <td className="px-4 py-2">{score.bib}</td>
-                  <td className="px-4 py-2">{score.seeding}</td>
-
-                  {/* Run 1 */}
-                  <td className="px-4 py-2 border-1 border-black">
-                    {score.run1 !== undefined ? (
-                      <RunCell                        
-                      run_result_id= { 123 }
-                      scorePerRun = {{
-                        athlete_name: `Tim Smith`,
-                        bib_num: 2,
-                        run_num: 1, 
-                        run_average: 40,
-                        judgesScore:
-                            [{
-                                personnel_id: 10,
-                                header: 'Header',
-                                name: 'Name',
-                                score: 20,
-                            }, 
-                            {
-                                personnel_id: 20,
-                                header: 'Header2',
-                                name: '',
-                                score: 40,
-                            }, 
-                            ]
-                        }}
-                      />
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-
-                  {/* Run 2 cell using HeadJudgePanelRunCell */}
-                  <td className="px-4 py-2 border-1 border-black">
-                    {score.run2 !== undefined ? (
-                      <RunCell                        
-                      run_result_id= { 123 }
-                      scorePerRun = {{
-                        athlete_name: `Tim Smith`,
-                        bib_num: 2,
-                        run_num: 1, 
-                        run_average: 40,
-                        judgesScore:
-                            [{
-                                personnel_id: 10,
-                                header: 'Header',
-                                name: 'Name',
-                                score: 20,
-                            }, 
-                            {
-                                personnel_id: 20,
-                                header: 'Header2',
-                                name: '',
-                                score: 40,
-                            }, 
-                            ]
-                        }}
-                      />
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-
-
-                  {/* Best cell using HeadJudgePanelRunCell */}
-                  <td className="px-4 py-2 font-semibold">
-                    {score.best !== undefined ? (
-                      2
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-            
-                </tr>
-              ))}
-
-              
-            </tbody>
-          </table>
-
-<div>
-  {roundHeatIds.map(roundHeatId => {
-    const heat = tableHeaders
-      .divisions.find(d => d.division_id === divisionId)
-      ?.rounds.find(r => r.round_id === roundId)
-      ?.heats.find(h => h.round_heat_id === roundHeatId);
-      // We find each round heat id and create a table for each one of them
-    return (
-      <div 
-      key={roundHeatId}
-      className="border-1 border-black mb-[5%]">
-
-        {/* Heat table title*/}
-        <div className="flex w-full border-1 border-black">
-          <div className="font-bold text-2xl">        
-            {heat ? `HEAT ${heat.heat_num}` : '—'}
-          </div>
-          <div className="flex gap-10 ml-auto items-center">
-            <div className="flex">
-              <div className="font-bold mr-1">
-                START:{` `}
-              </div>
-              <div>
-                {heat?.start_time ? heat.start_time.toLocaleString() : 'TBD'}
-              </div>
-            </div>
-            <div className="flex">
-              <div className="font-bold mr-1">
-                END:{` `}
-              </div>
-              <div>
-                {heat?.end_time ? heat.end_time.toLocaleString() : 'TBD'}
-              </div>
-            </div>
-          </div> 
-        </div>
-
-        {/* Scrolling area*/}
-        <div className="flex">
-        {/* Heat table headers */}
-        <div className="w-[10%]">BIB</div>
-        <div className="w-[10%]">SEEDING</div>
-
-        {/* get the raw array of scores (or empty array if undefined) */}
-        {(() => {
-          const runs = scoreData[roundHeatId]?.scores ?? [];
-          // 1) pull out all run_num values
-          const runNums = runs.map(r => r.run_num);
-          // 2) dedupe via a Set, then turn back into an array
-          const uniqueRunNums = Array.from(new Set(runNums));
-          // 3) render one <div> per unique run_num
-          return uniqueRunNums.map(runNum => (
-            <div 
-            key={runNum} className={`text-${columnTextSize} w-[10%]`}>
-              RUN {runNum}
-            </div>
-          ));
-        })()}
-        <div className="w-[10%]">BEST</div>
-
-        </div>
-      </div>
-    );
-  })}
-</div>
-              {/* <div>
-                {round_heat_ids.map((rhi) =>                 
-                  // scoreData[rhi]?.athlete_id ?? "" // loading until it finds it
-
-
-              )}
-
-              </div> */}
-
-
-
-
-
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         <div>
-          {scoreData && (
-            <HeadJudgeHeatScoringPanel
-            results = {scoreData} />
-          )}
-        </div>
+          {roundHeatIds.map(roundHeatId => {      
+            
+            // We find each round heat id and create a table for each one of them
+            const heat = tableHeaders
+              .divisions.find(d => d.division_id === divisionId)
+              ?.rounds.find(r => r.round_id === roundId)
+              ?.heats.find(h => h.round_heat_id === roundHeatId);
+
+            // Array of num of runs
+            const arrayOfRunNum = heat
+              ? Array.from({ length: heat.num_runs }, (_, i) => i + 1)
+              : [];
+
+
+            return (
+              <div 
+              key={roundHeatId}
+              className="border-1 border-black mb-[5%]">
+
+                {/* Heat table title*/}
+                <div className="flex w-full border-1 border-black">
+                  <div className="font-bold text-2xl">        
+                    {heat ? `HEAT ${heat.heat_num}` : '—'}
+                  </div>
+                  <div className="flex gap-10 ml-auto items-center">
+                    <div className="flex">
+                      <div className="font-bold mr-1">
+                        START:{` `}
+                      </div>
+                      <div>
+                        {heat?.start_time ? heat.start_time.toLocaleString() : 'TBD'}
+                      </div>
+                    </div>
+                    <div className="flex">
+                      <div className="font-bold mr-1">
+                        END:{` `}
+                      </div>
+                      <div>
+                        {heat?.end_time ? heat.end_time.toLocaleString() : 'TBD'}
+                      </div>
+                    </div>
+                  </div> 
+                </div>
+
+                {/* Scrolling area*/}
+                <div className="flex">
+                <div className="overflow-x-auto w-full">
+
+                  {(() => {
+                    const athleteResults = scoreData[roundHeatId];
+
+                    return (
+                      <div>
+                        {/* HEADER ROW */}
+                        <div className="flex">
+                            <div className={columnBibWidth}>BIB</div>
+                            <div className={columnBibWidth}>SEEDING</div>
+                          {arrayOfRunNum.map(runNum => (
+                              <div key={runNum} className={columnRunWidth}>
+                                RUN {runNum}
+                              </div>
+                          ))}
+                          <div className={columnBestWidth}>BEST</div>
+                        </div>
+
+
+                        <div className="flex">
+                            <div className={columnBibWidth}>{athleteResults?.bib_num}</div>
+                            <div className={columnBibWidth}>{athleteResults?.seeding}</div>
+                            {arrayOfRunNum.map(runNum => {
+                              const runCellData = athleteResults?.scores?.[runNum];
+                              return(
+                                <div key={runNum}>
+                                {athleteResults && runCellData && runCellData[runNum] ? (
+                                  <HeadJudgePanelRunCell
+                                    run_result_id={runCellData[runNum].run_result_id}
+                                    scorePerRun={{
+                                      athlete_name: "",
+                                      bib_num: athleteResults.bib_num ?? 0,
+                                      run_num: runNum,
+                                      run_average: athleteResults.run_average ?? 0,
+                                      judgesScore: {{
+
+                                      }},
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="text-center text-gray-400">—</div>
+                                )}
+                              </div>
+                              )})}
+                        </div>
+                      </div>
+
+                      
+                    )
+                  })()}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
-    )
+    </div>
+  </div>
+)
 }

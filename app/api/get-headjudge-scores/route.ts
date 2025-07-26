@@ -40,6 +40,8 @@ export async function GET(req: NextRequest) {
         personnel_id: number;
         run_result_id: number;
         round_heat_id: number;
+        bib_num: number;
+        seeding: number;
       }>(
         `
         SELECT
@@ -52,7 +54,9 @@ export async function GET(req: NextRequest) {
           hr.best AS best_heat_average,
           rs.personnel_id,
           rs.run_result_id,
-          hr.round_heat_id
+          hr.round_heat_id,
+          er.bib_num,
+          hr.seeding
         FROM ss_run_results rr
         JOIN ss_run_scores rs
           ON rr.run_result_id = rs.run_result_id
@@ -63,9 +67,13 @@ export async function GET(req: NextRequest) {
           AND hr.athlete_id = rr.athlete_id
         JOIN ss_event_judges ej
           ON rs.personnel_id = ej.personnel_id
+        JOIN ss_event_registrations er
+          ON hr.event_id = er.event_id
+          AND hr.division_id = er.division_id
+          AND hr.athlete_id = er.athlete_id
           WHERE rr.event_id = $1
           AND rr.round_heat_id = ANY($2::int[])
-        ORDER BY rr.athlete_id, rr.run_num;
+        ORDER BY hr.seeding, rr.athlete_id, rr.run_num;
         `,
         [eventId, roundHeatIdParam]
       );
@@ -88,27 +96,31 @@ const resultsHJDataMap: ResultsHJDataMap = {};
         header,
         name,
         score,
+        bib_num,
+        seeding,
       } = row;
 
+      // create the heat entry if it doesn't exist
       if (!resultsHJDataMap[round_heat_id]) {
         resultsHJDataMap[round_heat_id] = {
           athlete_id,
           run_average,
           best_heat_average,
-          scores: [],
+          bib_num,
+          seeding,
+          scores: []  // ← now an array, not object
         };
       }
 
-      const singleRun: RunHJData = {
-        run_num,
-        run_result_id,
-        personnel_id,
-        header,
-        name,
-        score,
-      };
-
-      resultsHJDataMap[round_heat_id].scores.push(singleRun);
+      resultsHJDataMap[round_heat_id].scores.push({
+        [run_num]:{
+          run_result_id,
+          personnel_id,
+          header,
+          name,
+          score,
+        }
+      });
     });
 
     return NextResponse.json(resultsHJDataMap);
