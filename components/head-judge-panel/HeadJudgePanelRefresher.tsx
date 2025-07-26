@@ -147,30 +147,41 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                             <div key={athleteId} className="flex my-2 p-2 border">
                               <div className={`${columnBibLayout}`}>{athlete.bib_num}</div>
                               <div className={`${columnBibLayout}`}>{athlete.seeding}</div>
-                              {/* now you can loop their runs: */}
-                              {athlete?.scores.map(runObj => {
-                                const runNum = Number(Object.keys(runObj)[0]);
-                                const runData = runObj[runNum];
-
-                                const runScores = athlete.scores.filter(
-  s => Number(Object.keys(s)[0]) === runNum
-);
-
-                                return (
-                                  <div key={`$${athleteId}-${runNum}-${runData.personnel_id}`}>
-                                      <HeadJudgePanelRunCell
-                                      run_result_id={runData.run_result_id}
-                                      run_num = {runNum}
-                                      scorePerRun={{
-                                        run_num: runNum,
-                                        athlete_name: "",
-                                        bib_num: athlete.bib_num ?? 0,
-                                        run_average: athlete?.run_average ?? 0,
-                                        judgesScore: runScores,
-                                      }}/>
-                                    </div>
+                              
+                              {(() => {
+                                // 1) build the unique list of run numbers
+                                const runNums = Array.from(
+                                  new Set(athlete.scores.map(s => Number(Object.keys(s)[0])))
                                 );
-                              })}
+
+                                // 2) map once per run
+                                return runNums.map(runNum => {
+                                  // 3) grab all judge‑scores for this run
+                                  const runScores = athlete.scores.filter(
+                                    s => Number(Object.keys(s)[0]) === runNum
+                                  );
+
+                                  // 4) pick one runData to pull run_result_id (they all share it)
+                                  const runData = runScores[0][runNum];
+
+                                  return (
+                                    <div key={`${athleteId}-${runNum}`} className={columnRunWidth}>
+                                      <HeadJudgePanelRunCell
+                                        run_result_id={runData.run_result_id}
+                                        run_num={runNum}
+                                        scorePerRun={{
+                                          run_num:     runNum,
+                                          athlete_name: "",                // or athlete.athlete_name
+                                          bib_num:     athlete.bib_num,
+                                          run_average: athlete.run_average,
+                                          judgesScore: runScores,          // <-- only this run’s judges
+                                        }}
+                                      />
+                                    </div>
+                                  );
+                                });
+                              })()}
+
                               <div className={`${columnBibLayout}`}>{athlete.best_heat_average}</div>
                             </div>
                           ))
