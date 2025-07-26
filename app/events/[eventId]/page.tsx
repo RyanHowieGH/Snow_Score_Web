@@ -84,6 +84,10 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
     const authResult = await auth(); // Clerk's auth() returns a Promise of AuthObject
     const clerkUserId = authResult.userId;
 
+    const disciplineDisplay = [event.category_name, event.subcategory_name]
+        .filter(Boolean) // Removes any null or undefined values
+        .join(' - ');     // Joins the parts with a space, e.g., "Freestyle Big Air"
+
     let isAdmin = false;
     if (clerkUserId) {
         // Assuming getAuthenticatedUserWithRole internally uses clerkUserId or fetches based on current session
@@ -159,10 +163,13 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         </InfoCard>
                         {/* --- ^^^ END OF POLISHED INTEGRATION ^^^ --- */}
-                        <InfoCard icon={<TrophyIcon className="h-6 w-6 text-secondary" />} title="Discipline" value={event.discipline_name || 'Not Specified'} />
-                    </div>
+                        <InfoCard 
+                            icon={<TrophyIcon className="h-6 w-6 text-secondary" />} 
+                            title="Discipline" 
+                            value={disciplineDisplay || 'Not Specified'} 
+                        /></div>
 
-                    {/* Divisions Section */}
+                    {/* Divisions Section
                     {event.divisions && event.divisions.length > 0 && (
                         <Section title="Event Divisions">
                             <div className="flex flex-wrap gap-3">
@@ -173,7 +180,27 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                 ))}
                             </div>
                         </Section>
-                    )}
+                    )} */}
+
+                    {/* Live Scores by Division / Heat */}
+                    <Section title="Event Divisions">
+                        <p className="text-base-content/70 mb-4">
+                            Click on a division below to view live scores and judging panels.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {event.divisions.map((division) => (
+                                <Link
+                                    key={division.division_id}
+                                    //Change the href to appropriately link to the division's live scores page
+                                    href={`/events/${eventId}/${division.division_id}`}
+                                    className="btn btn-secondary btn-outline btn-sm w-full"
+                                >
+                                    {division.division_name}
+                                </Link>
+                            ))}
+                            
+                        </div>
+                    </Section>
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">
@@ -198,7 +225,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             </div>
                         )}
                     </Section>
-                    {/* You could add more sections here: Schedule, Results (if completed), etc. */}
+                    {/* You could add more sections here: Schedule, etc. */}
                 </div>
             </div>
         </main>

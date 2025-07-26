@@ -1,3 +1,5 @@
+// app\admin\(detail)\events\[eventId]\manage-athletes\page.tsx
+
 'use client';
 
 export const dynamic = 'force-dynamic';
@@ -105,27 +107,36 @@ export default function ManageAthletesPage() {
         });
     };
     
+    // --- VVV THIS IS THE CORRECTED AND FINAL VERSION OF THE FUNCTION VVV ---
     const handleRegisterAthletes = () => {
         if (eventId === null) return;
+        
+        const parsePoints = (points: any): number | null => {
+            if (points === null || points === undefined || points === '') return null;
+            const num = parseFloat(points);
+            return isNaN(num) ? null : num;
+        };
 
-        const validSelectedAthletes = checkedAthletes.filter(a => 
-            a.isSelected && a.status !== 'error' && a.assigned_division_id
-        );
-
-        const athletesToSubmit: AthleteToRegister[] = validSelectedAthletes.map(a => ({
-            csvIndex: a.csvIndex,
-            status: a.status as 'matched' | 'new',
-            division_id: a.assigned_division_id as number,
-            last_name: a.csvData.last_name!,
-            first_name: a.csvData.first_name!,
-            dob: a.csvData.dob!,
-            gender: a.csvData.gender!,
-            nationality: a.csvData.nationality || null,
-            stance: a.csvData.stance || null,
-            fis_num: a.csvData.fis_num ? parseInt(a.csvData.fis_num, 10) : null,
-            dbAthleteId: a.dbAthleteId,
-            isOverwrite: a.isOverwrite,
-        }));
+        const athletesToSubmit: AthleteToRegister[] = checkedAthletes
+            .filter(a => a.isSelected && a.status !== 'error' && a.assigned_division_id)
+            .map(a => ({
+                csvIndex: a.csvIndex,
+                status: a.status as 'matched' | 'new',
+                division_id: a.assigned_division_id as number,
+                last_name: a.csvData.last_name!,
+                first_name: a.csvData.first_name!,
+                dob: a.csvData.dob!,
+                gender: a.csvData.gender!,
+                nationality: a.csvData.nationality || null,
+                stance: (a.csvData.stance as 'Regular' | 'Goofy' | null) || null,
+                fis_num: a.csvData.fis_num ? parseInt(a.csvData.fis_num, 10) : null,
+                dbAthleteId: a.dbAthleteId,
+                isOverwrite: a.isOverwrite,
+                fis_hp_points: parsePoints(a.csvData.fis_hp_points),
+                fis_ss_points: parsePoints(a.csvData.fis_ss_points),
+                fis_ba_points: parsePoints(a.csvData.fis_ba_points),
+                wspl_points: parsePoints(a.csvData.wspl_points),
+            }));
 
         if (athletesToSubmit.length === 0) {
             setPageError("No valid athletes are selected for registration."); return;
@@ -152,28 +163,30 @@ export default function ManageAthletesPage() {
         setCheckedAthletes(prev => prev.map(athlete => {
             if (athlete.csvIndex !== csvIndex) return athlete;
     
+            const conflictingAthlete = athlete.conflictDetails!.conflictingAthlete;
             if (resolution === 'keep_existing') {
-                const conflictingAthlete = athlete.conflictDetails!.conflictingAthlete;
-                // We construct a new object that perfectly matches the CheckedAthleteClient type
                 return { 
                     ...athlete, 
                     status: 'matched',
                     isSelected: true,
-                    // Rebuild the csvData object using the correct data from the DB
                     csvData: { 
                         first_name: conflictingAthlete.first_name,
                         last_name: conflictingAthlete.last_name,
                         dob: conflictingAthlete.dob,
                         gender: conflictingAthlete.gender,
                         nationality: conflictingAthlete.nationality,
-                        stance: conflictingAthlete.stance, // This now matches the type 'Regular' | 'Goofy' | null
+                        stance: conflictingAthlete.stance,
                         fis_num: conflictingAthlete.fis_num?.toString() ?? null,
+                        // --- CORRECTLY POPULATE POINTS FROM EXISTING DB RECORD ---
+                        fis_hp_points: conflictingAthlete.fis_hp_points?.toString() ?? null,
+                        fis_ss_points: conflictingAthlete.fis_ss_points?.toString() ?? null,
+                        fis_ba_points: conflictingAthlete.fis_ba_points?.toString() ?? null,
+                        wspl_points: conflictingAthlete.wspl_points?.toString() ?? null,
                     },
                     dbAthleteId: conflictingAthlete.athlete_id,
                     dbDetails: conflictingAthlete,
-                    isOverwrite: false, // Not an overwrite
+                    isOverwrite: false,
                     assigned_division_id: athlete.suggested_division_id ?? null, 
-                    // We can clear conflictDetails as it's been resolved
                     conflictDetails: undefined, 
                 };
             } else { // 'overwrite'
@@ -183,7 +196,6 @@ export default function ManageAthletesPage() {
                     isSelected: true,
                     isOverwrite: true,
                     assigned_division_id: athlete.suggested_division_id ?? null,
-                    // We can clear conflictDetails as it's been resolved
                     conflictDetails: undefined,
                 };
             }
