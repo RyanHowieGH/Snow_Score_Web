@@ -60,3 +60,16 @@ export const getEventState = (startDate: Date, endDate: Date): 'COMPLETE' | 'ONG
   // If neither of the above, the event must be in the future.
   return 'UPCOMING';
 };
+
+
+export function formatHeatTime(dateInput: string | Date): string {
+  const date = typeof dateInput === 'string'
+    ? new Date(dateInput)
+    : dateInput;
+    
+  return date.toLocaleTimeString('en-US', {
+    hour:   '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}

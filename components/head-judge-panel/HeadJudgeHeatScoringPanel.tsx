@@ -1,9 +1,9 @@
 "use client";
-import { ResultsHJDataMap } from "@/lib/definitions";
+import { ResultsHeatsHJDataMap } from "@/lib/definitions";
 import React from "react";
 
 type HeatScoringPanelProps = {
-  results: ResultsHJDataMap,
+  results: ResultsHeatsHJDataMap,
 }
 
 export default function HeatScoringPanel ({ results } : HeatScoringPanelProps) {

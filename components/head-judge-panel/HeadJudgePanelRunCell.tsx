@@ -13,14 +13,21 @@ type RunCellProps = {
 
 export default function RunCell ( props : RunCellProps ) {
 
-    const [scores, setScores] = useState<RunCell>();
+    // const [scores, setScores] = useState<RunCell>();
     const [average, setAverage] = useState<number>();
     const [openCheckScores, setOpenCheckScores] = useState<boolean>(false);
     const [modifier, setModifier] = useState<string>();
 
-    useEffect (()=> {
-        setScores(props.scorePerRun);
-    },[])
+
+    /* It would be good to have this with useState if we would allow the head judge to change
+       the scores for the judges. Now that I am thinking... if we just shoot the update to the
+       database, it would repass everything as props anyway, so it would be re-rendering this
+       component...
+    */
+
+    // useEffect (()=> {
+    //     setScores(props.scorePerRun);
+    // },[props])
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
@@ -47,13 +54,13 @@ export default function RunCell ( props : RunCellProps ) {
             onClick={() => setOpenCheckScores(true)}>
                 <div className="flex flex-col items-center">
                     {/* average */}
-                    <div className="w-full text-xl font-bold text-center pb-1">
+                    <div className="w-full text-2xl font-bold text-center pb-1">
                         {props.scorePerRun.run_average != null ? props.scorePerRun.run_average : '-'}
                     </div>
 
                     {/* individual judge scores */}
                     <div className="w-full space-y-1 pt-1">
-                        {scores?.judgesScore.map((judgeScore) => (
+                        {props.scorePerRun?.judgesScore.map((judgeScore) => (
                         <div
                             key={judgeScore[props.run_num].personnel_id}
                             className="text-sm text-center"
@@ -94,9 +101,9 @@ export default function RunCell ( props : RunCellProps ) {
 
                                     <div className="flex flex-col">
                                         <h1
-                                        className='text text-2xl font-bold mb-5'>Edit Run {scores?.run_num}</h1>
+                                        className='text text-2xl font-bold mb-5'>Edit Run {props.scorePerRun?.run_num}</h1>
                                         <h2
-                                        className='text-2xl mb-5'>Athlete: {scores?.athlete_name} {`(BIB #`}{scores?.bib_num}{`)`}</h2>
+                                        className='text-2xl mb-5'>Athlete: {props.scorePerRun?.athlete_name} {`(BIB #`}{props.scorePerRun?.bib_num}{`)`}</h2>
                                         {/* average */}
                                         <div className="w-full border-b border-black text-xl font-semibold pb-1">
                                             Average: {props.scorePerRun.run_average != null ? props.scorePerRun.run_average : '-'}
@@ -104,13 +111,15 @@ export default function RunCell ( props : RunCellProps ) {
 
                                         {/* individual judge scores */}
                                         <div className="">
-                                            {scores?.judgesScore.map((judgeScore) => (
+                                            {props.scorePerRun?.judgesScore.map((judgeScore) => (
                                             <div
                                                 key={judgeScore[props.run_num].personnel_id}
                                                 className="grid grid-cols-2"
                                             >
                                                 <span>
-                                                    {judgeScore[props.run_num].name ?? judgeScore[props.run_num].header}
+                                                    {judgeScore[props.run_num].name != "" 
+                                                    ? judgeScore[props.run_num].name :
+                                                    judgeScore[props.run_num].header }
                                                 </span>
                                                 <span>
                                                     {judgeScore[props.run_num].score != null ? judgeScore[props.run_num].score : '-'}

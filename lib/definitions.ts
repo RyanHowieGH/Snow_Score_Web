@@ -274,8 +274,14 @@ export type HeatHJData = {
     end_time: Date,
 }
 
-export type ResultsHJDataMap = {
+export type ResultsHeatsHJDataMap = {
     [round_heat_id: number]: {
+        athletes: ResultsAthletesHJDataMap[];
+    }
+}
+
+export type ResultsAthletesHJDataMap = {
+    [athlete_id: number]:{
         athlete_id: number;
         bib_num: number;
         seeding: number;
@@ -285,17 +291,6 @@ export type ResultsHJDataMap = {
     }
 }
 
-export type RunHJData = {
-    [run_num: number] : {
-        run_result_id: number;
-        personnel_id: number;
-        header: string;
-        name: string;
-        score: number;
-    }
-
-}
-
 export type RunCell = {
     athlete_name: string,
     bib_num: number,
@@ -303,6 +298,20 @@ export type RunCell = {
     run_average: number | null,
     judgesScore: RunHJData[];
 }
+
+export type RunHJData = {
+    [run_num: number] : {
+        run_result_id: number;
+        personnel_id: number;
+        header: string;
+        name: string;
+        score: number | null;
+        run_average:number;
+    }
+
+}
+
+
 
 // export type RunHJData = {
 //     personnel_id: number;
