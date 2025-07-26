@@ -62,25 +62,27 @@ export default function AddJudgeToHeatModal({
         <h3 className="text-lg font-bold mb-4 mr-4">Add Judge to Round</h3>
         <div className="flex flex-col gap-2">
           <div className="relative ml-2 group inline-block">
-            <Info>
-              <div
+            <Info className="w-5 h-5 text-gray-600" />
+
+            <div
                 className={`
                 invisible group-hover:visible 
                 opacity-0 group-hover:opacity-100 
                 transition-all duration-150
                 absolute left-full top-1/2
-                ml-2 w-[2000%]
+                ml-2 w-64
                 -translate-y-1/2
                 bg-gray-800 text-white text-sm 
                 rounded p-3 shadow
+                z-10
                 `}
-              >
+            >
                 The new judge will be assigned to only the selected division,
-                round and heat. The judging panels QR code for this judge will
+                round and heat. The judging panel’s QR code for this judge will
                 be displayed once the page is refreshed.
-              </div>
-            </Info>
-          </div>
+            </div>
+        </div>
+
 
           <input
             type="text"
