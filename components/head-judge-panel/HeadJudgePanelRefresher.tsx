@@ -145,20 +145,20 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                             <div className={columnBibWidth}>{athleteResults?.bib_num}</div>
                             <div className={columnBibWidth}>{athleteResults?.seeding}</div>
                             {arrayOfRunNum.map(runNum => {
-                              const runCellData = athleteResults?.scores?.[runNum];
+                              
+                              const runCellData = athleteResults.scores?.[runNum];
                               return(
                                 <div key={runNum}>
                                 {athleteResults && runCellData && runCellData[runNum] ? (
                                   <HeadJudgePanelRunCell
-                                    run_result_id={runCellData[runNum].run_result_id}
+                                    run_result_id={runCellData[runNum]?.run_result_id}
+                                    run_num = {runNum}
                                     scorePerRun={{
-                                      athlete_name: "",
-                                      bib_num: athleteResults.bib_num ?? 0,
                                       run_num: runNum,
-                                      run_average: athleteResults.run_average ?? 0,
-                                      judgesScore: {{
-
-                                      }},
+                                      athlete_name: "",
+                                      bib_num: athleteResults?.bib_num ?? 0,
+                                      run_average: athleteResults?.run_average ?? 0,
+                                      judgesScore: athleteResults?.scores,
                                     }}
                                   />
                                 ) : (
@@ -168,8 +168,6 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                               )})}
                         </div>
                       </div>
-
-                      
                     )
                   })()}
                 </div>
