@@ -2,7 +2,7 @@
 import React from "react";
 import type { CompetitionHJData, ResultsHeatsHJDataMap, RunHJData } from "@/lib/definitions";
 import { notFound } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import RefreshSwitchButton from "@/components/RefreshSwitchButton";
 import HeadJudgeHeatScoringPanel from "@/components/head-judge-panel/HeadJudgeHeatScoringPanel"
 import HeadJudgePanelRunCell from "@/components/head-judge-panel/HeadJudgePanelRunCell"
@@ -42,35 +42,47 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
       refreshInterval = null;
       console.log("Panel is offline");
     }
-
-    // Live round progression
-    const currentTime = new Date();
-    const division = tableHeaders.divisions.find((d) => d.division_id === divisionId);
-    const endTimeOfTheFirstHeat = division?.rounds?.[0].heats?.[0].end_time;
-
-    if (endTimeOfTheFirstHeat) {
-      const endTime = new Date(endTimeOfTheFirstHeat);
-      if (currentTime.getTime() > endTime.getTime()) {
-          fetch(`/api/make-round-progress?source_round_id=${roundId}`)
-            .catch(err => {
-              console.error("Failed to load make round progression.", err);
-            });
-          console.log("Round progressed.")
-          console.log(`Current time: ${currentTime} // End time: ${endTime}`)
-      }
-    }
-
-
     return () => {
       if (refreshInterval) {
         clearInterval(refreshInterval);
       }
-
-      
     };
   }, [liveSwitch]);
 
 
+  // Progress round on page unmount
+  const latestHeaders = useRef(tableHeaders);
+  const latestRoundId = useRef(roundId);
+
+  useEffect(() => {
+    latestHeaders.current = tableHeaders;
+    latestRoundId.current = roundId;
+  }, [tableHeaders, roundId]);
+
+    useEffect(() => {
+    return () => {
+      const now = new Date();
+      const division = latestHeaders.current.divisions.find((d) => d.division_id === divisionId);
+      const arrHeats = division?.rounds?.[0].heats;
+      const indexLastArrHeats = arrHeats?.length;
+      
+      const endTimeOfTheFirstHeat = division?.rounds?.[0].heats?.[(indexLastArrHeats ? (indexLastArrHeats - 1) : 0)].end_time;
+
+      if (!endTimeOfTheFirstHeat)
+        return;
+
+      const end = new Date(endTimeOfTheFirstHeat);
+      if (now.getTime() > end.getTime()) {
+        fetch(`/api/make-round-progress?source_round_id=${latestRoundId.current}`)
+          .then(() => console.log("Round progressed."))
+          .catch(err => console.error("Failed to progress round on unmount", err));
+        console.log(`Unmounted at ${now}, end was ${end}`);
+      }
+    };
+  }, []);
+
+
+    // Get scores
     let round_heat_ids_API = roundHeatIds.map(id => `round_heat_id=${id}`).join(`&`);
     
     useEffect(()=> {
