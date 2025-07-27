@@ -24,6 +24,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
   const [liveSwitch, setLiveSwitch] = useState<boolean>(false);
 
+
   const handleOnLiveToggle = () => {
     setLiveSwitch((prev) => !prev);
   };
@@ -41,10 +42,34 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
       refreshInterval = null;
       console.log("Panel is offline");
     }
+
+    // Live round progression
+    const currentTime = new Date();
+    const division = tableHeaders.divisions.find((d) => d.division_id === divisionId);
+    const endTimeOfTheFirstHeat = division?.rounds?.[0].heats?.[0].end_time;
+
+    if (endTimeOfTheFirstHeat) {
+      const endTime = new Date(endTimeOfTheFirstHeat);
+      if (currentTime.getTime() > endTime.getTime()) {
+          fetch(`/api/make-round-progress?source_round_id=${roundId}`)
+            .catch(err => {
+              console.error("Failed to load make round progression.", err);
+            });
+          console.log("Round progressed.")
+          console.log(`Current time: ${currentTime} // End time: ${endTime}`)
+      }
+    }
+
+
     return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+
+      
     };
   }, [liveSwitch]);
+
 
     let round_heat_ids_API = roundHeatIds.map(id => `round_heat_id=${id}`).join(`&`);
     
@@ -196,11 +221,8 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                 {/* ----------------------------  STANDINGS  ---------------------------- */}
                 <div className="w-[30%] pl-[1%] mx-auto mt-[-5] h-150 overflow-auto">
                   {(() => {
-                    // 1) pull & flatten the one‑key maps into an array
                     const athletesRaw = scoreData[roundHeatId]?.athletes ?? [];
                     const athletesList = athletesRaw.flatMap(m => Object.values(m));
-
-                    // 2) sort descending by best_heat_average
                     const sorted = [...athletesList].sort(
                       (a, b) => b.best_heat_average - a.best_heat_average
                     );
