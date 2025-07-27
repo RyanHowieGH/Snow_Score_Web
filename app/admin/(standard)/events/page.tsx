@@ -31,8 +31,27 @@ export default async function AdminEventsListPage() {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 {/* Admin Page Title and Create Button */}
                 <div className="flex flex-col sm:flex-row items-center justify-between mb-8">
-                    <h2 className="text-2xl md:text-3xl font-bold text-base-content">Events Dashboard</h2>
-                    <Link href="/admin/events/create" className="btn btn-primary mt-3 sm:mt-0">
+                    <h2 className="
+                     text-2xl 
+                     md:text-3xl 
+                     font-bold 
+                     text-base-content
+                     s256:text-xs
+                     s384:text-sm
+                     s576:text-base
+                     lg:text-4xl
+                     ">Events Dashboard</h2>
+                    <Link href="/admin/events/create" className="
+                     btn 
+                     btn-primary 
+                     mt-3 
+                     sm:mt-0
+                     s256:text-xs
+                     s384:text-sm
+                     s576:text-base
+                     md:text-lg
+                     lg:text-xl
+                     xl:text-2xl">
                         Create New Event
                     </Link>
                 </div>

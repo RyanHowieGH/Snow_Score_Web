@@ -48,7 +48,16 @@ const EventList: React.FC<EventListProps> = ({
             <div className="text-center p-6 bg-base-100 rounded-box shadow-md">
                 <p className={`text-xl ${titleTextColor} opacity-70`}>{noEventsMessage || defaultNoEventsMessage}</p>
                 {showCreateButton && (
-                    <Link href="/admin/events/create" className="btn btn-primary mt-6">
+                    <Link href="/admin/events/create" className="
+                     btn 
+                     btn-primary 
+                     mt-6
+                     s256:text-xs
+                     s384:text-sm
+                     s576:text-base
+                     md:text-lg
+                     lg:text-xl
+                     xl:text-2xl">
                         Create New Event
                     </Link>
                 )}
@@ -64,7 +73,17 @@ const EventList: React.FC<EventListProps> = ({
                     {/* VVV --- CHANGED TEXT COLOR CLASS --- VVV */}
                     <h1 className={`text-3xl font-bold ${titleTextColor}`}>{title}</h1>
                     {showCreateButton && (
-                        <Link href="/admin/events/create" className="btn btn-primary btn-md">
+                        <Link href="/admin/events/create" className="
+                         btn 
+                         btn-primary 
+                         mt-6
+                         s256:text-xs
+                         s384:text-sm
+                         s576:text-base
+                         md:text-lg
+                         lg:text-xl
+                         xl:text-2xl
+                         btn-md">
                             Create New Event
                         </Link>
                     )}
@@ -75,7 +94,21 @@ const EventList: React.FC<EventListProps> = ({
             {upcomingEvents.length > 0 && (
                 <section>
                     {/* VVV --- CHANGED TEXT COLOR CLASS --- VVV */}
-                    <h2 className={`text-2xl font-semibold mb-6 ${titleTextColor} opacity-90`}>Upcoming Events</h2>
+                    <h2 className={`
+                         text-2xl 
+                         font-semibold 
+                         mb-6 
+                         ${titleTextColor} 
+                         opacity-90
+                         s256:text-xs
+                         s384:text-sm
+                         s576:text-base
+                         md:text-lg
+                         lg:text-xl
+                         xl:text-2xl
+                         2xl:text-3xl
+                         3xl:text-4xl`}>
+                            Upcoming Events</h2>
                     <ul className={`grid ${itemGridCols} gap-6`}>
                         {upcomingEvents.map(event => (
                             <EventListItem
@@ -95,7 +128,21 @@ const EventList: React.FC<EventListProps> = ({
             {pastEvents.length > 0 && (
                 <section className={upcomingEvents.length > 0 ? "mt-12 pt-8 border-t border-base-300" : ""}>
                     {/* VVV --- CHANGED TEXT COLOR CLASS --- VVV */}
-                    <h2 className={`text-2xl font-semibold mb-6 ${titleTextColor} opacity-90`}>Past Events</h2>
+                    <h2 className={`
+                         text-2xl 
+                         font-semibold 
+                         mb-6
+                         s256:text-xs
+                         s384:text-sm
+                         s576:text-base
+                         md:text-lg
+                         lg:text-xl
+                         xl:text-2xl
+                         2xl:text-3xl
+                         3xl:text-4xl 
+                         ${titleTextColor} 
+                         opacity-90`}>
+                            Past Events</h2>
                     <ul className={`grid ${itemGridCols} gap-6`}>
                         {pastEvents.map(event => (
                             <EventListItem

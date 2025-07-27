@@ -128,10 +128,27 @@ export default async function AdminEventDetailPage({
       {/* Core Event Info Display */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-xl text-secondary mb-4">
+          <h2 className="
+           card-title 
+           text-xl 
+           text-secondary 
+           mb-4
+           s256:text-xs
+           s384:text-sm
+           s576:text-lg
+           md:text-lg
+           lg:text-xl
+           xl:text-2xl
+           2xl:text-3xl
+           3xl:text-4xl">
             Quick Overview
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm
+           s256:text-xs
+           s384:text-sm
+           s576:text-base
+           md:text-lg
+           lg:text-xl">
             <p className="font-medium text-base-content/70 block">
                 Location:{" "}
                 <span className="font-normal">{event.location}</span>
@@ -301,18 +318,40 @@ const ManagementActionCard: React.FC<ManagementActionCardProps> = ({
           {icon}
         </div>{" "}
         {/* Reduced margin */}
-        <h2 className="card-title text-lg font-bold mb-1 md:mb-0">
+        <h2 className="card-title text-lg font-bold mb-1 md:mb-0
+         s256:text-xs
+         s384:text-sm
+         s576:text-base
+         md:text-lg
+         lg:text-xl
+         xl:text-2xl">
           {title}
         </h2>{" "}
         {/* Reduced margin */}
-        <p className="text-xs text-base-content/80 flex-grow mb-0">
+        <p className="text-xs 
+         text-base-content/80 
+         flex-grow 
+         mb-0
+         md:text-sm
+         md:mb-2">
           {description}
         </p>{" "}
         {/* Reduced text size & margin */}
         <div className="card-actions justify-center w-full mt-auto pt-0">
           {" "}
           {/* Reduced padding-top */}
-          <span className="btn btn-xs btn-outline btn-primary w-full md:w-auto">
+          <span className="
+           btn 
+           btn-xs 
+           md:btn-sm 
+           btn-outline 
+           btn-primary 
+           w-full 
+           md:w-auto
+           s256:btn-xs
+           s384:btn-xs
+           s576:btn-xs
+           ">
             {" "}
             {/* Smaller button */}
             Go to {title.split(" ")[0]}
