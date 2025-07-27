@@ -3,7 +3,7 @@ import getDbPool from './db';
 import { PoolClient } from 'pg';
 import { HeatForSchedule } from './definitions'; // You will create this type next
 import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
-import type { RegisteredAthleteWithDivision } from './definitions';
+import type { RegisteredAthleteWithDivision, RoundManagement } from './definitions';
 import type { EventResult, PodiumAthlete, ArticleData } from './definitions';
 import { UserWithRole } from './definitions';
 
@@ -780,4 +780,84 @@ export async function checkEventExistanceById(eventId: number): Promise<number |
      } finally {
          if (client) client.release();
      }
+}
+
+
+export async function getRoundsAndHeats(
+  eventId: number,
+  divisionId: number
+): Promise<RoundManagement[]> {
+
+  if (isNaN(eventId) || isNaN(divisionId)) {
+    console.error("Failed retrieving division information.");
+    return [];
+  }
+
+  const pool = getDbPool();
+
+  try {
+    const roundsQuery = `
+      SELECT
+        event_id,
+        round_id,
+        round_num,
+        round_name,
+        num_heats,
+        round_sequence
+      FROM ss_round_details
+      WHERE event_id    = $1
+        AND division_id = $2
+      ORDER BY round_sequence;
+    `;
+    const roundsResult = await pool.query<{
+      event_id: number;
+      round_id: number;
+      round_num: number;
+      round_name: string;
+      num_heats: number;
+      round_sequence: number;
+    }>(roundsQuery, [eventId, divisionId]);
+
+    const rounds: RoundManagement[] = roundsResult.rows.map((r) => ({
+      event_id:       r.event_id,
+      round_id:       r.round_id,
+      round_num:      r.round_num,
+      round_name:     r.round_name,
+      num_heats:      r.num_heats,
+      round_sequence: r.round_sequence,
+      heats:          null,
+    }));
+
+    const heatsQuery = `
+      SELECT
+        round_heat_id,
+        heat_num,
+        num_runs,
+        schedule_sequence
+      FROM ss_heat_details
+      WHERE round_id = $1
+      ORDER BY heat_num;
+    `;
+
+    for (const round of rounds) {
+      const heatsResult = await pool.query<{
+        round_heat_id:      number;
+        heat_num:           number;
+        num_runs:           number;
+        schedule_sequence:  number;
+      }>(heatsQuery, [round.round_id]);
+
+      round.heats = heatsResult.rows.map((h) => ({
+        heat_num:          h.heat_num,
+        num_runs:          h.num_runs,
+        schedule_sequence: h.schedule_sequence,
+      }));
+    }
+
+    console.log(`Rounds and heats information successfuly retrieved.`);
+    return rounds;
+  } catch (error) {
+    console.error(`Failed to get information for rounds and heats`, error);
+    throw new Error("Failed to fetch rounds and heats.");
+  }
 }
