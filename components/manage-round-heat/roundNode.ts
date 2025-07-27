@@ -1,4 +1,4 @@
-export class roundNode<T> {
+export default class roundNode<T> {
   public data: T;
   public next: roundNode<T> | null;
 
