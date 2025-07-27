@@ -324,7 +324,7 @@ export type RunHJData = {
 export type RoundManagement = {
     event_id: number,
     division_id: number,
-    round_id: number, 
+    round_id: number | null, 
     round_num: number, 
     round_name: string, 
     num_heats: number,

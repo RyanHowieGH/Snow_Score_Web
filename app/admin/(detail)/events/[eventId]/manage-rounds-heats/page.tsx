@@ -2,6 +2,7 @@ import React from 'react'
 import { notFound, redirect } from 'next/navigation'
 import { checkEventExistanceById, getRoundsAndHeats } from '@/lib/data'
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'
+import RoundHeatManagementDisplay from "@/components/manage-round-heat/RoundHeatManagementDisplay"
 import { Toaster } from 'react-hot-toast'
 
 export default async function ManageRoundsAndHeatsPage({ params }: { params: { eventId: string } }) {
@@ -20,8 +21,13 @@ export default async function ManageRoundsAndHeatsPage({ params }: { params: { e
         notFound();
     }
 
+    const rounds = await getRoundsAndHeats(100, 3);
 
    return (
-        <div>aa</div>
+        <div>
+            <RoundHeatManagementDisplay
+            rounds={rounds}/>
+            <Toaster/>
+        </div>
     )
 }

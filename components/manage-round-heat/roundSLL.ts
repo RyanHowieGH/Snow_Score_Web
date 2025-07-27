@@ -1,6 +1,6 @@
 import RoundNode from "@/components/manage-round-heat/roundNode";
 
-export class SinglyLinkedList<T> {
+export class roundSLL<T> {
   private head: RoundNode<T> | null = null;
   private tail: RoundNode<T> | null = null;
 
