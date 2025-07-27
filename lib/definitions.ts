@@ -322,7 +322,8 @@ export type RunHJData = {
 // ---- ROUNDS AND HEATS MANAGEMENT
 
 export type RoundManagement = {
-    event_id: number, 
+    event_id: number,
+    division_id: number,
     round_id: number, 
     round_num: number, 
     round_name: string, 

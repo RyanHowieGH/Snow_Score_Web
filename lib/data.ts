@@ -801,6 +801,7 @@ export async function getRoundsAndHeats(eventId: number, divisionId: number
         round_num,
         round_name,
         num_heats,
+        division_id,
         round_sequence
       FROM ss_round_details
       WHERE event_id    = $1
@@ -809,6 +810,7 @@ export async function getRoundsAndHeats(eventId: number, divisionId: number
     `;
     const roundsResult = await pool.query<{
       event_id: number;
+      division_id: number;
       round_id: number;
       round_num: number;
       round_name: string;
@@ -818,6 +820,7 @@ export async function getRoundsAndHeats(eventId: number, divisionId: number
 
     const rounds: RoundManagement[] = roundsResult.rows.map((r) => ({
       event_id:       r.event_id,
+      division_id:    r.division_id,
       round_id:       r.round_id,
       round_num:      r.round_num,
       round_name:     r.round_name,
@@ -839,10 +842,10 @@ export async function getRoundsAndHeats(eventId: number, divisionId: number
 
     for (const round of rounds) {
       const heatsResult = await pool.query<{
-        round_heat_id:      number;
-        heat_num:           number;
-        num_runs:           number;
-        schedule_sequence:  number;
+        round_heat_id: number;
+        heat_num: number;
+        num_runs: number;
+        schedule_sequence: number;
       }>(heatsQuery, [round.round_id]);
 
       round.heats = heatsResult.rows.map((h) => ({
