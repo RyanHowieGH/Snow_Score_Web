@@ -783,9 +783,7 @@ export async function checkEventExistanceById(eventId: number): Promise<number |
 }
 
 
-export async function getRoundsAndHeats(
-  eventId: number,
-  divisionId: number
+export async function getRoundsAndHeats(eventId: number, divisionId: number
 ): Promise<RoundManagement[]> {
 
   if (isNaN(eventId) || isNaN(divisionId)) {
@@ -856,6 +854,7 @@ export async function getRoundsAndHeats(
 
     console.log(`Rounds and heats information successfuly retrieved.`);
     return rounds;
+    
   } catch (error) {
     console.error(`Failed to get information for rounds and heats`, error);
     throw new Error("Failed to fetch rounds and heats.");

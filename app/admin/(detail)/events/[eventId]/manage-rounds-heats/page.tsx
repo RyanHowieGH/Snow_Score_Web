@@ -1,6 +1,6 @@
 import React from 'react'
 import { notFound, redirect } from 'next/navigation'
-import { fetchEventById } from '@/lib/data'
+import { checkEventExistanceById, getRoundsAndHeats } from '@/lib/data'
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'
 import { Toaster } from 'react-hot-toast'
 
@@ -15,7 +15,7 @@ export default async function ManageRoundsAndHeatsPage({ params }: { params: { e
     if (!user || !allowedRoles.includes(user.roleName)) {
         redirect('/admin');
     }
-    const eventDetails = await fetchEventById(eventId);
+    const eventDetails = await checkEventExistanceById(eventId);
     if (!eventDetails) {
         notFound();
     }
