@@ -1,4 +1,3 @@
-// app/api/get-division-round-heat/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
 import type {
@@ -10,7 +9,6 @@ import type {
 export async function GET(req: NextRequest) {
   const pool = getDbPool();
 
-  // 1) Validate query params
   const eventIdParam = req.nextUrl.searchParams.get('event_id');
   if (!eventIdParam) {
     return NextResponse.json(
@@ -39,7 +37,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 2) Fetch flat rows from DB
     const { rows } = await pool.query<{
       round_heat_id: number;
       athlete_id: number;
@@ -96,7 +93,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 3) Rebuild into ResultsHeatsHJDataMap
     const results: ResultsHeatsHJDataMap = {};
 
     rows.forEach((row) => {
@@ -115,14 +111,12 @@ export async function GET(req: NextRequest) {
         best_heat_average,
       } = row;
 
-      // -- ensure heat bucket --
       if (!results[round_heat_id]) {
         results[round_heat_id] = { athletes: [] };
       }
 
       const heatBucket = results[round_heat_id];
 
-      // -- find or create this athlete’s map --
       let athleteMap = heatBucket.athletes.find(
         (m) => Object.keys(m)[0] === String(athlete_id)
       ) as ResultsAthletesHJDataMap | undefined;
@@ -141,7 +135,6 @@ export async function GET(req: NextRequest) {
         heatBucket.athletes.push(athleteMap);
       }
 
-      // -- push this run into that athlete’s scores array --
       const athleteObj = athleteMap[athlete_id];
       const runEntry: RunHJData = {
         [run_num]: {
@@ -156,7 +149,6 @@ export async function GET(req: NextRequest) {
       athleteObj.scores.push(runEntry);
     });
 
-    // 4) Return the nested map
     return NextResponse.json(results);
   } catch (err) {
     console.error("Error in get-division-round-heat:", err);

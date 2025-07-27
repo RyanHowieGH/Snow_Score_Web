@@ -2,7 +2,7 @@
 import React from "react";
 import type { CompetitionHJData, ResultsHeatsHJDataMap, RunHJData } from "@/lib/definitions";
 import { notFound } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import RefreshSwitchButton from "@/components/RefreshSwitchButton";
 import HeadJudgeHeatScoringPanel from "@/components/head-judge-panel/HeadJudgeHeatScoringPanel"
 import HeadJudgePanelRunCell from "@/components/head-judge-panel/HeadJudgePanelRunCell"
@@ -24,6 +24,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
   const [liveSwitch, setLiveSwitch] = useState<boolean>(false);
 
+
   const handleOnLiveToggle = () => {
     setLiveSwitch((prev) => !prev);
   };
@@ -42,10 +43,43 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
       console.log("Panel is offline");
     }
     return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
     };
   }, [liveSwitch]);
 
+
+  // Progress round on page unmount
+  const latestHeaders = useRef(tableHeaders);
+  const latestRoundId = useRef(roundId);
+
+  useEffect(() => {
+    latestHeaders.current = tableHeaders;
+    latestRoundId.current = roundId;
+  }, [tableHeaders, roundId]);
+
+    useEffect(() => {
+    return () => {
+      const now = new Date();
+      const division = latestHeaders.current.divisions.find((d) => d.division_id === divisionId);
+      const endTimeOfTheFirstHeat = division?.rounds?.[0].heats?.[0].end_time;
+
+      if (!endTimeOfTheFirstHeat)
+        return;
+
+      const end = new Date(endTimeOfTheFirstHeat);
+      if (now.getTime() > end.getTime()) {
+        fetch(`/api/make-round-progress?source_round_id=${latestRoundId.current}`)
+          .then(() => console.log("Round progressed."))
+          .catch(err => console.error("Failed to progress round on unmount", err));
+        console.log(`Unmounted at ${now}, end was ${end}`);
+      }
+    };
+  }, []);
+
+
+    // Get scores
     let round_heat_ids_API = roundHeatIds.map(id => `round_heat_id=${id}`).join(`&`);
     
     useEffect(()=> {
@@ -95,7 +129,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
               <div 
               key={roundHeatId}
               className=" mb-[5%]">
-                  <div className="font-bold text-2xl text-center">        
+                  <div className="font-bold text-2xl text-center border-b-2 border-t-2 border-black mb-4">        
                     {heat ? `HEAT ${heat.heat_num}` : '—'}
                   </div>
                 {/* Heat table title*/}
@@ -122,25 +156,27 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
 
                 {/* Scrolling area*/}
                 <div className="flex">
-                <div className="overflow-x-auto w-full">
+                <div className="overflow-x-auto w-full h-150">
 
                   {(() => {
                     return (
                       <div>
                         {/* --------------------------- JUDGE SCORES ---------------------------*/}
-                        <div
-                          className="text-center text-2xl font-bold mb-[12]">JUDGE SCORES
-                        </div>
-                        {/* HEADER ROW */}
-                        <div className="flex text-xl font-bold">
-                            <div className={`${columnHeaderBibDesign}`}>BIB</div>
-                            {/* <div className={columnBibLayout}>SEEDING</div> */}
-                          {arrayOfRunNum.map(runNum => (
-                              <div key={runNum} className={`${columnHeaderRunDesign}`}>
-                                RUN {runNum}
-                              </div>
-                          ))}
-                          <div className={`${columnHeaderBestDesign}`}>BEST</div>
+                        <div className="top-0 z-10 sticky bg-gray-100 ">
+                          <div
+                            className="text-center text-2xl font-bold mb-[12]">JUDGE SCORES
+                          </div>
+                          {/* HEADER ROW */}
+                          <div className="flex text-xl font-bold">
+                              <div className={`${columnHeaderBibDesign}`}>BIB</div>
+                              {/* <div className={columnBibLayout}>SEEDING</div> */}
+                            {arrayOfRunNum.map(runNum => (
+                                <div key={runNum} className={`${columnHeaderRunDesign}`}>
+                                  RUN {runNum}
+                                </div>
+                            ))}
+                            <div className={`${columnHeaderBestDesign}`}>BEST</div>
+                          </div>
                         </div>
 
                         {/* ATHLETE SPECIFIC DATA */}
@@ -192,30 +228,28 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
                 </div>
 
                 {/* ----------------------------  STANDINGS  ---------------------------- */}
-                <div className="w-[30%] pl-[1%] mx-auto mt-[-5]">
+                <div className="w-[30%] pl-[1%] mx-auto mt-[-5] h-150 overflow-auto">
                   {(() => {
-                    // 1) pull & flatten the one‑key maps into an array
                     const athletesRaw = scoreData[roundHeatId]?.athletes ?? [];
                     const athletesList = athletesRaw.flatMap(m => Object.values(m));
-
-                    // 2) sort descending by best_heat_average
                     const sorted = [...athletesList].sort(
                       (a, b) => b.best_heat_average - a.best_heat_average
                     );
 
                     return (
-                      <div className="w-full">
-                        <div
-                        className="text-center text-2xl font-bold mb-[12]">
-                          STANDINGS
+                      <div className="w-full ">
+                        <div className="top-0 z-10 sticky bg-gray-100 ">
+                          <div
+                          className="text-center text-2xl font-bold mb-[12]">
+                            STANDINGS
+                          </div>
+                          {/* HEADER ROW */}
+                          <div className={`grid grid-cols-3 w-full text-center font-semibold bg-gray-100 py-2`}>
+                            <div className={`text-xl font-bold`}>RANK</div>
+                            <div className="text-xl font-bold">BIB</div>
+                            <div className="text-xl font-bold">BEST</div>
+                          </div>
                         </div>
-                        {/* HEADER ROW */}
-                        <div className={`grid grid-cols-3 w-full text-center font-semibold bg-gray-100 py-2`}>
-                          <div className={`text-xl font-bold`}>RANK</div>
-                          <div className="text-xl font-bold">BIB</div>
-                          <div className="text-xl font-bold">BEST</div>
-                        </div>
-
                         {/* DATA ROWS */}
                         <div className={`border-1 rounded-xl border-gray-700`}>
                           {sorted.map((athlete, idx) => (

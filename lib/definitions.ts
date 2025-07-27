@@ -319,13 +319,21 @@ export type RunHJData = {
 
 }
 
+// ---- ROUNDS AND HEATS MANAGEMENT
 
+export type RoundManagement = {
+    event_id: number,
+    division_id: number,
+    round_id: number | null, 
+    round_num: number, 
+    round_name: string, 
+    num_heats: number,
+    round_sequence: number,
+    heats: HeatManagement[] | null,
+}
 
-// export type RunHJData = {
-//     personnel_id: number;
-//     header: string;
-//     name: string;
-//     score: number | null;
-// }
-
-
+export type HeatManagement = {
+    num_runs: number, 
+    heat_num: number,
+    schedule_sequence: number,
+}
