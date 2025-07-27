@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { roundSLL } from "./roundSLL";
 import type { RoundManagement, HeatManagement } from "@/lib/definitions";
 import toast from "react-hot-toast";
+import next from "next";
 
 export type RoundHeatManagementDisplayProps = {
   rounds: RoundManagement[];
@@ -54,13 +55,23 @@ export default function RoundHeatManagementDisplay(
     });
   }
 
+  const [nextAvailableRoundId, setNextAvailableRoundId] = useState<number>();
+
   function addRound() {
-    // ROUND ID FROM MAX
+    // ROUND ID FROM MAX: it should straight up write a row with that round_id, and delete/rollback if it fails => to prevent using the same if there are people using it at the same time
+    fetch(`/api/get-max-round_id-from-event?event_id=${eventId}&division_id=${divisionId}`)
+    .then((res) => res.json() as Promise<number>)
+      .then((data) => setNextAvailableRoundId(data))
+      .catch((err) => {
+        toast.error("Failed to retrieve the next division identification available for assignment.");
+      });
+      console.log(`next available round ${nextAvailableRoundId}`);
+
     const roundOrder = roundArray.length + 1;
     const newRound: RoundManagement = {
       event_id: eventId,
       division_id: divisionId,
-      round_id: null,
+      round_id: nextAvailableRoundId ?? null,
       round_num: roundOrder,
       round_name: "NEW",
       num_heats: 1,
