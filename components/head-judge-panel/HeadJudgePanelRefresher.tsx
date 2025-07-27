@@ -63,10 +63,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
     return () => {
       const now = new Date();
       const division = latestHeaders.current.divisions.find((d) => d.division_id === divisionId);
-      const arrHeats = division?.rounds?.[0].heats;
-      const indexLastArrHeats = arrHeats?.length;
-      
-      const endTimeOfTheFirstHeat = division?.rounds?.[0].heats?.[(indexLastArrHeats ? (indexLastArrHeats - 1) : 0)].end_time;
+      const endTimeOfTheFirstHeat = division?.rounds?.[0].heats?.[0].end_time;
 
       if (!endTimeOfTheFirstHeat)
         return;
