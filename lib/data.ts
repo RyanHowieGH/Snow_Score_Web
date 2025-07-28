@@ -93,9 +93,16 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             ORDER BY d.division_name ASC;
         `; // This query now fetches num_rounds
          const athleteQuery = `
-             SELECT a.athlete_id, a.first_name, a.last_name, r.bib_num
-             FROM ss_athletes a JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
-             WHERE r.event_id = $1 ORDER BY r.bib_num ASC, a.last_name ASC, a.first_name ASC;
+             SELECT 
+                a.athlete_id, 
+                a.first_name, 
+                a.last_name, 
+                r.bib_num,
+                r.division_id -- Select the division_id from the registration table
+             FROM ss_athletes a 
+             JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
+             WHERE r.event_id = $1 
+             ORDER BY r.bib_num ASC, a.last_name ASC, a.first_name ASC;
          `;
          const judgeQuery = `
              SELECT ej.event_id, ej.personnel_id, ej.header, ej.name
