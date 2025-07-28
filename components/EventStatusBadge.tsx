@@ -10,7 +10,7 @@ interface EventStatusBadgeProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-export default function EventStatusBadge({ startDate, endDate, status, size = 'md' }: EventStatusBadgeProps) {
+export default function EventStatusBadge({ startDate, endDate, status }: EventStatusBadgeProps) {
   const eventState = getEventState(startDate, endDate);
 
   const getBadgeProps = () => {

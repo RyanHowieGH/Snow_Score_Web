@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { fetchEventById, fetchEventScheduleByEventId } from '@/lib/data';
 import { formatDate, formatDateRange, formatScheduleTime } from '@/lib/utils';
 // --- VVV THIS IS THE FIX VVV ---
-import type { EventDetails, UserWithRole, PublicScheduleItem } from '@/lib/definitions';
+import type { EventDetails, PublicScheduleItem } from '@/lib/definitions';
 // --- ^^^ END OF FIX ^^^ ---
 import { notFound } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
