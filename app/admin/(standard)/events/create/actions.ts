@@ -79,7 +79,7 @@ export async function saveDraftAndGoToManageAthletesAction(
     }
 
     const { name, location, start_date, end_date, discipline_id, division_ids } = validation.data;
-    const status = 'Draft'; // <<< --- KEY CHANGE: SAVE AS DRAFT --- <<<
+    const status = 'Inactive'; 
 
     const pool = getDbPool();
     let client: PoolClient | null = null;
