@@ -121,9 +121,6 @@ export default function RoundHeatManagementDisplay(
 
   return (
     <div>
-
-
-
       <div className="space-y-6">
         {roundArray.map((round, roundIndex) => (
           <div
@@ -208,7 +205,7 @@ export default function RoundHeatManagementDisplay(
             <button
             className="mb-4 px-3 py-1 bg-green-600 text-white rounded"
             onClick={addRound}>
-            + Add Round
+            + ADD ROUND
             </button>
         </div>
 

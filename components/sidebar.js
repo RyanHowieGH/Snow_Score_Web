@@ -50,7 +50,7 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
                 Head Judge
               </Link>
             )}
-            <Link href="/admin/settings" className="hover:bg-primary-focus p-2 rounded block">
+            <Link href="/admin/edit-details" className="hover:bg-primary-focus p-2 rounded block">
               Settings
             </Link>
           </>
