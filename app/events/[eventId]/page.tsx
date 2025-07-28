@@ -189,14 +189,21 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {event.divisions.map((division) => (
-                                <Link
-                                    key={division.division_id}
-                                    //Change the href to appropriately link to the division's live scores page
-                                    href={`/events/${eventId}/${division.division_id}`}
-                                    className="btn btn-secondary btn-outline btn-sm w-full"
-                                >
-                                    {division.division_name}
-                                </Link>
+                                <div key={division.division_id}
+>
+                                    <Link
+                                        //Change the href to appropriately link to the division's live scores page
+                                        href={`/events/${eventId}/${division.division_id}`}
+                                        className="btn btn-secondary btn-outline btn-sm w-full"
+                                    >
+                                        {division.division_name}
+                                    </Link>
+
+                                                                
+                                </div>
+
+
+
                             ))}
                             {/* {event.rounds?.map((round) => (
                                 console.log(`PublicEventDetailPage: Rendering round link for ${round.round_name} in division ${round.division_id}`),
