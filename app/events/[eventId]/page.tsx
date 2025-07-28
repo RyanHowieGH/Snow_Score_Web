@@ -111,7 +111,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                             {/* Left side: Event Name and Location */}
                             <div className="flex-grow">
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight leading-tight">
-                                    {event.name}
+                                    {event.name} 
                                 </h1>
                                 <p className="mt-2 text-lg sm:text-xl text-base-content opacity-80 flex items-center">
                                     <MapPinIcon className="h-5 w-5 mr-2 opacity-70" />
@@ -197,6 +197,9 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                 Participant list is not yet available or no athletes are registered.
                             </div>
                         )}
+                    </Section>
+                    <Section title="Results">
+                        <p className="text-base-content/70 italic">Results will be available here after the event concludes.</p>
                     </Section>
                     {/* You could add more sections here: Schedule, Results (if completed), etc. */}
                 </div>
