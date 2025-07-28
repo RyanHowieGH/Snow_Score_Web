@@ -163,14 +163,16 @@ export default async function AdminEventDetailPage({
                 Status:{' '}
               <span
                 className={`ml-1 badge badge-sm ${
-                  eventState === "ONGOING"
+                  event.status === "Inactive"
+                    ? "badge-error" // Red for inactive
+                    : eventState === "ONGOING"
                     ? "badge-success" // Green for live/ongoing
                     : eventState === "COMPLETE"
                     ? "badge-primary" // Blue/Primary for completed
-                    : "badge-ghost"   // Default/Ghost for upcoming
+                    : "badge-info"   // Info for upcoming
                 } badge-outline`}
               >
-                {eventState}
+                {event.status === 'Inactive' ? 'INACTIVE' : eventState}
               </span>
             </p>
             <p className="font-medium text-base-content/70">
@@ -271,13 +273,16 @@ export default async function AdminEventDetailPage({
 
       </div>
 
-      {/* Optional: Publish button */}
-      {(event.status?.toLowerCase() === "draft" &&
+      {/* Event Status Toggle Button */}
+      {((event.status === 'Active' || event.status === 'Inactive') &&
       allowedRolesToManageTheEvent.includes(user.roleName)) && (
         <div className="mt-8 pt-6 border-t border-base-300 text-center">
-    <PublishEventButton eventId={eventId} />
+    <PublishEventButton eventId={eventId} currentStatus={event.status as 'Active' | 'Inactive'} />
     <p className="text-xs text-base-content/60 mt-2">
-        Make this event visible to the public and open for registrations (if applicable).
+        {event.status === 'Active' ? 
+          'Deactivate this event to hide it from public view.' :
+          'Activate this event to make it visible to the public.'
+        }
     </p>
 </div>
       )}

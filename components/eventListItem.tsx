@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { formatDateRange, getEventState } from '@/lib/utils';
 import type { SnowEvent } from '@/lib/definitions';
 import { deleteEventAction } from '@/app/admin/(detail)/events/actions';
-import { TrashIcon, PencilIcon, ClockIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, PencilIcon, ClockIcon, CheckCircleIcon, CalendarIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { useRouter } from "next/navigation";
 
 interface EventListItemProps {
@@ -61,8 +61,18 @@ const EventListItem: React.FC<EventListItemProps> = ({
         });
     };
 
-    // --- VVV NEW: Define badge properties based on the calculated state VVV ---
+    // --- VVV NEW: Define badge properties based on database status first, then date state VVV ---
     const getBadgeProps = () => {
+        // If the event is Inactive in the database, show that regardless of date
+        if (event.status === 'Inactive') {
+            return {
+                text: 'INACTIVE',
+                className: 'badge-error',
+                icon: <XCircleIcon className="h-3 w-3 mr-1" />
+            };
+        }
+
+        // For Active events, show date-based status
         switch (eventState) {
             case 'ONGOING':
                 return {

@@ -89,6 +89,13 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
     }
     // --- END ADMIN CHECK ---
 
+    // --- INACTIVE EVENT CHECK ---
+    // If event is Inactive and user is not admin, return 404
+    if (event.status === 'Inactive' && !isAdmin) {
+        notFound();
+    }
+    // --- END INACTIVE EVENT CHECK ---
+
     const startDate = new Date(event.start_date);
     const endDate = new Date(event.end_date);
     const disciplineDisplay = [event.category_name, event.subcategory_name].filter(Boolean).join(' - ');
@@ -143,7 +150,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                         <InfoCard icon={<CalendarDaysIcon className="h-6 w-6 text-secondary" />} title="Dates" value={formatDateRange(startDate, endDate)} />
                         <InfoCard icon={<FlagIcon className="h-6 w-6 text-secondary" />} title="Status">
                             <div className="mt-1">
-                                <EventStatusBadge startDate={startDate} endDate={endDate} size="lg" />
+                                <EventStatusBadge startDate={startDate} endDate={endDate} status={event.status} size="lg" />
                             </div>
                         </InfoCard>
                         <InfoCard 

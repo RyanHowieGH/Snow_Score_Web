@@ -1,6 +1,6 @@
 // app/page.tsx
 import EventList from "@/components/EventList";
-import { fetchEvents } from "@/lib/data";
+import { fetchActiveEvents } from "@/lib/data";
 import type { Metadata } from 'next';
 import BlankHeader from "@/components/blankHeader";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const events = await fetchEvents();
+  const events = await fetchActiveEvents(); // Only show active events on public homepage
 
   return (
     // RESPONSIVE: Set a background color for the whole page. The gradient will be on the hero.
