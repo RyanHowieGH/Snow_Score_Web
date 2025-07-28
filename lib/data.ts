@@ -291,25 +291,25 @@ export async function fetchAssignedDivisionIds(eventId: number): Promise<number[
     }
 }
 
-const validSortColumns = ['athlete_id', 'last_name', 'nationality', 'fis_num'] as const;
+const validSortColumns = [
+    'athlete_id', 'last_name', 'nationality', 'fis_num',
+    'fis_hp_points', 'fis_ss_points', 'fis_ba_points', 'wspl_points'
+] as const;
 type SortColumn = typeof validSortColumns[number];
 type SortDirection = 'asc' | 'desc';
 
 export async function fetchAllAthletes(
-    // --- VVV NEW: Add sorting parameters VVV ---
     sortBy: SortColumn = 'athlete_id',
-    sortDirection: SortDirection = 'asc'
+    sortDirection: SortDirection = 'asc',
+    query: string = '' // Keep the search query parameter
 ): Promise<Athlete[]> {
-    // --- VVV NEW: Validate inputs to ensure they are safe VVV ---
     const orderByColumn = validSortColumns.includes(sortBy) ? sortBy : 'athlete_id';
     const orderDirection = sortDirection.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
     const pool = getDbPool();
     try {
-        // --- VVV UPDATED: The query now includes dynamic ORDER BY ---
-        // Note: We are safely injecting validated column and direction names.
-        // DO NOT use parameterized queries ($1, $2) for ORDER BY columns.
-        const query = `
+        // This query now selects all the new points columns.
+        const sqlQuery = `
             SELECT 
                 athlete_id,
                 last_name,
@@ -318,18 +318,27 @@ export async function fetchAllAthletes(
                 gender,
                 nationality,
                 stance,
-                fis_num
+                fis_num,
+                fis_hp_points,
+                fis_ss_points,
+                fis_ba_points,
+                wspl_points
             FROM ss_athletes
+            WHERE
+                first_name ILIKE $1 OR
+                last_name ILIKE $1 OR
+                CAST(fis_num AS TEXT) ILIKE $1
             ORDER BY ${orderByColumn} ${orderDirection} NULLS LAST;
         `;
-        // 'NULLS LAST' is good practice to keep rows with null values at the bottom.
+        const searchQuery = `%${query}%`;
 
-        const result = await pool.query(query);
-        return result.rows;
+        const result = await pool.query(sqlQuery, [searchQuery]);
+        
+        // We cast to Athlete[] because we've now selected all the required columns.
+        return result.rows as Athlete[];
 
     } catch (error) {
         console.error("Failed to fetch all athletes:", error);
-        // In case of error, return an empty array to prevent the page from crashing.
         return [];
     }
 }

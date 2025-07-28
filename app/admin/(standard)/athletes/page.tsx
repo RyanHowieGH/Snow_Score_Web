@@ -7,6 +7,8 @@ import { fetchAllAthletes } from '@/lib/data';
 import AthleteList from '@/components/AthleteList';
 import type { Metadata } from 'next';
 import { Athlete } from '@/lib/definitions';
+import SearchBar from '@/components/SearchBar'; // <-- We will create this next
+
 
 export const metadata: Metadata = {
     title: 'Athletes - Admin',
@@ -17,6 +19,7 @@ interface ManageAthletesPageProps {
     searchParams?: {
         sortBy?: string;
         sortDir?: string;
+        query?: string; // <-- Add query to the props
     };
 }
 
@@ -36,6 +39,8 @@ export default async function ManageAthletesPage({ searchParams }: ManageAthlete
     
     const sortBy = resolvedSearchParams?.sortBy || 'athlete_id';
     const sortDir = resolvedSearchParams?.sortDir || 'asc';
+    const query = resolvedSearchParams?.query || '';
+
     // --- ^^^ END OF CORRECTION ^^^ ---
 
     const validSortBy = ['athlete_id', 'last_name', 'nationality', 'fis_num'].includes(sortBy) ? sortBy : 'athlete_id';
@@ -44,13 +49,15 @@ export default async function ManageAthletesPage({ searchParams }: ManageAthlete
     // Fetch all athletes server-side, passing the sort parameters
     const athletes: Athlete[] = await fetchAllAthletes(
         validSortBy as any,
-        validSortDir as any
+        validSortDir as any,
+        query // Pass the query string
     );
 
     return (
         <div className="space-y-6">
              <div className='flex flex-col sm:flex-row justify-between items-center gap-4 mb-4'>
                 <h2 className="text-2xl md:text-3xl font-bold">Athletes</h2>
+                <SearchBar placeholder="Search by name or FIS #" />
             </div>
             <div className="card bg-base-100 shadow-md">
                  <div className="card-body">
