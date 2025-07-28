@@ -75,7 +75,7 @@ export interface Athlete {
     nationality: string | null;
     stance: 'Regular' | 'Goofy' | null;
     fis_num: number | null;
-    // ADDED POINTS
+    // --- VVV THIS IS THE CRITICAL ADDITION VVV ---
     fis_hp_points: number | null;
     fis_ss_points: number | null;
     fis_ba_points: number | null;
