@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const events = await fetchEvents();
+  const publicEvents = events.filter(event => event.status === 'Active');
 
   return (
     // RESPONSIVE: Set a background color for the whole page. The gradient will be on the hero.
@@ -40,7 +41,7 @@ export default async function HomePage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         {events.length > 0 ? (
           <EventList
-            events={events}
+            events={publicEvents}
             title="Discover Upcoming Events"
             showCreateButton={false}
             noEventsMessage="Stay tuned! More exciting events coming soon."

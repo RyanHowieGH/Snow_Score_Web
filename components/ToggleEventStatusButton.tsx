@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import { toggleEventStatusAction } from '@/app/admin/(detail)/events/[eventId]/actions';
 
-export default function PublishEventButton({
+export default function ToggleEventStatusButton({
   eventId,
   currentStatus,
 }: {

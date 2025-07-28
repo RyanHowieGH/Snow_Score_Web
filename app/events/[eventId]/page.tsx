@@ -89,6 +89,10 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
     }
     // --- END ADMIN CHECK ---
 
+    if (event.status === 'Inactive' && !isAdmin) {
+    notFound(); // Or redirect('/')
+}
+
     const startDate = new Date(event.start_date);
     const endDate = new Date(event.end_date);
     const disciplineDisplay = [event.category_name, event.subcategory_name].filter(Boolean).join(' - ');
