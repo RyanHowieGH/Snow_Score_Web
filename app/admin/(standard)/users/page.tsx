@@ -59,8 +59,11 @@ export default async function ManageUsersPage() {
                 <div className="card-body">
                     <h3 className="card-title">Existing Users</h3>
                     {/* --- VVV IMPLEMENTED USER LIST VVV --- */}
-                    <UserList users={existingUsers} currentUserId={user.appUserId} />
-                </div>
+<UserList 
+                        users={existingUsers} 
+                        currentUserId={user.appUserId} 
+                        assignableRoles={assignableRoles} 
+                    /></div>
             </div>
         </div>
     );
