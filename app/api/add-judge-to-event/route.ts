@@ -8,23 +8,16 @@ export async function POST(req: Request) {
   try {
     const { name, header, event_id } = await req.json();
 
-    const result = await pool.query<{ max: number }>(
-      `SELECT MAX(personnel_id) AS max FROM ss_event_judges`
-    );
 
-    const currentMax = result.rows[0].max ?? 0;
-    const next_personnel_id = currentMax + 1;
-
-    await pool.query(
+    const personnel_id = await pool.query<{ personnel_id: number }>(
       `
-      INSERT INTO ss_event_judges (personnel_id, name, header, event_id)
-      VALUES ($1, $2, $3, $4)
+      SELECT add_event_judge($1, $2, $3)
       `,
-      [next_personnel_id, name, header, event_id]
+      [event_id, header, name]
     );
-
+    
       const newJudge: Judge = {
-        personnel_id: String(next_personnel_id),
+        personnel_id: String(personnel_id),
         name,
         header,
         event_id,
