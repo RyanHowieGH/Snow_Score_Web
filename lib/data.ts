@@ -3,7 +3,7 @@ import getDbPool from './db';
 import { PoolClient } from 'pg';
 import { HeatForSchedule } from './definitions'; // You will create this type next
 import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
-import type { RegisteredAthleteWithDivision, RoundManagement } from './definitions';
+import type { DivisionToMainEventPage, RegisteredAthleteWithDivision, RoundManagement, RoundToMainEventPage } from './definitions';
 import type { EventResult, PodiumAthlete, ArticleData } from './definitions';
 import { UserWithRole } from './definitions';
 
@@ -180,42 +180,63 @@ export async function fetchEvents(): Promise<SnowEvent[]> {
     }
 }
 
-export async function fetchEventsFilteredByRoleId(roleId: number): Promise<SnowEvent[]> {
-    console.log("Fetching all events...");
-    const placeholderUrl = "postgres://user:pass@localhost:5432/db";
-    if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL === placeholderUrl) {
-        console.warn("fetchEvents: database is not configured, returning empty list.");
-        return [];
-    }
 
+export async function fetchDivisionsAndRoundsByEventId(event_id: number): Promise<DivisionToMainEventPage[]> {
     const pool = getDbPool();
     let client: PoolClient | null = null;
-    try {
-        client = await pool.connect();
-        const result = await client.query(
-          `SELECT e.event_id, name, start_date, end_date, location, status 
-          FROM ss_events e
-          JOIN ss_event_personnel ep ON e.event_id = ep.event_id
-          WHERE user_id = $1
-          ORDER BY start_date DESC`, 
-          [roleId]
-        );
-        const events: SnowEvent[] = result.rows.map(row => ({
-            event_id: row.event_id,
-            name: row.name,
-            start_date: new Date(row.start_date),
-            end_date: new Date(row.end_date),
-            location: row.location,
-            status: row.status,
-        }));
-        console.log(`Fetched ${events.length} events.`);
-        return events;
-    } catch (error) {
-        console.error("Error fetching all events:", error);
-        return [];
-    } finally {
-        if (client) client.release();
+  try {
+    client = await pool.connect();
+    const result = await client.query<{
+      division_id: number;
+      division_name: string;
+      round_id: number;
+      round_name: string;
+    }>(
+      `
+      SELECT
+        d.division_id,
+        d.division_name,
+        rd.round_id,
+        rd.round_name
+      FROM ss_round_details rd
+      JOIN ss_division d
+        ON d.division_id = rd.division_id
+      WHERE rd.event_id = $1;
+      `,
+      [event_id]
+    );
+
+    // Group rows by division
+    const divisionMap: Record<
+      number,
+      { division_name: string; rounds: RoundToMainEventPage[] }
+    > = {};
+
+    for (const row of result.rows) {
+      const { division_id, division_name, round_id, round_name } = row;
+      if (!divisionMap[division_id]) {
+        divisionMap[division_id] = { division_name, rounds: [] };
+      }
+      divisionMap[division_id].rounds.push({ round_id, round_name });
     }
+
+    // Convert map to array
+    const data: DivisionToMainEventPage[] = Object.entries(divisionMap).map(
+      ([id, { division_name, rounds }]) => ({
+        division_id: Number(id),
+        division_name,
+        rounds,
+      })
+    );
+
+    console.log(`Fetched ${data.length} divisions for event ${event_id}.`);
+    return data;
+  } catch (error) {
+    console.error('Error fetching competition data:', error);
+    return [];
+  } finally {
+    if (client) client.release();
+  }
 }
 
 export async function fetchDisciplines(): Promise<Discipline[]> {

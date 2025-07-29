@@ -14,8 +14,8 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const eventId = parseInt(eventIdParam, 10);
-  const divisionId = parseInt(divisionIdParam, 10);
+  const eventId = parseInt(eventIdParam);
+  const divisionId = parseInt(divisionIdParam);
 
   if (isNaN(eventId) || isNaN(divisionId)) {
     return NextResponse.json(
