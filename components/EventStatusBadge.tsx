@@ -1,20 +1,29 @@
 // components/EventStatusBadge.tsx
 import React from 'react';
 import { getEventState } from '@/lib/utils';
-import { ClockIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { ClockIcon, CheckCircleIcon, CalendarIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 interface EventStatusBadgeProps {
   startDate: Date;
   endDate: Date;
-  size?: 'xs' | 'sm' | 'md' | 'lg'; // Add the optional size prop
-
-  // You can add size props for flexibility later, e.g., size: 'sm' | 'md'
+  status?: string; // Database status field
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-export default function EventStatusBadge({ startDate, endDate, size = 'md' }: EventStatusBadgeProps) {
+export default function EventStatusBadge({ startDate, endDate, status }: EventStatusBadgeProps) {
   const eventState = getEventState(startDate, endDate);
 
   const getBadgeProps = () => {
+    // If the event is Inactive in the database, show that regardless of date
+    if (status === 'Inactive') {
+      return {
+        text: 'Inactive',
+        className: 'badge-error',
+        icon: <XCircleIcon className="h-4 w-4 mr-1.5" />
+      };
+    }
+
+    // For Active events, show date-based status
     switch (eventState) {
       case 'ONGOING':
         return {
