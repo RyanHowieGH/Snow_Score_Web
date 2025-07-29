@@ -4,10 +4,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { fetchEventById, fetchEventScheduleByEventId } from '@/lib/data';
+import { fetchEventById, fetchEventScheduleByEventId, fetchDivisionsAndRoundsByEventId } from '@/lib/data';
 import { formatDate, formatDateRange, formatScheduleTime } from '@/lib/utils';
 // --- VVV THIS IS THE FIX VVV ---
-import type { EventDetails, UserWithRole, PublicScheduleItem } from '@/lib/definitions';
+import type { EventDetails, UserWithRole, PublicScheduleItem, DivisionToMainEventPage } from '@/lib/definitions';
 // --- ^^^ END OF FIX ^^^ ---
 import { notFound } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
@@ -96,6 +96,10 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
     const startDate = new Date(event.start_date);
     const endDate = new Date(event.end_date);
     const disciplineDisplay = [event.category_name, event.subcategory_name].filter(Boolean).join(' - ');
+
+    // LIVE RESULTS
+
+    const competitionData = await fetchDivisionsAndRoundsByEventId(parseInt(params.eventId));
 
     return (
         <main className="bg-base-200 min-h-screen">
@@ -190,26 +194,29 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                         )}
                     </Section>                    
                     
-                    {/* Live Scores by Division Section */}
-                    {event.divisions && event.divisions.length > 0 && (
-                        <Section title="Live Scores by Division">
-                            <p className="text-base-content/70 mb-4 text-sm">
-                                Click on a division below to view live standings and results.
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {event.divisions.map((division) => (
-                                    <Link
-                                        key={division.division_id}
-                                        // TODO: Update this href to the correct final path for division results
-                                        href={`/events/${eventId}/${division.division_id}`}
-                                        className="btn btn-outline btn-secondary w-full"
-                                    >
-                                        {division.division_name}
-                                    </Link>
-                                ))}
+                    {/* Live Scores by Division Section */} 
+                    <Section title="Live results">
+                    <p className="text-base-content/70 mb-4 text-sm">
+                        Click on a division below to view live standings and results.
+                    </p>
+                    
+                        {competitionData.map((division) => (
+                            <div className='flex' key={division.division_id}>
+                                <div className='border-1 border-secondary w-[30%] rounded text-center p-[0.5%] mb-[1%] mr-[2%]'>{division.division_name}</div>
+                                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
+                                    {division.rounds.map((round) => (
+                                    <div
+                                     className="btn btn-outline btn-secondary w-full"
+                                    key={`${division.division_id}-${round.round_id}`}>
+                                        <Link href={`/events/${division.division_id}/${round.round_id}`}>                                        
+                                            {round.round_name}
+                                        </Link>
+                                    </div>
+                                    ))}
+                                </div>
                             </div>
-                        </Section>
-                    )}
+                            ))}
+                    </Section>      
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">

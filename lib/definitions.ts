@@ -1,5 +1,7 @@
 // lib\definitions.ts
 
+import RoundHeatManagementDisplay from "@/components/manage-round-heat/RoundHeatManagementDisplay";
+
 // --- Core Application Models ---
 
 export interface SnowEvent {
@@ -336,4 +338,15 @@ export type HeatManagement = {
     num_runs: number, 
     heat_num: number,
     schedule_sequence: number,
+}
+
+export type DivisionToMainEventPage = {
+    division_id: number,
+    division_name: string,
+    rounds: RoundToMainEventPage[],
+}
+
+export type RoundToMainEventPage = {
+    round_id: number,
+    round_name: string,
 }

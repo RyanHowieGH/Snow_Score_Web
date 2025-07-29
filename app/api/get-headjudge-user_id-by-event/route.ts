@@ -19,29 +19,10 @@ export async function GET(req: NextRequest) {
   }>(
     `
     SELECT
-      e.name           AS event_name,
-      d.division_id,
-      d.division_name,
-      rd.round_id,
-      rd.round_name,
-      rd.num_heats,
-      hd.round_heat_id,
-      hd.heat_num,
-      hd.num_runs,
-      hd.start_time,
-      hd.end_time
-    FROM ss_events e
-    JOIN ss_event_divisions ed
-      ON e.event_id = ed.event_id
-    JOIN ss_division d
-      ON ed.division_id = d.division_id
-    JOIN ss_round_details rd
-      ON rd.event_id = ed.event_id
-     AND rd.division_id = ed.division_id
-    JOIN ss_heat_details hd
-      ON hd.round_id = rd.round_id
+      role_id
+    FROM ss_event_personnel
     WHERE e.event_id = $1
-    ORDER BY d.division_id, rd.round_id, hd.heat_num
+    AND event_role = 'Head Judge'
     `,
     [eventId]
   );
