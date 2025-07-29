@@ -46,11 +46,11 @@ export default function Sidebar({ isOpen, toggleSidebar, user = null }) {
               </Link>
             )}
             {canAddJudges && (
-              <Link href="/headJudge" className="hover:bg-primary-focus p-2 rounded block">
+              <Link href="/admin/headJudge" className="hover:bg-primary-focus p-2 rounded block">
                 Head Judge
               </Link>
             )}
-            <Link href="/admin/settings" className="hover:bg-primary-focus p-2 rounded block">
+            <Link href="/admin/edit-details" className="hover:bg-primary-focus p-2 rounded block">
               Settings
             </Link>
           </>

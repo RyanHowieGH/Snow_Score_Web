@@ -6,7 +6,9 @@ import type { Metadata } from 'next'
 import { fetchJudgingPanelDataByEventId, fetchEventById } from '@/lib/data'
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'
 import JudgeEventSepecificSection from "components/JudgeEventSpecificSection"
-
+import type { JudgingPanelPerEvent } from '@/lib/definitions'
+import { Toaster } from 'react-hot-toast'
+    
 export async function generateMetadata({ params }: { params: any }): Promise<Metadata> {
     const eventIdString = params?.eventId;
     if (typeof eventIdString !== 'string') return { title: 'Invalid Event ID Type' };
@@ -25,7 +27,7 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
         notFound();
     }
     const user = await getAuthenticatedUserWithRole();
-    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition'];
+    const allowedRoles = ['Executive Director', 'Administrator', 'Chief of Competition', 'Head Judge'];
     if (!user || !allowedRoles.includes(user.roleName)) {
         redirect('/admin');
     }
@@ -34,10 +36,17 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
         notFound();
     }
 
+    const panels: JudgingPanelPerEvent[] | null = await fetchJudgingPanelDataByEventId(Number(eventId));
+
     return (
         <div className="space-y-6">
+            <Toaster />
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl md:text-3xl font-bold">Manage Judges: <span className='font-normal'>{eventDetails.name}</span></h2>
+                <h2 className="text-2xl md:text-3xl font-bold">Manage Judges:{` `}
+                    <span className='font-normal'>
+                        {eventDetails.name}
+                    </span>
+                </h2>
                 <Link href={`/admin/events/${eventId}`} className="btn btn-sm btn-outline">
                     Back to Event Dashboard
                 </Link>
@@ -48,7 +57,9 @@ export default async function ManageJudgingPanelsPage({ params }: { params: { ev
                     judges={eventDetails.judges} 
                     event_id={eventId}/>
                 <div className="card-body">
-                    <ManageJudgingPanelsDisplay eventId={String(eventId)} />
+                    <ManageJudgingPanelsDisplay 
+                        panels={panels}
+                        event_id = {eventId} />
                 </div>
             </div>
         </div>

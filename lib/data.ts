@@ -3,7 +3,10 @@ import getDbPool from './db';
 import { PoolClient } from 'pg';
 import { HeatForSchedule } from './definitions'; // You will create this type next
 import { RoundWithHeats, ScheduleHeatItem } from './definitions'; // Add RoundWithHeats to definitions
-import type { RegisteredAthleteWithDivision } from './definitions';
+import type { RegisteredAthleteWithDivision, RoundManagement } from './definitions';
+import type { EventResult, PodiumAthlete, ArticleData } from './definitions';
+import { UserWithRole } from './definitions';
+
 
 
 // Import types from the centralized definitions file
@@ -20,10 +23,34 @@ import type {
 } from './definitions';
 // Note: formatDate and formatDateRange should be imported from lib/utils.ts where they are used, not usually from here.
 
+
+
 // --- Data Fetching Functions ---
+export async function fetchEventScheduleByEventId(eventId: number) {
+    const client = await getDbPool().connect();
+    try {
+        const result = await client.query(`
+            SELECT
+                rd.round_name,
+                d.division_name,
+                hd.heat_num,
+                hd.start_time,
+                hd.end_time,
+                hd.schedule_sequence
+            FROM ss_heat_details hd
+            JOIN ss_round_details rd ON hd.round_id = rd.round_id
+            JOIN ss_division d ON rd.division_id = d.division_id -- Join with ss_division
+            WHERE rd.event_id = $1
+            ORDER BY hd.schedule_sequence ASC, hd.start_time ASC;
+        `, [eventId]);
+        return result.rows;
+    } finally {
+        client.release();
+    }
+}
 
 export async function fetchEventById(eventId: number): Promise<EventDetails | null> {
-     console.log(`Fetching event details (ID: ${eventId}) including status, discipline, divisions, athletes, judges...`);
+     console.log(`Fetching event details (ID: ${eventId})...`);
      if (isNaN(eventId)) {
          console.error("fetchEventById: Invalid event ID provided.");
          return null;
@@ -35,10 +62,14 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
      try {
          client = await pool.connect();
 
+         // --- THIS QUERY IS NOW CORRECT ---
          const eventQuery = `
              SELECT
                  e.event_id, e.name, e.start_date, e.end_date, e.location, e.status,
-                 e.discipline_id, d.discipline_name
+                 e.discipline_id, 
+                 d.discipline_name,
+                 d.category_name,    -- Select category_name
+                 d.subcategory_name  -- Select subcategory_name
              FROM ss_events e
              LEFT JOIN ss_disciplines d ON e.discipline_id = d.discipline_id
              WHERE e.event_id = $1;
@@ -62,9 +93,16 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
             ORDER BY d.division_name ASC;
         `; // This query now fetches num_rounds
          const athleteQuery = `
-             SELECT a.athlete_id, a.first_name, a.last_name, r.bib_num
-             FROM ss_athletes a JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
-             WHERE r.event_id = $1 ORDER BY r.bib_num ASC, a.last_name ASC, a.first_name ASC;
+             SELECT 
+                a.athlete_id, 
+                a.first_name, 
+                a.last_name, 
+                r.bib_num,
+                r.division_id -- Select the division_id from the registration table
+             FROM ss_athletes a 
+             JOIN ss_event_registrations r ON a.athlete_id = r.athlete_id
+             WHERE r.event_id = $1 
+             ORDER BY r.bib_num ASC, a.last_name ASC, a.first_name ASC;
          `;
          const judgeQuery = `
              SELECT ej.event_id, ej.personnel_id, ej.header, ej.name
@@ -75,17 +113,6 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
              FROM ss_event_personnel ej JOIN ss_users u ON ej.user_id = u.user_id
              WHERE ej.event_id = $1 AND u.role_id = 5 AND (LOWER(ej.event_role) = 'head judge' OR LOWER(ej.event_role) = 'headjudge');
          `;
-
-         const judgingPanelQuery = `
-            SELECT rd.event_id, rd.division_id, rd.division_name, rd.round_id, hd.round_heat_id, ej.personnel_id
-            FROM ss_round_details rd JOIN ss_heat_details hd ON rd.round_id = hd.round_id
-            JOIN ss_heats_results hr ON hr.round_heat_id = hd.round_heat_id
-            JOIN ss_event_divisions ed ON ed.division_id = rd.division_id            
-            JOIN ss_event_judges ej ON rd.event_id = ej.event_id
-            WHERE ej.event_id = $1;
-         `;
-         // TO FINISH
-         // judgingPanelQuery + judgeQuery to create the Judging Panel and to create the QRCodes > then map it to create the pages, can we create the pages from a mapping function?
 
          const [divisionResult, athleteResult, judgeResult, headJudgeResult] = await Promise.all([
              client.query<Division>(divisionQuery, [eventId]),
@@ -103,6 +130,8 @@ export async function fetchEventById(eventId: number): Promise<EventDetails | nu
              status: eventData.status,
              discipline_id: eventData.discipline_id,
              discipline_name: eventData.discipline_name,
+             category_name: eventData.category_name, // This field is now available
+             subcategory_name: eventData.subcategory_name, // This field is now available
              divisions: divisionResult.rows,
              athletes: athleteResult.rows,
              judges: judgeResult.rows,
@@ -132,6 +161,44 @@ export async function fetchEvents(): Promise<SnowEvent[]> {
         client = await pool.connect();
         const result = await client.query(
           'SELECT event_id, name, start_date, end_date, location, status FROM ss_events ORDER BY start_date DESC'
+        );
+        const events: SnowEvent[] = result.rows.map(row => ({
+            event_id: row.event_id,
+            name: row.name,
+            start_date: new Date(row.start_date),
+            end_date: new Date(row.end_date),
+            location: row.location,
+            status: row.status,
+        }));
+        console.log(`Fetched ${events.length} events.`);
+        return events;
+    } catch (error) {
+        console.error("Error fetching all events:", error);
+        return [];
+    } finally {
+        if (client) client.release();
+    }
+}
+
+export async function fetchEventsFilteredByRoleId(roleId: number): Promise<SnowEvent[]> {
+    console.log("Fetching all events...");
+    const placeholderUrl = "postgres://user:pass@localhost:5432/db";
+    if (!process.env.POSTGRES_URL || process.env.POSTGRES_URL === placeholderUrl) {
+        console.warn("fetchEvents: database is not configured, returning empty list.");
+        return [];
+    }
+
+    const pool = getDbPool();
+    let client: PoolClient | null = null;
+    try {
+        client = await pool.connect();
+        const result = await client.query(
+          `SELECT e.event_id, name, start_date, end_date, location, status 
+          FROM ss_events e
+          JOIN ss_event_personnel ep ON e.event_id = ep.event_id
+          WHERE user_id = $1
+          ORDER BY start_date DESC`, 
+          [roleId]
         );
         const events: SnowEvent[] = result.rows.map(row => ({
             event_id: row.event_id,
@@ -231,36 +298,55 @@ export async function fetchAssignedDivisionIds(eventId: number): Promise<number[
     }
 }
 
-export async function fetchAllAthletes(): Promise<Athlete[]> {
-    console.log("Fetching all athletes (for general lists, not event-specific registration)...");
+const validSortColumns = [
+    'athlete_id', 'last_name', 'nationality', 'fis_num',
+    'fis_hp_points', 'fis_ss_points', 'fis_ba_points', 'wspl_points'
+] as const;
+type SortColumn = typeof validSortColumns[number];
+type SortDirection = 'asc' | 'desc';
+
+export async function fetchAllAthletes(
+    sortBy: SortColumn = 'athlete_id',
+    sortDirection: SortDirection = 'asc',
+    query: string = '' // Keep the search query parameter
+): Promise<Athlete[]> {
+    const orderByColumn = validSortColumns.includes(sortBy) ? sortBy : 'athlete_id';
+    const orderDirection = sortDirection.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+
     const pool = getDbPool();
-    let client: PoolClient | null = null;
     try {
-        client = await pool.connect();
-        const result = await client.query( // No specific type hint needed if using map
-            `SELECT
-                athlete_id, last_name, first_name, dob, gender,
-                nationality, stance, fis_num
-             FROM ss_athletes
-             ORDER BY last_name ASC, first_name ASC`
-        );
-        const athletes: Athlete[] = result.rows.map(row => ({
-            athlete_id: row.athlete_id,
-            last_name: row.last_name,
-            first_name: row.first_name,
-            dob: new Date(row.dob), // Convert to Date
-            gender: row.gender,
-            nationality: row.nationality,
-            stance: row.stance,
-            fis_num: row.fis_num,
-        }));
-        console.log(`Fetched ${athletes.length} athletes from ss_athletes.`);
-        return athletes;
+        // This query now selects all the new points columns.
+        const sqlQuery = `
+            SELECT 
+                athlete_id,
+                last_name,
+                first_name,
+                dob,
+                gender,
+                nationality,
+                stance,
+                fis_num,
+                fis_hp_points,
+                fis_ss_points,
+                fis_ba_points,
+                wspl_points
+            FROM ss_athletes
+            WHERE
+                first_name ILIKE $1 OR
+                last_name ILIKE $1 OR
+                CAST(fis_num AS TEXT) ILIKE $1
+            ORDER BY ${orderByColumn} ${orderDirection} NULLS LAST;
+        `;
+        const searchQuery = `%${query}%`;
+
+        const result = await pool.query(sqlQuery, [searchQuery]);
+        
+        // We cast to Athlete[] because we've now selected all the required columns.
+        return result.rows as Athlete[];
+
     } catch (error) {
-        console.error("Error fetching all athletes:", error);
+        console.error("Failed to fetch all athletes:", error);
         return [];
-    } finally {
-        if (client) client.release();
     }
 }
 
@@ -383,18 +469,19 @@ export async function fetchJudgingPanelDataByEventId(eventId: number): Promise<J
                 hd.heat_num,
                 hd.round_heat_id,
                 ej.personnel_id,
-                ej.header AS judge_header,
-                ej.name AS judge_name,
-                e.name,
+                ej.header    AS judge_header,
+                ej.name      AS judge_name,
                 ej.passcode,
+                e.name       AS event_name,
                 rd.round_name
             FROM   ss_round_details   rd
-            JOIN   ss_heat_details    hd ON rd.round_id      = hd.round_id
-            JOIN   ss_heat_results    hr ON hr.round_heat_id = hd.round_heat_id
-            JOIN   ss_event_divisions ed ON ed.division_id   = rd.division_id            
-            JOIN   ss_event_judges    ej ON rd.event_id      = ej.event_id
-            JOIN   ss_events          e  ON e.event_id       = rd.event_id
-            JOIN   ss_division        d  ON ed.division_id   = d.division_id
+            JOIN   ss_heat_details    hd     ON rd.round_id       = hd.round_id
+            JOIN   ss_heat_results    hr     ON hr.round_heat_id  = hd.round_heat_id
+            JOIN   ss_event_divisions ed     ON ed.division_id    = rd.division_id 
+            JOIN   ss_heat_judges     hj     ON hj.round_heat_id  = hd.round_heat_id
+            JOIN   ss_event_judges    ej     ON ej.personnel_id   = hj.personnel_id
+            JOIN   ss_events          e      ON e.event_id        = rd.event_id
+            JOIN   ss_division        d      ON d.division_id     = ed.division_id
             WHERE  ej.event_id = $1;
          `;
 
@@ -593,5 +680,202 @@ export async function fetchRosterForEvent(eventId: number): Promise<RegisteredAt
   } catch (error) {
     console.error(`[data.ts] Database Error fetching roster for event ${eventId}:`, error);
     throw new Error('Failed to fetch event roster.');
+  }
+}
+
+export async function fetchEventResultsForArticle(eventId: number): Promise<ArticleData | null> {
+    const eventDetails = await fetchEventById(eventId);
+    if (!eventDetails) return null;
+
+    const pool = getDbPool();
+    const client = await pool.connect();
+
+    try {
+        // Query to get the top 3 athletes per division for the podium
+        const resultsQuery = `
+            WITH RankedAthletes AS (
+                SELECT
+                    er.division_id,
+                    a.first_name,
+                    a.last_name,
+                    a.nationality,
+                    hr.best as final_score,
+                    ROW_NUMBER() OVER(PARTITION BY er.division_id ORDER BY hr.best DESC) as rank
+                FROM ss_heat_results hr
+                JOIN ss_event_registrations er ON hr.event_id = er.event_id AND hr.athlete_id = er.athlete_id
+                JOIN ss_athletes a ON er.athlete_id = a.athlete_id
+                WHERE hr.event_id = $1
+            )
+            SELECT
+                d.division_name,
+                json_agg(json_build_object('rank', ra.rank, 'first_name', ra.first_name, 'last_name', ra.last_name, 'nationality', ra.nationality) ORDER BY ra.rank) as podium
+            FROM RankedAthletes ra
+            JOIN ss_division d ON ra.division_id = d.division_id
+            WHERE ra.rank <= 3
+            GROUP BY d.division_name;
+        `;
+        
+        // Query to get the top 3 Canadian athletes overall
+        const topCanadiansQuery = `
+            SELECT first_name, last_name, nationality, best as final_score,
+                   ROW_NUMBER() OVER(ORDER BY best DESC) as rank
+            FROM ss_heat_results hr
+            JOIN ss_athletes a ON hr.athlete_id = a.athlete_id
+            WHERE hr.event_id = $1 AND a.nationality = 'CAN'
+            ORDER BY final_score DESC
+            LIMIT 3;
+        `;
+
+        const [resultsResult, topCanadiansResult] = await Promise.all([
+            client.query(resultsQuery, [eventId]),
+            client.query(topCanadiansQuery, [eventId])
+        ]);
+
+        return {
+            ...eventDetails,
+            results: resultsResult.rows,
+            top_canadians: topCanadiansResult.rows,
+        };
+
+    } catch (error) {
+        console.error(`Database error fetching results for article generation for event ${eventId}:`, error);
+        return null;
+    } finally {
+        client.release();
+    }
+}
+
+export async function fetchUsersWithRoles(): Promise<UserWithRole[]> {
+  const pool = getDbPool();
+  try {
+    const result = await pool.query<UserWithRole>(`
+      SELECT 
+        u.user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.auth_provider_user_id,
+        r.role_name
+      FROM ss_users u
+      JOIN ss_roles r ON u.role_id = r.role_id
+      ORDER BY r.role_id, u.last_name ASC;
+    `);
+    return result.rows;
+  } catch (error) {
+    console.error("Failed to fetch users with roles:", error);
+    return [];
+  }
+}
+
+export async function checkEventExistanceById(eventId: number): Promise<number | null> {
+     if (isNaN(eventId)) {
+         console.error("Invalid event provided.");
+         return null;
+     }
+
+     const pool = getDbPool();
+     let client: PoolClient | null = null;
+
+     try {
+         client = await pool.connect();
+
+         const eventQuery = `
+             SELECT event_id
+             FROM ss_events
+             WHERE event_id = $1;
+         `;
+         const result = await client.query(eventQuery, [eventId]);
+         if (result.rows.length === 0) {
+             return null;
+         }
+         return result.rows[0].event_id as number;
+
+     } catch (error) {
+         console.error(`The event was not found:`, error);
+         return null;
+     } finally {
+         if (client) client.release();
+     }
+}
+
+
+export async function getRoundsAndHeats(eventId: number, divisionId: number
+): Promise<RoundManagement[]> {
+
+  if (isNaN(eventId) || isNaN(divisionId)) {
+    console.error("Failed retrieving division information.");
+    return [];
+  }
+
+  const pool = getDbPool();
+
+  try {
+    const roundsQuery = `
+      SELECT
+        event_id,
+        round_id,
+        round_num,
+        round_name,
+        num_heats,
+        division_id,
+        round_sequence
+      FROM ss_round_details
+      WHERE event_id    = $1
+        AND division_id = $2
+      ORDER BY round_sequence;
+    `;
+    const roundsResult = await pool.query<{
+      event_id: number;
+      division_id: number;
+      round_id: number;
+      round_num: number;
+      round_name: string;
+      num_heats: number;
+      round_sequence: number;
+    }>(roundsQuery, [eventId, divisionId]);
+
+    const rounds: RoundManagement[] = roundsResult.rows.map((r) => ({
+      event_id:       r.event_id,
+      division_id:    r.division_id,
+      round_id:       r.round_id,
+      round_num:      r.round_num,
+      round_name:     r.round_name,
+      num_heats:      r.num_heats,
+      round_sequence: r.round_sequence,
+      heats:          null,
+    }));
+
+    const heatsQuery = `
+      SELECT
+        round_heat_id,
+        heat_num,
+        num_runs,
+        schedule_sequence
+      FROM ss_heat_details
+      WHERE round_id = $1
+      ORDER BY heat_num;
+    `;
+
+    for (const round of rounds) {
+      const heatsResult = await pool.query<{
+        round_heat_id: number;
+        heat_num: number;
+        num_runs: number;
+        schedule_sequence: number;
+      }>(heatsQuery, [round.round_id]);
+
+      round.heats = heatsResult.rows.map((h) => ({
+        heat_num:          h.heat_num,
+        num_runs:          h.num_runs,
+        schedule_sequence: h.schedule_sequence,
+      }));
+    }
+
+    console.log(`Rounds and heats information successfuly retrieved.`);
+    return rounds;
+    
+  } catch (error) {
+    console.error(`Failed to get information for rounds and heats`, error);
+    throw new Error("Failed to fetch rounds and heats.");
   }
 }

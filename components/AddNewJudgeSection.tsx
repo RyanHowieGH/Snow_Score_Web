@@ -1,60 +1,49 @@
 'use client';
 import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
+import { Judge } from '@/lib/definitions';
+import { Info, X } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
 
-
-    // Judge Interface
-    export interface Judge {
-        personnel_id: string;
-        header: string;
-        name: string;
-        event_id: number;
-    }
-
-    // JudgesProps Interface
-    export interface EventJudgesProps {
-        judges: Judge[] | null;
-        event_id: Number;
-    }
-
+interface AddNewJudgeSectionProps {
+  event_id: number,
+  onAddJudgeToEvent: (judge: Judge) => void,
+}
 
 export default function AddNewJudgeSection({
-    judges,
-    event_id
-} : EventJudgesProps) {
-    const [confirmJudgeToAdd, setConfirmJudgeToAdd] = useState<string>('');
-    const [openAddJudge, setOpenAddJudge] = useState(false);
+  event_id,
+  onAddJudgeToEvent
+  }: AddNewJudgeSectionProps) {
     const [openCreateNewJudge, setCreateNewJudge] = useState(false);
 
-    // New Judge Properties (ss_event_judges)
-    const [newJudgeHeader, setNewJudgeHeader] = useState("");
-    const [newJudgeName, setNewJudgeName] = useState("");
-    // new personnel_id would be a sequence
-    // how to get the event id if this is an external component from the event page???
+    const [newJudgeHeader, setNewJudgeHeader] = useState<string>("");
+    const [newJudgeName, setNewJudgeName] = useState<string>("");
 
-    const handleSubmitNewJudge = (e: FormEvent<HTMLFormElement>) =>{
+    const handleSubmitNewJudge = async (e: FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
         try{
-            // write in the database the next number in the sequence for personnel_id, new header, new name, event_id > async
-            // useEffect to fetch the judge list
             // implement regex (prevent SQL injection here or any undesired thing)
+            const response = await fetch("/api/add-judge-to-event", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newJudgeName,
+                    header: newJudgeHeader,
+                    event_id,
+                }),
+                });
+                const data = await response.json();
+                onAddJudgeToEvent(data.judge);
+                console.log("A new judge was added to the event");
+                toast.success(`${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} was assigned to the event`);
         } catch (error) {
             console.error('Failed to add new judge', error);
+            toast.error(`Failed to assign ${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} to the event`);
         }
         finally{
             setCreateNewJudge(false);
-        }
-    };
-
-    function handleAdd(judge: Judge) {
-        try{
-            // take judge value from the selected item from dropdown and write into database > async
-            // useEffect to fetch the judge list
-        } catch (error) {
-            console.error('Failed to add new judge', error);
-        }
-        finally{
-            setOpenAddJudge(false);
+            setNewJudgeHeader(""); 
+            setNewJudgeName("");
         }
     };
 
@@ -62,72 +51,10 @@ export default function AddNewJudgeSection({
         <div>
             {/* ADD NEW JUDGE */}
             <button 
-            className="btn  mt-2 p-2 border-green-400 border-solid border-2 font-bold w-25" 
-            onClick={() => setOpenAddJudge(true)}>
-                Add +
+            className="btn btn-danger ml-[0] mt-[1%]" 
+            onClick={() =>  setCreateNewJudge(true)}>
+                Add judge
             </button>
-
-            {/* ADD NEW JUDGE FROM LIST */}
-                <Modal open={openAddJudge} onClose={() => setOpenAddJudge(false)}>
-                    <div className="text-center">
-                    <div className="mx-auto my-2 w-48">
-                        <h5 className="text-lg font-black text-gray-800 text-center">                                                                            
-                        Add Judge
-                        </h5>
-                        {/* <p className=" text-gray-498 mt-2">
-                            DO WE WANT TO HAVE ANYTHING AS A SUBTITLE? 
-                        </p> */}
-                    </div>
-                            <select
-                                id="selectedJudgeToAdd"
-                                value={confirmJudgeToAdd}
-                                onChange={e => setConfirmJudgeToAdd(e.target.value)}
-                                className="border border-gray-298 rounded px-2 py-1 w-full text-black">
-                                    <option 
-                                        value="" 
-                                        disabled>
-                                            Registered Judges
-                                    </option>
-
-                                {judges?.map((judge) => (
-                                <option 
-                                    key={judge.personnel_id} 
-                                    value={judge.personnel_id}>
-                                        {judge.name ?? judge.header}
-                                </option>
-                                ))}
-                            </select>
-
-                    <div className="flex gap-2 mt-5">
-                        <button 
-                        className="btn btn-danger w-[52%] ml-[-5]"
-                        onClick={() => {
-                            const selectedJudge = judges?.find(
-                                j => j.personnel_id === confirmJudgeToAdd) ?? null;
-                            if (selectedJudge) 
-                                {
-                                    handleAdd(selectedJudge);
-                                }
-                            setOpenAddJudge(false);
-                        }}
-                        >Add</button>
-                        <button
-                        className="btn btn-danger w-[52%] ml-[-5]"
-                        onClick={() => setOpenAddJudge(false)}>
-                        Cancel
-                        </button>
-                    </div>
-                    <div>
-                        <button
-                        className="btn bg-green-598 mt-2 w-full border-green-700"
-                        onClick={() => {
-                            setOpenAddJudge(false);
-                            setCreateNewJudge(true)}}>
-                                Create New
-                        </button>
-                    </div>
-                    </div>
-                </Modal>
 
 
             {/* CREATE AND ADD NEW JUDGE */}
@@ -136,7 +63,28 @@ export default function AddNewJudgeSection({
                     setNewJudgeHeader(""); 
                     setNewJudgeName("")}}>
                     <form onSubmit={(e) => handleSubmitNewJudge(e)}>
-                        <div>
+                        <div>      
+                            {/*Tooltip*/}      
+                            <div className="relative ml-2 group inline-block">
+
+                            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-context-menu" />
+                            <div
+                                className={`
+                                invisible group-hover:visible 
+                                opacity-0 group-hover:opacity-100 
+                                transition-all duration-150
+                                absolute left-full top-1/2
+                                ml-2 w-[2000%]
+                                -translate-y-1/2
+                                bg-gray-800 text-white text-sm 
+                                rounded p-3 shadow
+                                `}
+                            >
+                                The new judge will be assigned to every division, round and heat in this event. The judging panels QR code for this judge will be displayed once the page is refreshed.
+                            </div>
+
+                            {/*New Judge form*/}
+                            </div>
                             <h3 
                             className='text-black font-bold text-xl text-center mb-5'>
                                 New Judge
@@ -153,7 +101,7 @@ export default function AddNewJudgeSection({
                                     id="judge_header"
                                     type="text"
                                     value={newJudgeHeader}
-                                    onChange={e => setNewJudgeHeader(e.target.value.trim())}
+                                    onChange={e => setNewJudgeHeader(e.target.value)}
                                     className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
                                     placeholder="Enter header"/>
                                 </div>
@@ -168,7 +116,7 @@ export default function AddNewJudgeSection({
                                     id="judge_name"
                                     type="text"
                                     value={newJudgeName}
-                                    onChange={e => setNewJudgeName(e.target.value.trim())}
+                                    onChange={e => setNewJudgeName(e.target.value)}
                                     className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
                                     placeholder="Enter name"/>
                                 </div>

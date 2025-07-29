@@ -10,8 +10,14 @@ import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
 
 // Zod schema (can be the same as before, or simplified if draft needs fewer initial fields)
 const CreateEventSchema = z.object({
-    name: z.string().min(3, "Event name must be at least 3 characters."),
-    location: z.string().min(3, "Location must be at least 3 characters."),
+    name: z.string()
+    .min(3, "Event name must be at least 3 characters.")
+    .max(60, "Event name must not exceed 60 characters.")
+    .regex(/^[a-zA-Z0-9,' ]+$/, "Name cannot contain special characters."),
+    location: z.string()
+    .min(3, "Location must be at least 3 characters.")
+    .max(60, "Location must not exceed 60 characters.")
+    .regex(/^[a-zA-Z0-9,' ]+$/, "Location cannot contain special characters."),
     start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid start date format.")
         .refine(date => !isNaN(Date.parse(date)), { message: "Invalid start date." }),
     end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid end date format.")

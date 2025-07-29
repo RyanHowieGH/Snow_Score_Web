@@ -1,9 +1,12 @@
 // app\admin\(detail)\events\[eventId]\page.tsx
 
+export const dynamic = 'force-dynamic';
+
 import React from "react";
 import Link from "next/link";
 import { fetchEventById } from "@/lib/data";
 import { formatDate, formatDateRange } from "@/lib/utils";
+import { getEventState } from "@/lib/utils"; 
 import type { EventDetails } from "@/lib/definitions";
 import { notFound, redirect } from "next/navigation";
 import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
@@ -11,6 +14,9 @@ import type { AppUserWithRole } from "@/lib/auth/user";
 import type { Metadata } from "next";
 import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
 import PublishEventButton from '@/components/PublishEventButton';
+import { ArticleGenerator } from './ArticleGenerator'; // <-- Add this import
+import { Toaster } from 'react-hot-toast';
+import QuickviewHeadjudgeDisplay from "@/components/QuickviewHeadjudgeDisplay";
 
 // Note: AdminHeader should be in app/admin/layout.tsx, not directly here.
 // If you need to pass eventName to it, that's a more advanced layout composition.
@@ -21,6 +27,7 @@ import {
   UserGroupIcon,
   WrenchScrewdriverIcon,
   ClockIcon,
+  TableCellsIcon,
 } from "@heroicons/react/24/outline";
 
 type AdminEventDetailPageProps = {
@@ -51,12 +58,21 @@ export default async function AdminEventDetailPage({
   const eventId = Number(params.eventId);
 
   const user = await getAuthenticatedUserWithRole();
-  const allowedRoles = [
+  const allowedRolesToView = [
+    "Executive Director",
+    "Administrator",
+    "Chief of Competition",
+    "Head Judge",
+  ];
+
+   const allowedRolesToManageTheEvent = [
     "Executive Director",
     "Administrator",
     "Chief of Competition",
   ];
-  if (!user || !allowedRoles.includes(user.roleName)) {
+
+ 
+  if (!user || !allowedRolesToView.includes(user.roleName)) {
     console.warn(
       `Unauthorized access attempt to /admin/events/${eventId} by user: ${user?.email} with role: ${user?.roleName}`
     );
@@ -79,10 +95,16 @@ export default async function AdminEventDetailPage({
       : new Date(event.start_date);
   const endDate =
     event.end_date instanceof Date ? event.end_date : new Date(event.end_date);
+    const eventState = getEventState(startDate, endDate);
+
+  const disciplineDisplay = [event.category_name, event.subcategory_name]
+    .filter(Boolean) // Removes any null or undefined values
+    .join(' - '); // Joins the parts with a space, e.g., "Freestyle Big Air"
 
   return (
     // VVV --- REDUCED TOP PADDING for less headroom --- VVV
     <div className="space-y-6 p-4 md:pt-2 md:px-6 md:pb-6">
+      <Toaster />
       {/* Page Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-base-300">
         {" "}
@@ -106,85 +128,92 @@ export default async function AdminEventDetailPage({
       {/* Core Event Info Display */}
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-xl text-secondary mb-4">
+          <h2 className="
+           card-title 
+           text-xl 
+           text-secondary 
+           mb-4
+           s256:text-xs
+           s384:text-sm
+           s576:text-lg
+           md:text-lg
+           lg:text-xl
+           xl:text-2xl
+           2xl:text-3xl
+           3xl:text-4xl">
             Quick Overview
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Location:
-              </strong>{" "}
-              {event.location}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm
+           s256:text-xs
+           s384:text-sm
+           s576:text-base
+           md:text-lg
+           lg:text-xl">
+            <p className="font-medium text-base-content/70 block">
+                Location:{" "}
+                <span className="font-normal">{event.location}</span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Dates:
-              </strong>{" "}
-              {formatDateRange(startDate, endDate)}
+            <p className="font-medium text-base-content/70 block mb-0.5">
+                Dates:{" "}
+                <span className="font-normal">
+                  {formatDateRange(startDate, endDate)}
+                </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70 block mb-0.5">
-                Status:
-              </strong>
+            <p className="font-medium text-base-content/70 block mb-0.5">
+                Status:{' '}
               <span
                 className={`ml-1 badge badge-sm ${
-                  event.status?.toLowerCase() === "scheduled"
-                    ? "badge-success"
-                    : event.status?.toLowerCase() === "completed"
-                    ? "badge-primary"
-                    : event.status?.toLowerCase() === "cancelled"
-                    ? "badge-error"
-                    : "badge-ghost"
+                  eventState === "ONGOING"
+                    ? "badge-success" // Green for live/ongoing
+                    : eventState === "COMPLETE"
+                    ? "badge-primary" // Blue/Primary for completed
+                    : "badge-ghost"   // Default/Ghost for upcoming
                 } badge-outline`}
               >
-                {event.status || "N/A"}
+                {eventState}
               </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Discipline:
-              </strong>{" "}
-              {event.discipline_name || "Not Specified"}
+            <p className="font-medium text-base-content/70">
+                Discipline:{" "}
+                <span className="font-normal">
+                  {disciplineDisplay || "Not Specified"}
+                </span>
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Divisions:
-              </strong>{" "}
-              {event.divisions?.length
-                ? event.divisions
-                    .map((division) => {
-                      const count = event.athletes?.filter(
-                        (athlete) =>
-                          athlete.division_id === division.division_id
-                      ).length;
-                      return `${division.division_name} (${count})`;
-                    })
-                    .join(", ")
-                : "None"}
+            <p className="font-medium text-base-content/70">
+                Divisions:{" "}
+                <span className="font-normal">
+                  {event.divisions?.length
+                  ? event.divisions
+                      .map((division) => {
+                        const count = event.athletes?.filter(
+                          (athlete) =>
+                            athlete.division_id === division.division_id
+                        ).length;
+                        return `${division.division_name} (${count})`;
+                      })
+                      .join(", ")
+                  : 0}
+                </span>
+              
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Registered Athletes:
-              </strong>{" "}
-              {event.athletes?.length || 0}
+            <p className="font-medium text-base-content/70">
+                Registered Athletes:{" "}
+                <span className="font-normal">
+                  {event.athletes?.length || 0}
+                </span>
+              
             </p>
-            <p>
-              <strong className="font-medium text-base-content/70">
-                Assigned Judges:
-              </strong>{" "}
-              {event.judges?.length || 0}
+            <p className="font-medium text-base-content/70">
+                Assigned Judges:{" "}
+                <span className="font-normal">
+                  {event.judges?.length || 0}
+                </span>
             </p>
-            <div className="flex items-center gap-2">
-              <strong className="font-medium text-base-content/70">
-                Head Judge:
-              </strong>
-              {event.headJudge && event.headJudge.length > 0
-                ? event.headJudge
-                    .map((hj) => `${hj.first_name} ${hj.last_name}`)
-                    .join(", ")
-                : "None"}
-              <EditHeadJudgeButton eventId={eventId} userRoleId={user.roleId} />
-            </div>
+            {(!user || !allowedRolesToView.includes(user.roleName)) ? 
+              <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} permissionToEdit={false} />
+              :
+              <QuickviewHeadjudgeDisplay eventId = {eventId} userRoleId={user.roleId} event={event} permissionToEdit={true}/>
+              }
           </div>
         </div>
       </div>
@@ -193,34 +222,58 @@ export default async function AdminEventDetailPage({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 pt-2">
         {" "}
         {/* Removed margin-top that was for the header */}
-        <ManagementActionCard
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+          <ManagementActionCard
           title="Manage Schedule"
           description="Set and adjust start and end times for all heats in the event."
           linkHref={`/admin/events/${eventId}/manage-schedule`}
           icon={<ClockIcon className="h-7 w-7 text-info" />}
         />
+        )}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
         <ManagementActionCard
           title="Event Setup"
           description="Modify core details, dates, location, discipline, status, and assigned divisions."
           linkHref={`/admin/events/${eventId}/edit-details`}
           icon={<WrenchScrewdriverIcon className="h-7 w-7 text-primary" />} // Slightly smaller icon
         />
+        )}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+        <ManagementActionCard
+          title="Rounds and Heats"
+          description="Add, edit and manage rounds and heats."
+          linkHref={`/admin/events/${eventId}/manage-rounds-heats`}
+          icon={<TableCellsIcon className="h-7 w-7" />} // Slightly smaller icon
+        />)}
+
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
         <ManagementActionCard
           title="Athlete Roster"
           description="Register, view, and manage athlete participation and bib numbers."
           linkHref={`/admin/events/${eventId}/manage-athletes`}
           icon={<UsersIcon className="h-7 w-7 text-secondary" />} // Slightly smaller icon
-        />
+        />)}
+
+        {(allowedRolesToManageTheEvent.includes(user.roleName) ||
+        allowedRolesToView.includes(user.roleName)) && (
         <ManagementActionCard
           title="Judges & Officials"
           description="Assign and manage judges and other event personnel."
           linkHref={`/admin/events/${eventId}/manage-judges`}
           icon={<UserGroupIcon className="h-7 w-7 text-accent" />} // Slightly smaller icon
         />
+        )}
+        {allowedRolesToManageTheEvent.includes(user.roleName) && (
+          <ArticleGenerator eventId={eventId} />
+        )}
+
       </div>
 
       {/* Optional: Publish button */}
-      {event.status?.toLowerCase() === "draft" && (
+      {(event.status?.toLowerCase() === "draft" &&
+      allowedRolesToManageTheEvent.includes(user.roleName)) && (
         <div className="mt-8 pt-6 border-t border-base-300 text-center">
     <PublishEventButton eventId={eventId} />
     <p className="text-xs text-base-content/60 mt-2">
@@ -265,18 +318,40 @@ const ManagementActionCard: React.FC<ManagementActionCardProps> = ({
           {icon}
         </div>{" "}
         {/* Reduced margin */}
-        <h2 className="card-title text-lg font-bold mb-1 md:mb-0">
+        <h2 className="card-title text-lg font-bold mb-1 md:mb-0
+         s256:text-xs
+         s384:text-sm
+         s576:text-base
+         md:text-lg
+         lg:text-xl
+         xl:text-2xl">
           {title}
         </h2>{" "}
         {/* Reduced margin */}
-        <p className="text-xs text-base-content/80 flex-grow mb-0">
+        <p className="text-xs 
+         text-base-content/80 
+         flex-grow 
+         mb-0
+         md:text-sm
+         md:mb-2">
           {description}
         </p>{" "}
         {/* Reduced text size & margin */}
         <div className="card-actions justify-center w-full mt-auto pt-0">
           {" "}
           {/* Reduced padding-top */}
-          <span className="btn btn-xs btn-outline btn-primary w-full md:w-auto">
+          <span className="
+           btn 
+           btn-xs 
+           md:btn-sm 
+           btn-outline 
+           btn-primary 
+           w-full 
+           md:w-auto
+           s256:btn-xs
+           s384:btn-xs
+           s576:btn-xs
+           ">
             {" "}
             {/* Smaller button */}
             Go to {title.split(" ")[0]}

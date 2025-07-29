@@ -1,3 +1,5 @@
+// lib\definitions.ts
+
 // --- Core Application Models ---
 
 export interface SnowEvent {
@@ -11,8 +13,12 @@ export interface SnowEvent {
 
 export interface EventDetails extends SnowEvent {
     status: string;
-    discipline_id?: number;
+    discipline_id?: string; // Discipline ID can be a string
     discipline_name?: string;
+    // --- VVV ADD THESE NEW OPTIONAL FIELDS VVV ---
+    category_name?: string;
+    subcategory_name?: string;
+    // --- ^^^ END OF NEW FIELDS ^^^ ---
     divisions: Division[];
     athletes: RegisteredAthlete[];
     judges: Judge[];
@@ -67,81 +73,90 @@ export interface Athlete {
     dob: Date;
     gender: string;
     nationality: string | null;
-    stance: string | null;
-    fis_num: number | null; // The database stores this as a number
+    stance: 'Regular' | 'Goofy' | null;
+    fis_num: number | null;
+    // --- VVV THIS IS THE CRITICAL ADDITION VVV ---
+    fis_hp_points: number | null;
+    fis_ss_points: number | null;
+    fis_ba_points: number | null;
+    wspl_points: number | null;
 }
 
-// Represents a simple view of an athlete registered for an event.
-//export interface RegisteredAthlete {
- //   athlete_id: number;
- //   first_name: string;
- //   last_name: string;
- //   bib_num?: string | null;
-//}
-
-// Extends RegisteredAthlete to include their specific division for roster lists.
 export interface RegisteredAthleteWithDivision extends RegisteredAthlete {
     division_id: number;
     division_name: string;
 }
 
-
 // --- Athlete Registration Workflow Types ---
 
-// Represents an athlete after the CSV is parsed and checked against the DB.
-// This is what the server sends to the client for the review table.
+// Helper type for what an athlete from the DB looks like when stringified for the UI
+export type AthleteAsString = {
+    athlete_id: number;
+    last_name: string;
+    first_name: string;
+    dob: string; // dob is a string here
+    gender: string;
+    nationality: string | null;
+    stance: 'Regular' | 'Goofy' | null;
+    fis_num: number | null; // Keep as number to match Athlete type
+    fis_hp_points: number | null;
+    fis_ss_points: number | null;
+    fis_ba_points: number | null;
+    wspl_points: number | null;
+};
+
 export interface CheckedAthleteClient {
     csvIndex: number;
-    status: 'matched' | 'new' | 'error';
-    
-    // Data as it appeared in the CSV file
+    status: 'matched' | 'new' | 'error' | 'conflict';
     csvData: {
-        last_name?: string;
-        first_name?: string;
-        dob?: string;
-        gender?: string;
-        nationality?: string | null;
-        stance?: 'Regular' | 'Goofy' | '' | null;
-        fis_num?: string | null;
-    };
-
-    // Details from the server's check
-    validationError?: string;
-    dbAthleteId?: number | null;
-    dbDetails?: { // Data as it exists in the database
-        first_name: string;
         last_name: string;
+        first_name: string;
         dob: string;
         gender: string;
         nationality: string | null;
-        stance: string | null;
-        fis_num: number | null;
+        stance: 'Regular' | 'Goofy' | '' | null;
+        fis_num: string | null;
+        fis_hp_points?: any;
+        fis_ss_points?: any;
+        fis_ba_points?: any;
+        wspl_points?: any;
     };
-    
-    // UI state, managed on the client
+    validationError?: string;
+    dbAthleteId?: number | null;
+    dbDetails?: AthleteAsString;
+    conflictDetails?: {
+        conflictOn: 'fis_num' | 'name+dob';
+        conflictingAthlete: AthleteAsString;
+    };
+    // UI state
     isSelected?: boolean;
+    isOverwrite?: boolean;
     assigned_division_id?: number | null;
     suggested_division_id?: number | null;
     suggested_division_name?: string | null;
 }
 
-// Represents the final, cleaned data sent to the registration server action.
 export interface AthleteToRegister {
     csvIndex: number;
     status: 'matched' | 'new';
     division_id: number;
-    // We send the CSV data back, as it might have been corrected by the user.
-    last_name?: string;
-    first_name?: string;
-    dob?: string;
-    gender?: string;
-    nationality?: string | null;
-    stance?: string | null;
-    fis_num?: number | null; // Note: number, as expected by the DB
-    dbAthleteId?: number | null; // The ID if the athlete was matched
+    last_name: string;
+    first_name: string;
+    dob: string;
+    gender: string;
+    nationality: string | null;
+    stance: 'Regular' | 'Goofy' | null;
+    fis_num: number | null;
+    dbAthleteId?: number | null;
+    isOverwrite?: boolean;
+    // ADDED POINTS
+    fis_hp_points?: number | null;
+    fis_ss_points?: number | null;
+    fis_ba_points?: number | null;
+    wspl_points?: number | null;
 }
 
-// Represents the outcome of a single athlete's registration attempt.
+
 export interface RegistrationResultDetail {
     athleteName: string;
     status: string;
@@ -202,3 +217,123 @@ export type ScheduleHeatItem = {
   end_time: string | null;
   schedule_sequence: number | null;
 };
+
+export interface PublicScheduleItem {
+  round_name: string;
+  division_name: string;
+  heat_num: number;
+  start_time: Date | null;
+  end_time: Date | null;
+  schedule_sequence: number | null;
+}
+// --- Article Generation Types ---
+
+export interface PodiumAthlete {
+    rank: number;
+    first_name: string;
+    last_name: string;
+    nationality: string | null;
+}
+
+export interface EventResult {
+    division_name: string;
+    podium: PodiumAthlete[];
+}
+
+export interface ArticleData extends EventDetails {
+    results: EventResult[];
+    top_canadians: PodiumAthlete[];
+}
+
+export type UserWithRole = {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role_name: string;
+  auth_provider_user_id: string; // This is the Clerk ID needed for deletion
+};
+
+// --- HEAD JUDGE PANEL DATA TYPES ---
+
+export type CompetitionHJData = {
+    event_name: string,
+    divisions: DivisionHJData[], 
+}
+
+export type DivisionHJData = {
+  division_id: number;
+  division_name: string;
+  rounds: RoundHJData[];
+};
+
+export type RoundHJData = {
+  round_id: number;
+  round_name: string;
+  num_heats: number;
+  heats: HeatHJData[];
+};
+
+export type HeatHJData = {
+    round_heat_id: number,
+    heat_num: number,
+    num_runs: number,
+    start_time: Date,
+    end_time: Date,
+}
+
+export type ResultsHeatsHJDataMap = {
+    [round_heat_id: number]: {
+        athletes: ResultsAthletesHJDataMap[];
+    }
+}
+
+export type ResultsAthletesHJDataMap = {
+    [athlete_id: number]:{
+        athlete_id: number;
+        bib_num: number;
+        seeding: number;
+        run_average: number;
+        best_heat_average: number;
+        scores: RunHJData[];
+    }
+}
+
+export type RunCell = {
+    athlete_name: string,
+    bib_num: number,
+    run_num: number,
+    run_average: number | null,
+    judgesScore: RunHJData[];
+}
+
+export type RunHJData = {
+    [run_num: number] : {
+        run_result_id: number;
+        personnel_id: number;
+        header: string;
+        name: string;
+        score: number | null;
+        run_average:number;
+    }
+
+}
+
+// ---- ROUNDS AND HEATS MANAGEMENT
+
+export type RoundManagement = {
+    event_id: number,
+    division_id: number,
+    round_id: number | null, 
+    round_num: number, 
+    round_name: string, 
+    num_heats: number,
+    round_sequence: number,
+    heats: HeatManagement[] | null,
+}
+
+export type HeatManagement = {
+    num_runs: number, 
+    heat_num: number,
+    schedule_sequence: number,
+}

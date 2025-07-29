@@ -7,38 +7,32 @@ import getDbPool from '@/lib/db';
 import { PoolClient } from 'pg';
 import { revalidatePath } from 'next/cache';
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user';
-// Import your central data fetching functions and types
 import { getDivisionsForEvent, fetchAllAthletes, fetchRosterForEvent } from '@/lib/data';
-import type { Division, Athlete, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision } from '@/lib/definitions';
+import type { Division, Athlete, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision, AthleteAsString } from '@/lib/definitions';
 
-
-// --- Zod Schema for robust CSV validation (WITH THE FIXES) ---
+// --- Zod Schema  ---
 const AthleteCsvSchema = z.object({
     last_name: z.string().min(1, "Last name is required."),
     first_name: z.string().min(1, "First name is required."),
-    // Transform dob string into a Date object upon successful validation
-    dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "DOB must be YYYY-MM-DD.").transform((dateStr, ctx) => {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) {
-            ctx.addIssue({ code: z.ZodIssueCode.invalid_date, message: "Invalid date." });
-            return z.NEVER;
-        }
-        return date;
-    }),
+    dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "DOB must be YYYY-MM-DD.").transform((dateStr) => new Date(dateStr)),
     gender: z.string().min(1, "Gender is required."),
-    nationality: z.string().length(3, "Nationality must be 3 letters.").toUpperCase().nullable().optional().transform(val => val === '' ? null : val),
-    stance: z.enum(['Regular', 'Goofy', '']).nullable().optional().transform(val => val === '' ? null : val),
-    // Keep fis_num as a string during this validation phase
-    fis_num: z.preprocess((val) => (typeof val === 'string' && val.trim() !== '') ? val.trim() : null, z.string().regex(/^\d{7}$/, "FIS number must be 7 digits.").nullable().optional()),
+    nationality: z.string().length(3).toUpperCase().optional().transform(val => val === '' ? null : val).nullable(),
+    stance: z.enum(['Regular', 'Goofy', '']).optional().transform(val => val === '' ? null : val).nullable(),
+    fis_num: z.preprocess((val) => (val === '' ? null : val), z.string().regex(/^\d{7}$/).optional().nullable()),
+    fis_hp_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
+    fis_ss_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
+    fis_ba_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
+    wspl_points: z.preprocess((val) => (val === "" || val === null || val === undefined ? null : val), z.coerce.number().optional().nullable()),
 });
 
-// --- Helper Authorization Function ---
+// --- Helper Authorization Function (no changes needed) ---
 async function authorizeAction() {
     const user = await getAuthenticatedUserWithRole();
     if (!user || !['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.roleName)) {
         throw new Error('Unauthorized');
     }
 }
+
 
 // --- Action 1: Get Event Divisions (Wrapper for security) ---
 export async function getEventDivisions(eventId: number): Promise<{ success: boolean; data?: Division[]; error?: string }> {
@@ -52,7 +46,7 @@ export async function getEventDivisions(eventId: number): Promise<{ success: boo
     }
 }
 
-// --- Action 2: Check Athletes Against DB (The Review Step) ---
+// --- Action 2: Check Athletes Against DB (Fully Corrected) ---
 export async function checkAthletesAgainstDb(
     eventId: number,
     parsedAthletesFromCsv: unknown[]
@@ -62,7 +56,7 @@ export async function checkAthletesAgainstDb(
         
         const [allAthletesInDb, eventDivisions] = await Promise.all([ fetchAllAthletes(), getDivisionsForEvent(eventId) ]);
         if (eventDivisions.length === 0) {
-            return { success: false, error: "This event has no assigned divisions. Please add divisions in 'Event Setup' first." };
+            return { success: false, error: "This event has no assigned divisions." };
         }
 
         const checkedAthletes: CheckedAthleteClient[] = parsedAthletesFromCsv.map((row, index) => {
@@ -71,19 +65,21 @@ export async function checkAthletesAgainstDb(
             if (!validation.success) {
                 return {
                     csvIndex: index, status: 'error',
-                    csvData: { ...row as any }, // Show the raw data that failed
+                    csvData: { ...row as any },
                     validationError: JSON.stringify(validation.error.flatten().fieldErrors),
                 };
             }
             
-            const csvAthlete = validation.data; // csvAthlete.dob is now a Date object
+            const csvAthlete = validation.data;
             
-            // Match by a combination of first name, last name, and date of birth.
-            const matchedDbAthlete = allAthletesInDb.find(dbAthlete =>
+            const nameDobMatch = allAthletesInDb.find(dbAthlete =>
                 dbAthlete.first_name.toLowerCase() === csvAthlete.first_name.toLowerCase() &&
                 dbAthlete.last_name.toLowerCase() === csvAthlete.last_name.toLowerCase() &&
                 new Date(dbAthlete.dob).toISOString().split('T')[0] === csvAthlete.dob.toISOString().split('T')[0]
             );
+
+            const fisNumAsInt = csvAthlete.fis_num ? parseInt(csvAthlete.fis_num, 10) : null;
+            const fisNumMatch = fisNumAsInt ? allAthletesInDb.find(dbAthlete => dbAthlete.fis_num === fisNumAsInt) : undefined;
 
             let suggestedDivision: Division | undefined;
             const genderUpper = csvAthlete.gender.toUpperCase();
@@ -92,21 +88,59 @@ export async function checkAthletesAgainstDb(
             } else if (['F', 'FEMALE', 'WOMEN', 'W'].includes(genderUpper)) {
                 suggestedDivision = eventDivisions.find(d => d.division_name.toUpperCase() === 'FEMALE') || eventDivisions.find(d => d.division_name.toUpperCase() === 'WOMEN');
             }
+            
+            const formatAthleteForUI = (athlete: Athlete): AthleteAsString => ({
+                ...athlete,
+                dob: new Date(athlete.dob).toISOString().split('T')[0],
+            });
+
+            // This object now perfectly matches the `CheckedAthleteClient['csvData']` type
+            const formattedCsvData = {
+                last_name: csvAthlete.last_name,
+                first_name: csvAthlete.first_name,
+                dob: csvAthlete.dob.toISOString().split('T')[0],
+                gender: csvAthlete.gender,
+                nationality: csvAthlete.nationality ?? null,
+                stance: csvAthlete.stance ?? null,
+                fis_num: csvAthlete.fis_num ?? null,
+                fis_hp_points: csvAthlete.fis_hp_points ?? null,
+                fis_ss_points: csvAthlete.fis_ss_points ?? null,
+                fis_ba_points: csvAthlete.fis_ba_points ?? null,
+                wspl_points: csvAthlete.wspl_points ?? null,
+            };
+
+            if (nameDobMatch) {
+                return {
+                    csvIndex: index,
+                    status: 'matched',
+                    csvData: formattedCsvData,
+                    dbAthleteId: nameDobMatch.athlete_id,
+                    dbDetails: formatAthleteForUI(nameDobMatch),
+                    suggested_division_id: suggestedDivision?.division_id ?? null,
+                    suggested_division_name: suggestedDivision?.division_name ?? null,
+                };
+            }
+
+            if (fisNumMatch) {
+                return {
+                    csvIndex: index,
+                    status: 'conflict',
+                    csvData: formattedCsvData,
+                    dbAthleteId: fisNumMatch.athlete_id,
+                    conflictDetails: {
+                        conflictOn: 'fis_num',
+                        conflictingAthlete: formatAthleteForUI(fisNumMatch)
+                    },
+                    suggested_division_id: suggestedDivision?.division_id ?? null,
+                    suggested_division_name: suggestedDivision?.division_name ?? null,
+                };
+            }
 
             return {
                 csvIndex: index,
-                status: matchedDbAthlete ? 'matched' : 'new',
-                csvData: {
-                    ...csvAthlete,
-                    dob: csvAthlete.dob.toISOString().split('T')[0], // Convert Date back to string for UI
-                },
-                dbAthleteId: matchedDbAthlete?.athlete_id ?? null,
-                dbDetails: matchedDbAthlete ? {
-                    first_name: matchedDbAthlete.first_name, last_name: matchedDbAthlete.last_name,
-                    dob: new Date(matchedDbAthlete.dob).toISOString().split('T')[0],
-                    gender: matchedDbAthlete.gender, nationality: matchedDbAthlete.nationality,
-                    stance: matchedDbAthlete.stance, fis_num: matchedDbAthlete.fis_num,
-                } : undefined,
+                status: 'new',
+                csvData: formattedCsvData,
+                dbAthleteId: null,
                 suggested_division_id: suggestedDivision?.division_id ?? null,
                 suggested_division_name: suggestedDivision?.division_name ?? null,
             };
@@ -119,7 +153,8 @@ export async function checkAthletesAgainstDb(
     }
 }
 
-// --- Action 3: Add and Register Confirmed Athletes (The Final Step) ---
+
+// --- Action 3: Add and Register Confirmed Athletes (Fully Corrected) ---
 export async function addAndRegisterAthletes(
     eventId: number,
     athletesToRegister: AthleteToRegister[]
@@ -129,7 +164,6 @@ export async function addAndRegisterAthletes(
     } catch(err) {
         return { success: false, error: 'Unauthorized.' };
     }
-
     if (!eventId || !athletesToRegister || athletesToRegister.length === 0) {
         return { success: false, error: "Missing or invalid event ID or athlete data." };
     }
@@ -146,29 +180,49 @@ export async function addAndRegisterAthletes(
             let athleteId = athlete.dbAthleteId;
 
             try {
-                // If it's a new athlete, insert them into ss_athletes first
-                if (athlete.status === 'new' && !athleteId) {
+                if (athlete.isOverwrite && athleteId) {
+                    // UPDATE statement now includes the new points fields
+                    await client.query(
+                        `UPDATE ss_athletes SET 
+                            last_name = $1, first_name = $2, dob = $3, gender = $4, nationality = $5, stance = $6, fis_num = $7,
+                            fis_hp_points = $8, fis_ss_points = $9, fis_ba_points = $10, wspl_points = $11 
+                         WHERE athlete_id = $12;`,
+                        [
+                            athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, 
+                            athlete.stance, athlete.fis_num,
+                            athlete.fis_hp_points, athlete.fis_ss_points, athlete.fis_ba_points, athlete.wspl_points,
+                            athleteId
+                        ]
+                    );
+                } else if (athlete.status === 'new' && !athleteId) {
+                    // INSERT statement now includes the new points fields
                     const insertAthleteResult = await client.query(
-                        `INSERT INTO ss_athletes (last_name, first_name, dob, gender, nationality, stance, fis_num) 
-                         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING athlete_id;`,
-                        [athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, athlete.stance, athlete.fis_num]
+                        `INSERT INTO ss_athletes (
+                            last_name, first_name, dob, gender, nationality, stance, fis_num,
+                            fis_hp_points, fis_ss_points, fis_ba_points, wspl_points
+                         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING athlete_id;`,
+                        [
+                            athlete.last_name, athlete.first_name, athlete.dob, athlete.gender, athlete.nationality, 
+                            athlete.stance, athlete.fis_num,
+                            athlete.fis_hp_points, athlete.fis_ss_points, athlete.fis_ba_points, athlete.wspl_points
+                        ]
                     );
                     athleteId = insertAthleteResult.rows[0].athlete_id;
                 }
 
                 if (!athleteId || !athlete.division_id) {
-                    throw new Error(`Missing athlete or division ID for ${athleteName}.`);
+                    throw new Error(`Missing athlete ID or assigned division ID for ${athleteName}.`);
                 }
 
                 const regRes = await client.query(
-                    `INSERT INTO ss_event_registrations (event_id, athlete_id, division_id)
-                     VALUES ($1, $2, $3) ON CONFLICT (event_id, division_id, athlete_id) DO NOTHING;`,
+                    `INSERT INTO ss_event_registrations (event_id, athlete_id, division_id) VALUES ($1, $2, $3) ON CONFLICT (event_id, division_id, athlete_id) DO NOTHING;`,
                     [eventId, athleteId, athlete.division_id]
                 );
 
                 if ((regRes?.rowCount ?? 0) > 0) {
                     registeredCount++;
-                    registrationDetails.push({ athleteName, status: "Successfully Registered." });
+                    const statusMsg = athlete.isOverwrite ? "Overwritten & Registered." : "Successfully Registered.";
+                    registrationDetails.push({ athleteName, status: statusMsg });
                 } else {
                     registrationDetails.push({ athleteName, status: "Already registered." });
                 }
@@ -178,19 +232,17 @@ export async function addAndRegisterAthletes(
             }
         }
         
-        // If any detail entry contains an error, the entire transaction should fail.
         if (registrationDetails.some(d => d.error)) {
             throw new Error("One or more athletes failed to register. Rolling back all changes.");
         }
 
         await client.query('COMMIT');
-        revalidatePath(`/admin/events/${eventId}`);
+        revalidatePath(`/admin/events/${eventId}/manage-athletes`);
         return { success: true, registeredCount, details: registrationDetails };
 
     } catch (error) {
         await client.query('ROLLBACK');
         const message = error instanceof Error ? error.message : "A critical server error occurred.";
-        console.error("CRITICAL error in addAndRegisterAthletes transaction:", error);
         return { success: false, error: message, details: registrationDetails };
     } finally {
         client.release();

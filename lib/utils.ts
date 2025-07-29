@@ -28,3 +28,73 @@ export const formatDateRange = (startInput: Date | string | undefined | null, en
 
     return `${startDateStr} - ${endDateStr}`;
 };
+
+/**
+ * Formats a Date object or string into a "Month Day, H:MM AM/PM" format.
+ * Example: "Feb 27, 9:30 AM"
+ * Handles timezones correctly for display.
+ * @param dateValue - The Date object or string to format.
+ * @returns A formatted string, or a fallback string if the date is invalid.
+ */
+export const formatScheduleTime = (dateValue: Date | string | null): string => {
+  if (!dateValue) return '-';
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return 'Invalid Time';
+
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short', // e.g., "Feb"
+      day: 'numeric',   // e.g., "27"
+      hour: 'numeric',  // e.g., "9"
+      minute: '2-digit',// e.g., "30"
+      hour12: true,     // Use AM/PM
+    }).format(date);
+  } catch (error) {
+    return 'Formatting Error';
+  }
+};
+
+/**
+ * Calculates a dynamic, time-based status for an event.
+ * @param startDate The event's start date.
+ * @param endDate The event's end date.
+ * @returns A string: "COMPLETE", "ONGOING", or "UPCOMING".
+ */
+export const getEventState = (startDate: Date, endDate: Date): 'COMPLETE' | 'ONGOING' | 'UPCOMING' => {
+  const now = new Date();
+
+  // For accurate date-only comparison, we should ignore the time part.
+  // We set the time to the beginning of the day for `now`.
+  now.setHours(0, 0, 0, 0);
+
+  // We set the time of the event end date to the very end of the day.
+  // This ensures an event ending "today" is considered ONGOING, not COMPLETE.
+  const endOfDay = new Date(endDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  if (endOfDay < now) {
+    return 'COMPLETE';
+  }
+
+  // If the start date is today or in the past, and we haven't returned COMPLETE,
+  // it must be ONGOING.
+  if (startDate <= now) {
+    return 'ONGOING';
+  }
+  
+  // If neither of the above, the event must be in the future.
+  return 'UPCOMING';
+};
+
+
+export function formatHeatTime(dateInput: string | Date): string {
+  const date = typeof dateInput === 'string'
+    ? new Date(dateInput)
+    : dateInput;
+    
+  return date.toLocaleTimeString('en-US', {
+    hour:   '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+}

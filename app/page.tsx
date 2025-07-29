@@ -1,9 +1,7 @@
 // app/page.tsx
-// import PublicHeader from "@/components/public/PublicHeader"; // Assuming you've created/renamed this
-import EventList from "@/components/EventList";     // Assuming EventList is in components/shared/
+import EventList from "@/components/EventList";
 import { fetchEvents } from "@/lib/data";
 import type { Metadata } from 'next';
-import Link from 'next/link'; // For the "Get Started" button
 import BlankHeader from "@/components/blankHeader";
 
 export const dynamic = 'force-dynamic';
@@ -11,66 +9,60 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
     title: "SnowScore - Ski & Snowboard Competition Management",
     description: "The new way to track, manage, and follow snowboarding and skiing events. Score tracking, live updates, and more.",
-    // Add more metadata tags here if needed (e.g., OpenGraph for social sharing)
 };
 
 export default async function HomePage() {
-  const events = await fetchEvents(); // Fetches SnowEvent[] with Date objects
+  const events = await fetchEvents();
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-primary to-secondary"> {/* Example gradient background */}
-      {/* <PublicHeader /> */}
-      <BlankHeader /> {/* Use your generic public header for the homepage */}
+    // RESPONSIVE: Set a background color for the whole page. The gradient will be on the hero.
+    <main className="min-h-screen bg-base-200 flex flex-col">
+      <BlankHeader />
 
       {/* Hero Section */}
-      <div className="py-12 md:py-16 bg-base-100 text-base-content text-center flex justify-center"> {/* Outer container for background and vertical padding */}
-        <div className="container mx-auto px-4 text-center justify-center flex"> {/* Centering content */}
-          <div className="text-center md:text-left max-w-3xl mx-auto md:mx-0"> {/* Max width for text block & centering on small screens */}
-            <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-4 animate-fade-in-down text-center">
+      <div className="flex-grow">
+      {/* RESPONSIVE: Gradient is now here. We use `w-full` and `container` with `px-4` for consistent padding. */}
+      <div className="w-full bg-gradient-to-br from-primary to-secondary text-primary-content text-center py-2 sm:py-4 lg:py-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto"> {/* Centering content with a max-width */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 animate-fade-in-down">
               Welcome to SnowScore
             </h1>
-            <p className="text-md sm:text-lg opacity-80 animate-fade-in-up animation-delay-300 text-center">
-              The ultimate platform for tracking, managing, and following snowboarding and skiing competitions.
-              Real-time scores, detailed event breakdowns, and seamless organization.
+            <p className="text-lg sm:text-xl lg:text-2xl opacity-90 animate-fade-in-up animation-delay-300">
+              The ultimate platform for ski & snowboard competitions.
             </p>
           </div>
         </div>
       </div>
 
       {/* Events List Section */}
-      <div className="px-4 md:px-10 py-12 md:py-16 bg-base-200 text-base-content">
-        <div className="container mx-auto">
-          {events.length > 0 ? (
-            <EventList
-              events={events}
-              title="Discover Events"
-              showCreateButton={false} // No "Create Event" button on the public homepage
-              // baseUrl, linkActionText, linkActionSuffix are not passed,
-              // so EventListItem will use its defaults:
-              // baseUrl: '/events'
-              // linkActionText: 'View Details'
-              // linkActionSuffix: ''
-              noEventsMessage="Stay tuned! More exciting events coming soon."
-              className="space-y-10" // Custom spacing for the list on homepage
-            />
-          ) : (
-            <div className="text-center p-10 bg-base-100 rounded-box shadow-xl">
-              <h2 className="text-2xl font-semibold mb-4">No Events Yet</h2>
-              <p className="text-lg text-base-content opacity-70">
-                It looks like there are no events scheduled at the moment.
-                Please check back soon for updates!
-              </p>
-            </div>
-          )}
-        </div>
+      {/* RESPONSIVE: `container` and `px` ensure consistent padding that matches the hero section. */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        {events.length > 0 ? (
+          <EventList
+            events={events}
+            title="Discover Upcoming Events"
+            showCreateButton={false}
+            noEventsMessage="Stay tuned! More exciting events coming soon."
+            // RESPONSIVE: Reduced vertical spacing on the list items for a tighter mobile view.
+            className="space-y-4 md:space-y-6"
+          />
+        ) : (
+          <div className="text-center p-8 sm:p-10 bg-base-100 rounded-box shadow-lg">
+            <h2 className="text-2xl font-semibold mb-4">No Events Scheduled</h2>
+            <p className="text-base-content/80">
+              It looks like there are no events at the moment. Please check back soon!
+            </p>
+          </div>
+        )}
       </div>
-
-      {/* Footer (Example - create a components/shared/Footer.tsx) */}
-      {/* <footer className="footer footer-center p-4 bg-base-300 text-base-content">
+    </div>
+      {/* Footer (Example) */}
+      <footer className="footer footer-center p-4 bg-base-300 text-base-content mt-8">
         <aside>
           <p>© {new Date().getFullYear()} SnowScore - All rights reserved.</p>
         </aside>
-      </footer> */}
+      </footer>
     </main>
   );
 }

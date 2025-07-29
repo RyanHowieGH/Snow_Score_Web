@@ -1,5 +1,5 @@
 import { fetchJudgingPanelDataByEventId, fetchJudgingPanelPasscode } from '@/lib/data';
-import JudgingPanelClient from '../../../../../../../components/JudgingPanelClient';
+import JudgingPanelClient from '@/components/JudgingPanelClient';
 
 type JudgingPanelPageProps = {
   params: {
@@ -35,7 +35,6 @@ export default async function JudgingPanelPage({ params }: JudgingPanelPageProps
   if (!judgePasscode) {
     return <div>Judge Passcode not found.</div>;
   }
-  
 
   return (
         <JudgingPanelClient
@@ -45,6 +44,7 @@ export default async function JudgingPanelPage({ params }: JudgingPanelPageProps
           roundId={round_id}
           roundHeatId={round_heat_id}
           personnelId={personnel_id}
+          eventName={judgingPanels[0].name}
         />
   );
 }

@@ -5,7 +5,9 @@ export async function GET() {
   const pool = getDbPool();
   try {
     const result = await pool.query(
-      `SELECT user_id, first_name, last_name, email, role_id FROM ss_users WHERE role_id = 5`
+      `SELECT user_id, first_name, last_name, email, role_id 
+       FROM ss_users 
+       WHERE role_id = 5`
     );
     return NextResponse.json(result.rows);
   } catch (err) {

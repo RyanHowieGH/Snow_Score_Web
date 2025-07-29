@@ -93,3 +93,88 @@ export async function deleteAthleteAction(athleteIdInput: unknown): Promise<Dele
         if (client) client.release();
     }
 }
+
+const UpdateAthleteSchema = z.object({
+    athleteId: z.coerce.number().int().positive(),
+    firstName: z.string().min(1, "First name is required."),
+    lastName: z.string().min(1, "Last name is required."),
+    dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "DOB must be in YYYY-MM-DD format."),
+    gender: z.string().min(1, "Gender is required."),
+    nationality: z.string().length(3, "Nationality must be 3 letters.").toUpperCase().nullable(),
+    stance: z.enum(['Regular', 'Goofy']).nullable(),
+    fisNum: z.coerce.number().int().positive().optional().nullable(),
+});
+
+export interface UpdateActionResult {
+    success: boolean;
+    message: string;
+    error?: string;
+    fieldErrors?: Record<string, string[]>;
+}
+
+// --- VVV NEW: Server Action to Update an Athlete VVV ---
+export async function updateAthleteAction(
+    prevState: UpdateActionResult | null,
+    formData: FormData
+): Promise<UpdateActionResult> {
+    // 1. Authorization Check
+    const user = await getAuthenticatedUserWithRole();
+    if (!user || !['Executive Director', 'Administrator', 'Chief of Competition'].includes(user.roleName)) {
+        return { success: false, message: "You do not have permission to edit athletes." };
+    }
+
+    // 2. Validate Form Data
+    const validation = UpdateAthleteSchema.safeParse({
+        athleteId: formData.get('athleteId'),
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        dob: formData.get('dob'),
+        gender: formData.get('gender'),
+        nationality: formData.get('nationality') || null,
+        stance: formData.get('stance') || null,
+        fisNum: formData.get('fisNum') || null,
+    });
+
+    if (!validation.success) {
+        return {
+            success: false,
+            message: "Invalid data provided.",
+            fieldErrors: validation.error.flatten().fieldErrors,
+        };
+    }
+
+    const { athleteId, ...athleteData } = validation.data;
+
+    // 3. Database Update
+    const pool = getDbPool();
+    try {
+        const updateQuery = `
+            UPDATE ss_athletes
+            SET first_name = $1, last_name = $2, dob = $3, gender = $4,
+                nationality = $5, stance = $6, fis_num = $7
+            WHERE athlete_id = $8;
+        `;
+        await pool.query(updateQuery, [
+            athleteData.firstName,
+            athleteData.lastName,
+            athleteData.dob,
+            athleteData.gender,
+            athleteData.nationality,
+            athleteData.stance,
+            athleteData.fisNum,
+            athleteId,
+        ]);
+
+        // 4. Revalidate and Return Success
+        revalidatePath('/admin/athletes');
+        return { success: true, message: "Athlete updated successfully." };
+
+    } catch (error: any) {
+        console.error("Database error updating athlete:", error);
+        // Check for unique constraint violation on fis_num
+        if (error.code === '23505') { // PostgreSQL unique violation code
+            return { success: false, message: "Update failed: The provided FIS Number is already in use by another athlete." };
+        }
+        return { success: false, message: "A database error occurred." };
+    }
+}
