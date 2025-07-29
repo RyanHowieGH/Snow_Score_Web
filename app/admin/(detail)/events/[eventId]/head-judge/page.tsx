@@ -16,6 +16,9 @@ export default async function HeadJudgePanelPage ({ params }: { params: { eventI
     if (!user || !allowedRoles.includes(user.roleName)) {
         redirect('/admin');
     }
+
+    
+
     const eventIdInDb = await checkEventExistanceById(eventId);
     if (!eventIdInDb) {
         notFound();

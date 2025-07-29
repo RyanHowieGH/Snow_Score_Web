@@ -119,53 +119,6 @@ export default function ManageJudgingPanelsDisplay({ event_id, panels }: Judging
     }
   })
 
-  // return (
-  //   <div className="space-y-6">
-  //     {Object.entries(panelsMap).map(([divisionId, { divisionName, rounds }]) => (
-  //       <div key={divisionId} className="card mb-10">
-  //         <div className="card-body space-y-4">
-  //           <h2 className="card-title text-4xl font-bold text-primary">DIVISION: {divisionName}</h2>
-  //           {Object.entries(rounds).map(([roundId, { roundName, heats }]) => (
-  //             <div key={roundId} className="space-y-3">
-  //               <h3 className="font-semibold text-secondary text-2xl mt-5">ROUND: {roundName}</h3>
-  //               {Object.entries(heats).map(([heatId, { heatNumber, personnels }]) => (
-  //                 <div key={heatId} className="space-y-2">
-  //                   <div >  
-  //                    <div className="flex justify-between items-center">
-  //                     <h4 className="text-xl font-bold">HEAT: {heatNumber}</h4>
-  //                     <button 
-  //                     className="btn bg-green-500 text-white w-[10%] ml-[0] mb-[1%]">
-  //                       Add judge</button>
-  //                   </div>
-  //                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-  //                       {Object.values(personnels).map((personnel, index) => (
-  //                         <div key={index} className="text-center space-y-2">
-  //                           <span className="font-semibold text-base-content text-xl">
-  //                             {personnel.judgeName || personnel.judgeHeader || "Unknown"}
-  //                           </span>
-  //                           <div className="mt-1">
-  //                             {JudgeQRCode(
-  //                               String(eventId),
-  //                               divisionId,
-  //                               roundId,
-  //                               heatId,
-  //                               String(personnel.personnelId),
-  //                               personnel.passcode
-  //                             )}
-  //                           </div>
-  //                         </div>
-  //                       ))}
-  //                     </div>
-  //                   </div>
-  //                 </div>
-  //               ))}
-  //             </div>
-  //           ))}
-  //         </div>
-  //       </div>
-  //     ))}
-  //   </div>
-  // )
 
    return (
     <div className="space-y-6">
