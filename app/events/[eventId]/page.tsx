@@ -96,6 +96,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
     }
     // --- END INACTIVE EVENT CHECK ---
 
+
     const startDate = new Date(event.start_date);
     const endDate = new Date(event.end_date);
     const disciplineDisplay = [event.category_name, event.subcategory_name].filter(Boolean).join(' - ');

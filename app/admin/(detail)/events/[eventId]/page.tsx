@@ -5,15 +5,15 @@ export const dynamic = 'force-dynamic';
 import React from "react";
 import Link from "next/link";
 import { fetchEventById } from "@/lib/data";
-import { formatDate, formatDateRange } from "@/lib/utils";
+import { formatDateRange } from "@/lib/utils";
 import { getEventState } from "@/lib/utils"; 
 import type { EventDetails } from "@/lib/definitions";
 import { notFound, redirect } from "next/navigation";
 import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
-import type { AppUserWithRole } from "@/lib/auth/user";
+// import type { AppUserWithRole } from "@/lib/auth/user";
 import type { Metadata } from "next";
-import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
-import PublishEventButton from '@/components/PublishEventButton';
+// import EditHeadJudgeButton from "@/components/EditHeadJudgesButton";
+import ToggleEventStatusButton from '@/components/ToggleEventStatusButton';
 import { ArticleGenerator } from './ArticleGenerator'; // <-- Add this import
 import { Toaster } from 'react-hot-toast';
 import QuickviewHeadjudgeDisplay from "@/components/QuickviewHeadjudgeDisplay";
@@ -285,6 +285,7 @@ export default async function AdminEventDetailPage({
         }
     </p>
 </div>
+
       )}
     </div>
   );
