@@ -20,6 +20,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/athletes-and-score-1y781dy7821867d12gf3lp00(.*)',
   '/api/best-run-score-per-judge-dh12cm214v98b71ss(.*)',
   '/api/scores-dj18dh12gpdi1yd89178tsadji1289(.*)',
+  '/api/public-round-data-dd21h8u1289u91288og5(.*)',
+  '/api/public-leaderboard-preset-data-jdn1hd1728g621ifkg4plh5mo(.*)',
 ]);
 
 // Ensure this is the correct URL PATH for your admin page

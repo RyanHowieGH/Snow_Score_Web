@@ -1,7 +1,5 @@
-// app/api/events/[eventId]/[divisionId]/[roundId]/[roundHeatId]/route.ts
-
 import { NextResponse, type NextRequest } from "next/server";
-import getDbPool from "@/lib/db"; // your custom DB connection utility
+import getDbPool from "@/lib/db"; 
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
