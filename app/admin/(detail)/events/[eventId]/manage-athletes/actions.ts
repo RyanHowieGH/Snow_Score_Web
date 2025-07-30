@@ -293,3 +293,34 @@ export async function getEventRoster(eventId: number): Promise<{
         return { success: false, error: message };
     }
 }
+
+const EXPECTED_CSV_HEADERS = [
+    'last_name', 'first_name', 'dob', 'gender', 'nationality', 'stance', 'fis_num',
+    'fis_hp_points', 'fis_ss_points', 'fis_ba_points', 'wspl_points'
+];
+
+export async function validateCsvHeadersAction(
+    headers: string[]
+): Promise<{ success: boolean; error?: string }> {
+    'use server';
+
+    try {
+        await authorizeAction(); // Reuse your security check
+
+        const missingHeaders = EXPECTED_CSV_HEADERS.filter(
+            expectedHeader => !headers.includes(expectedHeader)
+        );
+
+        if (missingHeaders.length > 0) {
+            const errorMessage = `Invalid CSV format. The following required columns are missing: ${missingHeaders.join(', ')}.`;
+            console.error(errorMessage);
+            return { success: false, error: errorMessage };
+        }
+
+        return { success: true };
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "An unknown server error occurred.";
+        return { success: false, error: message };
+    }
+}

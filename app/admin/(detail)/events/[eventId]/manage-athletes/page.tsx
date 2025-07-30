@@ -1,13 +1,13 @@
 // app\admin\(detail)\events\[eventId]\manage-athletes\page.tsx
 
 'use client';
-
 export const dynamic = 'force-dynamic';
 
 import React, { useState, ChangeEvent, useTransition, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Papa, { ParseResult } from 'papaparse';
-import { checkAthletesAgainstDb, addAndRegisterAthletes, getEventDivisions, deleteRegistrationAction, getEventRoster } from './actions';
+// --- VVV Import the new action VVV ---
+import { validateCsvHeadersAction, checkAthletesAgainstDb, addAndRegisterAthletes, getEventDivisions, deleteRegistrationAction, getEventRoster } from './actions';
 import Link from 'next/link';
 import { TrashIcon, InformationCircleIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import type { Division, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision } from '@/lib/definitions';
@@ -53,10 +53,16 @@ export default function ManageAthletesPage() {
         
         startRosterTransition(async () => {
             const [rosterRes, divisionsRes] = await Promise.all([ getEventRoster(id), getEventDivisions(id) ]);
-            if (rosterRes.success && rosterRes.data) setCurrentRoster(rosterRes.data);
-            else setPageError(rosterRes.error || "Failed to load roster.");
-            if (divisionsRes.success && divisionsRes.data) setEventDivisions(divisionsRes.data);
-            else setPageError(prev => prev ? `${prev} & ${divisionsRes.error}` : divisionsRes.error || "Failed to load divisions.");
+            if (rosterRes.success && rosterRes.data) {
+                setCurrentRoster(rosterRes.data);
+            } else {
+                setPageError(rosterRes.error ?? "Failed to load roster."); // Use ?? to handle undefined
+            }
+            if (divisionsRes.success && divisionsRes.data) {
+                setEventDivisions(divisionsRes.data);
+            } else {
+                setPageError(prev => prev ? `${prev} & ${divisionsRes.error ?? "Failed to load divisions."}` : (divisionsRes.error ?? "Failed to load divisions."));
+            }
         });
     }, [eventIdParam]);
     
@@ -78,6 +84,16 @@ export default function ManageAthletesPage() {
                 const results = await parseCsv(file);
                 if (!results.data.length) throw new Error("CSV file is empty or could not be parsed.");
                 
+                // --- Step 1: Validate Headers ---
+                const actualHeaders = results.meta.fields || [];
+                const headerValidation = await validateCsvHeadersAction(actualHeaders);
+
+                if (!headerValidation.success) {
+                    setPageError(headerValidation.error ?? "Invalid CSV headers."); // Show the specific error message
+                    return; // Stop the process
+                }
+                
+                // --- Step 2: If headers are valid, proceed to check athletes ---
                 const response = await checkAthletesAgainstDb(eventId, results.data);
                 if (response.success && response.data) {
                     setCheckedAthletes(response.data.athletes.map(a => ({
@@ -87,7 +103,7 @@ export default function ManageAthletesPage() {
                     })));
                     setEventDivisions(response.data.divisions);
                 } else {
-                    setPageError(response.error || "Failed to process athletes.");
+                    setPageError(response.error ?? "Failed to process athletes.");
                 }
             } catch (error) {
                 const message = error instanceof Error ? `CSV Error: ${error.message}` : "An unknown error occurred.";
@@ -153,7 +169,7 @@ export default function ManageAthletesPage() {
                 const fileInput = document.getElementById('csv-file-input') as HTMLInputElement;
                 if (fileInput) fileInput.value = '';
             } else {
-                setPageError(response.error || "Registration failed.");
+                setPageError(response.error ?? "Registration failed.");
                 setRegistrationDetails(response.details || null);
             }
         });
