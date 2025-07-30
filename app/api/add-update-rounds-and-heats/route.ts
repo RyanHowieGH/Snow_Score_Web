@@ -1,86 +1,97 @@
-import { NextRequest, NextResponse } from "next/server";
+// app/api/add-update-rounds-and-heats/route.ts
+
+import { NextResponse } from "next/server";
 import getDbPool from "@/lib/db";
+import { PoolClient } from "pg";
 import type { RoundManagement, HeatManagement } from "@/lib/definitions";
 
-export async function PUT(req: NextRequest) {
-  const pool = getDbPool();
-  let rounds: RoundManagement[];
+export async function PUT(req: Request) {
+  const rounds = (await req.json()) as RoundManagement[];
+  const client: PoolClient = await getDbPool().connect();
 
   try {
-    const body = await req.json();
-    if (!Array.isArray(body)) {
-      return NextResponse.json(
-        { error: "Expected an array of RoundManagement objects" },
-        { status: 400 }
-      );
-    }
-    rounds = body;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-
-    const insertOrUpdateRoundQuery = `
-      INSERT INTO ss_round_details
-        (event_id, division_id, round_id, round_num, round_name, num_heats, round_sequence)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      ON CONFLICT (event_id, division_id, round_id)
-      DO UPDATE SET
-        round_num      = EXCLUDED.round_num,
-        round_name     = EXCLUDED.round_name,
-        num_heats      = EXCLUDED.num_heats,
-        round_sequence = EXCLUDED.round_sequence;
-    `;
+    // We will still use a transaction for data integrity
+    await client.query('BEGIN');
 
     for (const r of rounds) {
-      // 2) upsert this round
-      await client.query(insertOrUpdateRoundQuery, [
-        r.event_id,
-        r.division_id,
-        r.round_id,
-        r.round_num,
-        r.round_name,
-        r.num_heats,
-        r.round_sequence,
-      ]);
+      let roundId = r.round_id;
 
-    const insertOrUpdateHeatQuery = `
-      INSERT INTO ss_heat_details
-        (round_id, heat_num, num_runs, schedule_sequence)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (round_id, heat_num)
-      DO UPDATE SET
-        num_runs          = EXCLUDED.num_runs,
-        schedule_sequence = EXCLUDED.schedule_sequence;
-    `;
+      // --- VVV THIS IS THE NEW LOGIC VVV ---
+      if (roundId === null || roundId === undefined) {
+        // --- 1. HANDLE NEW ROUNDS (INSERT) ---
+        // The round_id is null, so this is a new round that needs to be inserted.
+        const insertRoundQuery = `
+          INSERT INTO ss_round_details (event_id, division_id, round_num, round_name, num_heats, round_sequence)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING round_id;
+        `;
+        const result = await client.query(insertRoundQuery, [
+          r.event_id,
+          r.division_id,
+          r.round_num,
+          r.round_name,
+          r.num_heats,
+          r.round_sequence
+        ]);
+        
+        // Get the new, real round_id that the database just generated
+        roundId = result.rows[0].round_id;
+        
+      } else {
+        // --- 2. HANDLE EXISTING ROUNDS (UPDATE) ---
+        // The round_id exists, so we update the existing record.
+        const updateRoundQuery = `
+          UPDATE ss_round_details
+          SET round_name = $1, num_heats = $2, round_sequence = $3, round_num = $4
+          WHERE round_id = $5 AND event_id = $6 AND division_id = $7;
+        `;
+        await client.query(updateRoundQuery, [
+          r.round_name,
+          r.num_heats,
+          r.round_sequence,
+          r.round_num,
+          roundId,
+          r.event_id,
+          r.division_id,
+        ]);
+      }
+      // --- ^^^ END OF NEW LOGIC ^^^ ---
 
+      // --- 3. UPSERT HEATS FOR THIS ROUND ---
+      // Now that we are guaranteed to have a valid, non-null roundId, we can process the heats.
       if (Array.isArray(r.heats)) {
+        // First, delete any heats that may have been removed on the client
+        const existingHeatNums = r.heats.map(h => h.heat_num);
+        await client.query(
+          `DELETE FROM ss_heat_details WHERE round_id = $1 AND heat_num NOT IN (${existingHeatNums.join(',')})`,
+          [roundId]
+        );
+
+        // Then, insert or update the current heats
         for (const h of r.heats as HeatManagement[]) {
+          const insertOrUpdateHeatQuery = `
+            INSERT INTO ss_heat_details (round_id, heat_num, num_runs)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (round_id, heat_num)
+            DO UPDATE SET num_runs = EXCLUDED.num_runs;
+          `;
           await client.query(insertOrUpdateHeatQuery, [
-            r.round_id,
+            roundId,
             h.heat_num,
             h.num_runs,
-            h.schedule_sequence,
           ]);
         }
       }
     }
 
-    await client.query("COMMIT");
-    return NextResponse.json(
-      { success: true, processedRounds: rounds.length },
-      { status: 200 }
-    );
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("Error upserting rounds & heats:", err);
-    return NextResponse.json(
-      { error: "Database error during upsert" },
-      { status: 500 }
-    );
+    await client.query('COMMIT');
+    return NextResponse.json({ success: true, message: 'Rounds and heats updated successfully.' }, { status: 200 });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error upserting rounds & heats:", error);
+    const message = error instanceof Error ? error.message : "An unknown error occurred.";
+    return NextResponse.json({ error: message }, { status: 500 });
   } finally {
     client.release();
   }
