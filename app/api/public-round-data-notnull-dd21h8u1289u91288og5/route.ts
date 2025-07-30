@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
       WHERE hr.event_id      = $1
         AND hr.division_id   = $2
         AND hd.round_id      = $3
+        AND hr.best NOTNULL
       ORDER BY hr.best DESC, hr.seeding;
       `,
       [eventId, divisionId, roundId]
