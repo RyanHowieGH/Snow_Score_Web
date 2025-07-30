@@ -1,16 +1,13 @@
-// app/api/events/[eventId]/[divisionId]/[roundId]/[roundHeatId]/route.ts
-
 import { NextResponse, type NextRequest } from "next/server";
-import getDbPool from "@/lib/db"; // your custom DB connection utility
+import getDbPool from "@/lib/db"; 
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const eventId     = searchParams.get("eventId");
   const divisionId  = searchParams.get("divisionId");
   const roundId     = searchParams.get("roundId");
-  const roundHeatId = searchParams.get("roundHeatId");
 
-  if (!eventId || !divisionId || !roundId || !roundHeatId) {
+  if (!eventId || !divisionId || !roundId) {
     return NextResponse.json(
       { error: "Missing one or more required query parameters" },
       { status: 400 }
@@ -31,6 +28,7 @@ export async function GET(req: NextRequest) {
         a.last_name,
         a.athlete_id,
         hr.seeding,
+        hd.heat_num,
         er.bib_num
       FROM ss_heat_results hr
       JOIN ss_event_registrations er 
@@ -44,10 +42,10 @@ export async function GET(req: NextRequest) {
       WHERE hr.event_id      = $1
         AND hr.division_id   = $2
         AND hd.round_id      = $3
-        AND hr.round_heat_id = $4
+        AND hr.best NOTNULL
       ORDER BY hr.best DESC, hr.seeding;
       `,
-      [eventId, divisionId, roundId, roundHeatId]
+      [eventId, divisionId, roundId]
     );
 
     return NextResponse.json(rows);

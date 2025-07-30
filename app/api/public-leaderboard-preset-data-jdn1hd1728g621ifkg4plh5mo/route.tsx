@@ -6,10 +6,9 @@ export async function GET(req: NextRequest) {
   const eventId = params.get("eventId");
   const divisionId = params.get("divisionId");
   const roundId = params.get("roundId");
-  const roundHeatId = params.get("roundHeatId");
 
   // basic validation
-  if (!eventId || !divisionId || !roundId || !roundHeatId) {
+  if (!eventId || !divisionId || !roundId) {
     return NextResponse.json(
       { error: "Missing one or more required query parameters" },
       { status: 400 }
@@ -32,9 +31,8 @@ export async function GET(req: NextRequest) {
       WHERE rr.event_id = $1
         AND rr.division_id = $2
         AND rd.round_id = $3
-        AND rr.round_heat_id = $4
       `,
-      [eventId, divisionId, roundId, roundHeatId]
+      [eventId, divisionId, roundId]
     );
 
     return NextResponse.json(rows);

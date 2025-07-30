@@ -16,7 +16,7 @@ type HeatData = {
   athleteId: number;
   firstName: string;
   lastName: string;
-  bestScore: number;
+  bestScore: number | null;
   seeding: number;
   bib_num: number;
 };
@@ -33,7 +33,8 @@ export default function Page() {
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? '';
 
   const [roundHeatData, setRoundHeatData] = useState<RoundHeatData | null>(null);
-  const [heatDataArr, setHeatDataArr] = useState<HeatData[]>([]);
+  const [heatDataArrNotNull, setHeatDataArrNotNull] = useState<HeatData[]>([]);
+  const [heatDataArrNull, setHeatDataArrNull] = useState<HeatData[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
@@ -42,7 +43,7 @@ export default function Page() {
     try {
       // 1) details
       const res1 = await fetch(
-        `${base}/api/public-leaderboard-preset-data?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}&roundHeatId=${roundHeatId}`
+        `${base}/api/public-leaderboard-preset-data-jdn1hd1728g621ifkg4plh5mo?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`
       );
       if (!res1.ok) throw new Error('Failed to fetch round heat data');
       const details = (await res1.json()) as {
@@ -63,13 +64,12 @@ export default function Page() {
         });
       }
 
-      // 2) results
-      const res2 = await fetch(
-        `${base}/api/public-round-data?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}&roundHeatId=${roundHeatId}`,
-        { cache: 'no-store' }
+      // 2) not null results
+      const notNullResults = await fetch(
+        `${base}/api/public-round-data-notnull-dd21h8u1289u91288og5?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`,
       );
-      if (!res2.ok) throw new Error('Failed to fetch heat data');
-      const rows = (await res2.json()) as {
+      if (!notNullResults.ok) throw new Error('Failed to fetch heat data');
+      const notNullRows = (await notNullResults.json()) as {
         athlete_id: number;
         first_name: string;
         last_name: string;
@@ -77,8 +77,8 @@ export default function Page() {
         seeding: number;
         bib_num: number;
       }[];
-      setHeatDataArr(
-        rows.map((r) => ({
+      setHeatDataArrNotNull(
+        notNullRows.map((r) => ({
           athleteId: r.athlete_id,
           firstName: r.first_name,
           lastName: r.last_name,
@@ -87,6 +87,31 @@ export default function Page() {
           bib_num: r.bib_num,
         }))
       );
+
+      // 3) null results
+      const nullResults = await fetch(
+        `${base}/api/public-round-data-null-dd21h8u1289u91288og5?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`,
+      );
+      if (!nullResults.ok) throw new Error('Failed to fetch heat data');
+      const nullRows = (await nullResults.json()) as {
+        athlete_id: number;
+        first_name: string;
+        last_name: string;
+        best: number | null;
+        seeding: number;
+        bib_num: number;
+      }[];
+       setHeatDataArrNull(
+        nullRows.map((r) => ({
+          athleteId: r.athlete_id,
+          firstName: r.first_name,
+          lastName: r.last_name,
+          bestScore: r.best ?? 0,
+          seeding: r.seeding,
+          bib_num: r.bib_num,
+        }))
+      );
+
     } catch (err: any) {
       console.error(err);
       setError(err.message);
@@ -112,10 +137,24 @@ export default function Page() {
       {roundHeatData ? (
         <div>
           <h2 className="text-xl font-semibold">{roundHeatData.roundName}</h2>
+          
+          {/* People that have already scored */}
           <div className="list-disc ml-5">
-            {heatDataArr.map((athlete) => (
+            <h1 className='text-4xl font-bold'>NOT NULL VALUES</h1>
+            {heatDataArrNotNull.map((athlete) => (
               <div key={athlete.athleteId}>
-                {athlete.firstName} {athlete.lastName} – Score: {athlete.bestScore} (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
+                {athlete.firstName} {athlete.lastName} - Score: {athlete.bestScore} (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
+              </div>
+            ))}
+          </div>
+          
+          
+          {/* People that have not scored yet */}
+          <div className="list-disc ml-5">
+            <h1 className='text-4xl font-bold'>NULL VALUES</h1>
+            {heatDataArrNull.map((athlete) => (
+              <div key={athlete.athleteId}>
+                {athlete.firstName} {athlete.lastName} - (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
               </div>
             ))}
           </div>
