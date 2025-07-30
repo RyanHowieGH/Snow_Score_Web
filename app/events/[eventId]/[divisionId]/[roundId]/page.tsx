@@ -154,7 +154,7 @@ export default function Page() {
             <h1 className='text-4xl font-bold'>NULL VALUES</h1>
             {heatDataArrNull.map((athlete) => (
               <div key={athlete.athleteId}>
-                {athlete.firstName} {athlete.lastName} - Score: {athlete.bestScore} (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
+                {athlete.firstName} {athlete.lastName} - (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
               </div>
             ))}
           </div>
