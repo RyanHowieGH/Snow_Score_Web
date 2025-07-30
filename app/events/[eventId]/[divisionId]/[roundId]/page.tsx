@@ -42,7 +42,7 @@ export default function Page() {
     try {
       // 1) details
       const res1 = await fetch(
-        `${base}/api/public-leaderboard-preset-data?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}&roundHeatId=${roundHeatId}`
+        `${base}/api/public-leaderboard-preset-data?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`
       );
       if (!res1.ok) throw new Error('Failed to fetch round heat data');
       const details = (await res1.json()) as {
@@ -65,7 +65,7 @@ export default function Page() {
 
       // 2) results
       const res2 = await fetch(
-        `${base}/api/public-round-data?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}&roundHeatId=${roundHeatId}`,
+        `${base}/api/public-round-data?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`,
         { cache: 'no-store' }
       );
       if (!res2.ok) throw new Error('Failed to fetch heat data');
