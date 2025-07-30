@@ -152,7 +152,7 @@ export default function Page() {
           {/* People that have not scored yet */}
           <div className="list-disc ml-5">
             <h1 className='text-4xl font-bold'>NULL VALUES</h1>
-            {heatDataArrNotNull.map((athlete) => (
+            {heatDataArrNull.map((athlete) => (
               <div key={athlete.athleteId}>
                 {athlete.firstName} {athlete.lastName} - Score: {athlete.bestScore} (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
               </div>
