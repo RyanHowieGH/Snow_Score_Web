@@ -1,17 +1,20 @@
-// app/api/events/[eventId]/[divisionId]/[roundId]/[roundHeatId]/route.ts
-
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import getDbPool from "@/lib/db"; // your custom DB connection utility
 
-interface Params {
-  eventId: string;
-  divisionId: string;
-  roundId: string;
-  roundHeatId: string;
-}
+export async function GET(req: NextRequest) {
+  const params = req.nextUrl.searchParams;
+  const eventId = params.get("eventId");
+  const divisionId = params.get("divisionId");
+  const roundId = params.get("roundId");
+  const roundHeatId = params.get("roundHeatId");
 
-export async function GET(req: Request, { params }: { params: Params }) {
-  const { eventId, divisionId, roundId, roundHeatId } = params;
+  // basic validation
+  if (!eventId || !divisionId || !roundId || !roundHeatId) {
+    return NextResponse.json(
+      { error: "Missing one or more required query parameters" },
+      { status: 400 }
+    );
+  }
 
   try {
     const pool = getDbPool(); // assuming PostgreSQL or similar
@@ -22,14 +25,14 @@ export async function GET(req: Request, { params }: { params: Params }) {
         rr.division_id,
         rd.round_id,
         rr.round_heat_id,
-        rd.round_name,
+        rd.round_name
       FROM ss_round_details rd
       JOIN ss_run_results rr ON rd.event_id = rr.event_id
         AND rd.division_id = rr.division_id
-      WHERE event_id = $1
-        AND division_id = $2
-        AND round_id = $3
-        AND round_heat_id = $4
+      WHERE rr.event_id = $1
+        AND rr.division_id = $2
+        AND rd.round_id = $3
+        AND rr.round_heat_id = $4
       `,
       [eventId, divisionId, roundId, roundHeatId]
     );
