@@ -41,6 +41,9 @@ export default function EventEditForm({ event, allDisciplines, allAvailableDivis
     const updateEventActionWithId = updateEventAction.bind(null, event.event_id);
     const [state, formAction] = useActionState(updateEventActionWithId, initialState);
 
+
+    const [selectedDisciplineId, setSelectedDisciplineId] = useState<string>(event.discipline_id?.toString() || "");
+
     // Initialize selectedDivisionIds from the event's current divisions
     const [selectedDivisionIds, setSelectedDivisionIds] = useState<Set<string>>(() =>
         new Set(event.divisions.map(d => String(d.division_id)))
@@ -65,6 +68,8 @@ export default function EventEditForm({ event, allDisciplines, allAvailableDivis
             updatedInitialRounds[String(div.division_id)] = div.num_rounds ?? 3;
         });
         setNumRoundsByDivision(updatedInitialRounds);
+        setSelectedDisciplineId(event.discipline_id?.toString() || "");
+
     }, [event]);
 
 
@@ -149,7 +154,15 @@ export default function EventEditForm({ event, allDisciplines, allAvailableDivis
             {/* Discipline */}
             <label className="form-control w-full">
                 <div className="label"><span className="label-text text-base font-medium">Discipline*</span></div>
-                <select name="discipline_id" defaultValue={event.discipline_id?.toString() || ""} required className={`select select-bordered w-full ${state?.fieldErrors?.discipline_id ? 'select-error' : ''}`}>
+                <select 
+                    name="discipline_id" 
+                    // Use `value` to make it a controlled component
+                    value={selectedDisciplineId} 
+                    // Update the state on change
+                    onChange={(e) => setSelectedDisciplineId(e.target.value)}
+                    required 
+                    className={`select select-bordered w-full ${state?.fieldErrors?.discipline_id ? 'select-error' : ''}`}
+                >
                     <option value="" disabled>Select a discipline</option>
                     {allDisciplines.map(d => (
                         <option key={d.discipline_id} value={d.discipline_id}>
