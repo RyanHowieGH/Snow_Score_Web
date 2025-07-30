@@ -208,7 +208,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                     <div
                                      className="btn btn-outline btn-secondary w-full"
                                     key={`${division.division_id}-${round.round_id}`}>
-                                        <Link href={`/events/${division.division_id}/${round.round_id}`}>                                        
+                                        <Link href={`/events/${event.event_id}/${division.division_id}/${round.round_id}`}>                                        
                                             {round.round_name}
                                         </Link>
                                     </div>
