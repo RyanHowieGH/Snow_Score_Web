@@ -1,3 +1,5 @@
+// app\admin\(detail)\events\[eventId]\edit-details\EventEditForm.tsx
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
