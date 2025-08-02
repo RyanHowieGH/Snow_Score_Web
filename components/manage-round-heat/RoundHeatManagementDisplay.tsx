@@ -7,18 +7,25 @@ export type RoundHeatManagementDisplayProps = {
   rounds: RoundManagement[];
 };
 
-export default function RoundHeatManagementDisplay(props: RoundHeatManagementDisplayProps) {
-  const [roundArray, setRoundArray] = useState<RoundManagement[]>(() => props.rounds.map(r => ({ ...r })));
+export default function RoundHeatManagementDisplay(
+  props: RoundHeatManagementDisplayProps
+) {
+  const [roundArray, setRoundArray] = useState<RoundManagement[]>(
+    () => props.rounds.map((r) => ({ ...r }))
+  );
   const isAddingRound = useRef(false);
 
   useEffect(() => {
-    setRoundArray(props.rounds.map(r => ({ ...r })));
+    setRoundArray(props.rounds.map((r) => ({ ...r })));
   }, [props.rounds]);
 
   const eventId = roundArray[0]?.event_id ?? 0;
   const divisionId = roundArray[0]?.division_id ?? 0;
 
-  function updateRound(index: number, newFields: Partial<RoundManagement>) {
+  function updateRound(
+    index: number,
+    newFields: Partial<RoundManagement>
+  ) {
     setRoundArray((prev) => {
       const copy = [...prev];
       copy[index] = { ...copy[index], ...newFields };
@@ -26,7 +33,11 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
     });
   }
 
-  function updateHeat(roundIndex: number, heatIndex: number, newFields: Partial<HeatManagement>) {
+  function updateHeat(
+    roundIndex: number,
+    heatIndex: number,
+    newFields: Partial<HeatManagement>
+  ) {
     setRoundArray((prev) => {
       const copy = [...prev];
       const heats = copy[roundIndex].heats ?? [];
@@ -42,22 +53,20 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
     isAddingRound.current = true;
 
     try {
-      const tempId = -(Date.now()); // unique negative ID for the key
-
+      const tempId = -Date.now();
       const roundOrder = roundArray.length + 1;
       const newRound: RoundManagement = {
         event_id: eventId,
         division_id: divisionId,
-        round_id: tempId, // temporary ID
+        round_id: tempId,
         round_num: roundOrder,
         round_name: "NEW ROUND",
         num_heats: 1,
         round_sequence: roundOrder,
         heats: [{ heat_num: 1, num_runs: 3, schedule_sequence: 1 }],
       };
-      
+
       setRoundArray((prev) => [...prev, newRound]);
-      
     } catch (err) {
       console.error("Error adding new round:", err);
       toast.error("Failed to add a new round.");
@@ -67,13 +76,13 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
   }
 
   async function handleSave() {
-   const roundsToSave = roundArray.map((round, index) => ({
-     ...round,
-     round_sequence: index + 1,
-     round_num: index + 1,
-   }));
+    const roundsToSave = roundArray.map((round, index) => ({
+      ...round,
+      round_sequence: index + 1,
+      round_num: index + 1,
+    }));
 
-   console.debug("Sending payload to server:", roundsToSave);
+    console.debug("Sending payload to server:", roundsToSave);
 
     try {
       const res = await fetch("/api/add-update-rounds-and-heats", {
@@ -84,7 +93,7 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
 
       if (res.ok) {
         const { idMap } = await res.json();
-       
+
         interface IdMapEntry {
           tempId: number;
           realId: number;
@@ -92,92 +101,151 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
 
         setRoundArray((prev: RoundManagement[]) =>
           prev.map((r: RoundManagement) =>
-            (idMap as IdMapEntry[]).some((m: IdMapEntry) => m.tempId === r.round_id)
-              ? { ...r, round_id: (idMap as IdMapEntry[]).find((m: IdMapEntry) => m.tempId === r.round_id)!.realId }
+            (idMap as IdMapEntry[]).some(
+              (m: IdMapEntry) => m.tempId === r.round_id
+            )
+              ? {
+                  ...r,
+                  round_id: (idMap as IdMapEntry[]).find(
+                    (m: IdMapEntry) => m.tempId === r.round_id
+                  )!.realId,
+                }
               : r
           )
         );
         toast.success("Saved!");
       }
-
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : "Error saving rounds & heats");
-    }}
-
+      toast.error(
+        err instanceof Error ? err.message : "Error saving rounds & heats"
+      );
+    }
+  }
 
   return (
     <div>
       <div className="space-y-6">
-        {roundArray.map((round, roundIndex) => (
+        {roundArray.map((round, roundIndex) => {
+          // Determine progression text
+          const nextRoundNum = round.round_num - 1;
+          let progressionText = "";
+          if (nextRoundNum === 0) {
+            progressionText = "Final round";
+          } else {
+            const next = roundArray.find(
+              (r) => r.round_num === nextRoundNum
+            );
+            if (next) {
+              progressionText = `This round progresses to the ${next.round_name} round.`;
+            }
+          }
 
-          <div key={round.round_id} className="p-4 border rounded shadow-sm">
+          return (
+            <div
+              key={round.round_id}
+              className="p-4 border rounded shadow-sm"
+            >
+              <h3 className="text-lg font-semibold mb-1">
+                {round.round_name} Round
+              </h3>
 
-            <h3 className="text-lg font-semibold mb-2">{round.round_name} Round</h3>
-            <div className="mb-2">
-              <label className="mr-2">Name:</label>
-              <input type="text" value={round.round_name} onChange={(e) => updateRound(roundIndex, { round_name: e.target.value })} className="border px-2 py-1 rounded"/>
-            </div>
-            <div className="mb-5 mt-5">
-              <label className="mr-1">Number of Heats:</label>
-              <select
-                value={round.num_heats}
-                onChange={(e) => {
-                  const number_of_heats = parseInt(e.target.value, 10);
-                  const heats = round.heats ?? [];
-                  const updatedHeats = [...heats];
-                  
-                  while (updatedHeats.length < number_of_heats) {
-                    updatedHeats.push({
-                      heat_num: updatedHeats.length + 1,
-                      num_runs: 3,
-                      schedule_sequence: updatedHeats.length + 1,
-                    });
+
+              <div className="mb-2 mt-4">
+                <label className="mr-2">Name:</label>
+                <input
+                  type="text"
+                  value={round.round_name}
+                  onChange={(e) =>
+                    updateRound(roundIndex, {
+                      round_name: e.target.value,
+                    })
                   }
-                  if (updatedHeats.length > number_of_heats) {
-                    updatedHeats.length = number_of_heats;
-                  }
-                  
-                  updateRound(roundIndex, { num_heats: number_of_heats, heats: updatedHeats });
-                }}
-                className="border px-1 py-1 rounded">
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                  <option 
-                  key={n} 
-                  value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {round.heats?.map((heat, heatIndex) => (
-              <div key={heatIndex} className="ml-4 pl-4 border-l-2 mb-4">
-                <span className="font-medium">Heat {heatIndex + 1}:</span>
-                <div className="mt-2">
-                  <label className="flex items-center">
-                    Number of Runs: 
-                    <select
-                      value={heat.num_runs}
-                      onChange={(e) => updateHeat(roundIndex, heatIndex, { num_runs: parseInt(e.target.value, 10) })}
-                      className="border rounded ml-2">
-                      {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (<option key={n} value={n}>{n}</option>))}
-                    </select>
-                  </label>
-                </div>
+                  className="border px-2 py-1 rounded"
+                />
               </div>
-            ))}
-          </div>
-        ))}
+
+              <div className="mb-5 mt-5">
+                <label className="mr-1">Number of Heats:</label>
+                <select
+                  value={round.num_heats}
+                  onChange={(e) => {
+                    const number_of_heats = parseInt(e.target.value, 10);
+                    const heats = round.heats ?? [];
+                    const updatedHeats = [...heats];
+
+                    while (updatedHeats.length < number_of_heats) {
+                      updatedHeats.push({
+                        heat_num: updatedHeats.length + 1,
+                        num_runs: 3,
+                        schedule_sequence: updatedHeats.length + 1,
+                      });
+                    }
+                    if (updatedHeats.length > number_of_heats) {
+                      updatedHeats.length = number_of_heats;
+                    }
+
+                    updateRound(roundIndex, {
+                      num_heats: number_of_heats,
+                      heats: updatedHeats,
+                    });
+                  }}
+                  className="border px-1 py-1 rounded"
+                >
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {round.heats?.map((heat, heatIndex) => (
+                <div key={heatIndex} className="ml-4 pl-4 border-l-2 mb-4">
+                  <span className="font-medium">Heat {heatIndex + 1}:</span>
+                  <div className="mt-2">
+                    <label className="flex items-center">
+                      Number of Runs:
+                      <select
+                        value={heat.num_runs}
+                        onChange={(e) =>
+                          updateHeat(roundIndex, heatIndex, {
+                            num_runs: parseInt(e.target.value, 10),
+                          })
+                        }
+                        className="border rounded ml-2"
+                      >
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              ))}
+
+              {progressionText && (
+                <div className="text-sm italic mt-8">
+                  {progressionText}
+                </div>
+              )}
+
+            </div>
+          );
+        })}
       </div>
+
       <div className="flex justify-center mt-4">
         <button className="btn btn-secondary" onClick={addRound}>
-          + Add Round
+          ADD ROUND
         </button>
       </div>
+
       <div className="flex justify-end mt-6">
         <button onClick={handleSave} className="btn btn-primary">
-          Update All
+          SAVE
         </button>
       </div>
     </div>

@@ -648,7 +648,7 @@ export async function fetchScheduleHeats(eventId: number): Promise<ScheduleHeatI
  * @returns A promise that resolves to an array of Division objects, including num_rounds.
  */
 export async function getDivisionsForEvent(eventId: number): Promise<Division[]> {
-    console.log(`[data.ts] Fetching assigned divisions for event ID: ${eventId}`);
+    console.log(`Fetching assigned divisions for the event.`);
     if (isNaN(eventId)) {
         console.error("getDivisionsForEvent: Invalid event ID provided.");
         return [];
@@ -668,10 +668,10 @@ export async function getDivisionsForEvent(eventId: number): Promise<Division[]>
         `;
         
         const result = await pool.query<Division>(query, [eventId]);
-        console.log(`[data.ts] Found ${result.rows.length} divisions for event ${eventId}.`);
+        console.log(`Found divisions for the event.`);
         return result.rows;
     } catch (error) {
-        console.error(`[data.ts] Database Error fetching divisions for event ${eventId}:`, error);
+        console.error(`Database Error fetching divisions for event`);
         throw new Error('Failed to fetch event divisions.');
     }
 }
