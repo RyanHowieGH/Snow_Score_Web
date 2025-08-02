@@ -227,34 +227,34 @@ export default function RoundHeatManagementDisplay(
                 </div>
               ))}
               
-        
-                  <div className="mt-2">
-                    <label className="flex items-center">
-                      Number of athletes to progress: 
-                      <input
-                        value={round.num_athletes}
-                        type="number"
-                        onChange={(e) =>
-                          updateRound(roundIndex, {
-                          num_athletes: parseInt(e.target.value, 10),
-                          })
-                        }
-                        className="border rounded ml-2 p-1 w-15 text-center"
-                      >
-                      </input>
-                    </label>
-                  </div>
+        {round.round_num != 1 && (
+          <div className="mt-2">
+            <label className="flex items-center">
+              Number of athletes to progress: 
+              <input
+                value={round.num_athletes}
+                type="number"
+                onChange={(e) =>
+                  updateRound(roundIndex, {
+                    num_athletes: parseInt(e.target.value, 10),
+                  })
+                }
+                className="border rounded ml-2 p-1 w-15 text-center"
+              />
+            </label>
+          </div>
+        )}
 
-              {progressionText && (
-                <div className="text-sm italic mt-2">
-                  {progressionText}
-                </div>
-              )}
+        {progressionText && (
+          <div className="text-sm italic mt-2">
+            {progressionText}
+          </div>
+        )}
 
-            </div>
-          );
-        })}
       </div>
+      );
+      })}
+    </div>
 
       <div className="flex justify-center mt-4">
         <button className="btn btn-secondary" onClick={addRound}>
