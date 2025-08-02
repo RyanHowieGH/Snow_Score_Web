@@ -42,13 +42,13 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
     isAddingRound.current = true;
 
     try {
-      const tempId = -(Date.now()); // Unique negative ID for the key
+      const tempId = -(Date.now()); // unique negative ID for the key
 
       const roundOrder = roundArray.length + 1;
       const newRound: RoundManagement = {
         event_id: eventId,
         division_id: divisionId,
-        round_id: tempId, // Use the temporary ID
+        round_id: tempId, // temporary ID
         round_num: roundOrder,
         round_name: "NEW ROUND",
         num_heats: 1,
@@ -67,13 +67,13 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
   }
 
   async function handleSave() {
-    const roundsToSave = roundArray.map((round, index) => ({
-      ...round,
-      // If round_id is negative, it's a new round. The server will see null and INSERT.
-      round_id: (round.round_id && round.round_id > 0) ? round.round_id : null,
-      round_sequence: index + 1,
-      round_num: index + 1,
-    }));
+   const roundsToSave = roundArray.map((round, index) => ({
+     ...round,
+     round_sequence: index + 1,
+     round_num: index + 1,
+   }));
+
+   console.debug("Sending payload to server:", roundsToSave);
 
     try {
       const res = await fetch("/api/add-update-rounds-and-heats", {
@@ -81,28 +81,37 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(roundsToSave),
       });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Save failed');
+
+      if (res.ok) {
+        const { idMap } = await res.json();
+       
+        interface IdMapEntry {
+          tempId: number;
+          realId: number;
+        }
+
+        setRoundArray((prev: RoundManagement[]) =>
+          prev.map((r: RoundManagement) =>
+            (idMap as IdMapEntry[]).some((m: IdMapEntry) => m.tempId === r.round_id)
+              ? { ...r, round_id: (idMap as IdMapEntry[]).find((m: IdMapEntry) => m.tempId === r.round_id)!.realId }
+              : r
+          )
+        );
+        toast.success("Saved!");
       }
-      toast.success("Rounds & heats saved successfully");
-      // Consider a page refresh or re-fetch here to get the new, real IDs from the server
-      // router.refresh(); // if using Next.js App Router navigation
+
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Error saving rounds & heats");
-    }
-  }
+    }}
+
 
   return (
     <div>
       <div className="space-y-6">
         {roundArray.map((round, roundIndex) => (
-          // --- VVV THIS IS THE FIX VVV ---
-          // The key prop must be a unique string or number.
-          // We can use the temporary negative ID for new rounds.
+
           <div key={round.round_id} className="p-4 border rounded shadow-sm">
-          {/* --- ^^^ END OF FIX ^^^ --- */}
 
             <h3 className="text-lg font-semibold mb-2">{round.round_name} Round</h3>
             <div className="mb-2">
@@ -114,25 +123,31 @@ export default function RoundHeatManagementDisplay(props: RoundHeatManagementDis
               <select
                 value={round.num_heats}
                 onChange={(e) => {
-                  const nh = parseInt(e.target.value, 10);
+                  const number_of_heats = parseInt(e.target.value, 10);
                   const heats = round.heats ?? [];
                   const updatedHeats = [...heats];
                   
-                  while (updatedHeats.length < nh) {
+                  while (updatedHeats.length < number_of_heats) {
                     updatedHeats.push({
                       heat_num: updatedHeats.length + 1,
                       num_runs: 3,
                       schedule_sequence: updatedHeats.length + 1,
                     });
                   }
-                  if (updatedHeats.length > nh) {
-                    updatedHeats.length = nh;
+                  if (updatedHeats.length > number_of_heats) {
+                    updatedHeats.length = number_of_heats;
                   }
                   
-                  updateRound(roundIndex, { num_heats: nh, heats: updatedHeats });
+                  updateRound(roundIndex, { num_heats: number_of_heats, heats: updatedHeats });
                 }}
                 className="border px-1 py-1 rounded">
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (<option key={n} value={n}>{n}</option>))}
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <option 
+                  key={n} 
+                  value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
             </div>
 

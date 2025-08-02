@@ -21,7 +21,7 @@ export default async function ManageRoundsAndHeatsPage({ params }: { params: { e
         notFound();
     }
 
-    const rounds = await getRoundsAndHeats(100, 3);
+    const rounds = await getRoundsAndHeats(eventId, 3);
 
    return (
         <div>

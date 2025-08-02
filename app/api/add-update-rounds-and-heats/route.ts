@@ -9,15 +9,20 @@ export async function PUT(req: Request) {
   const rounds = (await req.json()) as RoundManagement[];
   const client: PoolClient = await getDbPool().connect();
 
+  const idMap: { tempId: number; realId: number }[] = [];
+
   try {
     // We will still use a transaction for data integrity
     await client.query('BEGIN');
 
     for (const r of rounds) {
-      let roundId = r.round_id;
+      const tempId = r.round_id!;
+      let roundId: number;
+      // let roundId = r.round_id;
 
       // --- VVV THIS IS THE NEW LOGIC VVV ---
-      if (roundId === null || roundId === undefined) {
+      // if (roundId === null || roundId === undefined) {
+      if (tempId <= 0) {
         // --- 1. HANDLE NEW ROUNDS (INSERT) ---
         // The round_id is null, so this is a new round that needs to be inserted.
         const insertRoundQuery = `
@@ -36,8 +41,11 @@ export async function PUT(req: Request) {
         
         // Get the new, real round_id that the database just generated
         roundId = result.rows[0].round_id;
-        
+
+        idMap.push({ tempId, realId: roundId });
+      
       } else {
+        roundId = tempId;
         // --- 2. HANDLE EXISTING ROUNDS (UPDATE) ---
         // The round_id exists, so we update the existing record.
         const updateRoundQuery = `
@@ -85,7 +93,7 @@ export async function PUT(req: Request) {
     }
 
     await client.query('COMMIT');
-    return NextResponse.json({ success: true, message: 'Rounds and heats updated successfully.' }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Rounds and heats updated successfully.', idMap }, { status: 200 });
 
   } catch (error) {
     await client.query('ROLLBACK');
