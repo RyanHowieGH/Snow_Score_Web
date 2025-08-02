@@ -26,8 +26,8 @@ export async function PUT(req: Request) {
         // --- 1. HANDLE NEW ROUNDS (INSERT) ---
         // The round_id is null, so this is a new round that needs to be inserted.
         const insertRoundQuery = `
-          INSERT INTO ss_round_details (event_id, division_id, round_num, round_name, num_heats, round_sequence)
-          VALUES ($1, $2, $3, $4, $5, $6)
+          INSERT INTO ss_round_details (event_id, division_id, round_num, round_name, num_heats, round_sequence, num_athletes)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING round_id;
         `;
         const result = await client.query(insertRoundQuery, [
@@ -36,7 +36,8 @@ export async function PUT(req: Request) {
           r.round_num,
           r.round_name,
           r.num_heats,
-          r.round_sequence
+          r.round_sequence,
+          r.num_athletes,
         ]);
         
         // Get the new, real round_id that the database just generated
@@ -50,7 +51,7 @@ export async function PUT(req: Request) {
         // The round_id exists, so we update the existing record.
         const updateRoundQuery = `
           UPDATE ss_round_details
-          SET round_name = $1, num_heats = $2, round_sequence = $3, round_num = $4
+          SET round_name = $1, num_heats = $2, round_sequence = $3, round_num = $4, num_athletes = $8
           WHERE round_id = $5 AND event_id = $6 AND division_id = $7;
         `;
         await client.query(updateRoundQuery, [
@@ -61,6 +62,7 @@ export async function PUT(req: Request) {
           roundId,
           r.event_id,
           r.division_id,
+          r.num_athletes,
         ]);
       }
       // --- ^^^ END OF NEW LOGIC ^^^ ---

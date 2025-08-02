@@ -63,6 +63,7 @@ export default function RoundHeatManagementDisplay(
         round_name: "NEW ROUND",
         num_heats: 1,
         round_sequence: roundOrder,
+        num_athletes: 0,
         heats: [{ heat_num: 1, num_runs: 3, schedule_sequence: 1 }],
       };
 
@@ -123,11 +124,12 @@ export default function RoundHeatManagementDisplay(
     }
   }
 
+  
+
   return (
     <div>
       <div className="space-y-6">
         {roundArray.map((round, roundIndex) => {
-          // Determine progression text
           const nextRoundNum = round.round_num - 1;
           let progressionText = "";
           if (nextRoundNum === 0) {
@@ -144,8 +146,7 @@ export default function RoundHeatManagementDisplay(
           return (
             <div
               key={round.round_id}
-              className="p-4 border rounded shadow-sm"
-            >
+              className="p-4 border rounded shadow-sm">
               <h3 className="text-lg font-semibold mb-1">
                 {round.round_name} Round
               </h3>
@@ -225,9 +226,27 @@ export default function RoundHeatManagementDisplay(
                   </div>
                 </div>
               ))}
+              
+        
+                  <div className="mt-2">
+                    <label className="flex items-center">
+                      Number of athletes to progress: 
+                      <input
+                        value={round.num_athletes}
+                        type="number"
+                        onChange={(e) =>
+                          updateRound(roundIndex, {
+                          num_athletes: parseInt(e.target.value, 10),
+                          })
+                        }
+                        className="border rounded ml-2 p-1 w-15 text-center"
+                      >
+                      </input>
+                    </label>
+                  </div>
 
               {progressionText && (
-                <div className="text-sm italic mt-8">
+                <div className="text-sm italic mt-2">
                   {progressionText}
                 </div>
               )}

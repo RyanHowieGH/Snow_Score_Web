@@ -331,6 +331,7 @@ export type RoundManagement = {
     round_name: string, 
     num_heats: number,
     round_sequence: number,
+    num_athletes: number,
     heats: HeatManagement[] | null,
 }
 
