@@ -60,7 +60,7 @@ export default function RoundHeatManagementDisplay(
         division_id: divisionId,
         round_id: tempId,
         round_num: roundOrder,
-        round_name: "NEW ROUND",
+        round_name: "NEW",
         num_heats: 1,
         round_sequence: roundOrder,
         num_athletes: 0,

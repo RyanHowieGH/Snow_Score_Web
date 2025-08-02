@@ -1,13 +1,10 @@
 import React from 'react'
 import { notFound, redirect } from 'next/navigation'
-import {
-  checkEventExistanceById,
-  getRoundsAndHeats,
-  getDivisionsForEvent,
-} from '@/lib/data'
+import { checkEventExistanceById, getRoundsAndHeats, getDivisionsForEvent } from '@/lib/data'
 import { getAuthenticatedUserWithRole } from '@/lib/auth/user'
 import RoundHeatManagementDisplay from '@/components/manage-round-heat/RoundHeatManagementDisplay'
 import { Toaster } from 'react-hot-toast'
+import Link from 'next/link'
 
 type Division = {
   division_id: number
@@ -41,17 +38,26 @@ export default async function ManageRoundsAndHeatsPage({ params }: {params: { ev
   )
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+    <Toaster />
+    <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl md:text-3xl font-bold">
+        Manage Rounds and heats:{` `}
+        <span className="font-normal">{}</span>
+        </h2>
+        <Link href={`/admin/events/${eventId}`} className="btn btn-sm btn-outline">
+        Back to Event Dashboard
+        </Link>
+    </div>
       {divisionsWithRounds.map(({ division_id, division_name, rounds }) => (
-        <div 
-        key={division_id}>
-            <div className='flex justify-center align-itens'>
-                <h1 className='text-3xl font-bold text-center '>Division: {` `}</h1>
-                <h2 className="text-2xl font-semibold text-center justify-center mb-4">
-                    {division_name}
-                </h2>
+        <div key={division_id} className="card bg-base-100 shadow-md">
+            <div className="card-body space-y-4">
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-semibold">DIVISION:</span>
+                <span className="text-2xl">{division_name}</span>
+                </div>
+                <RoundHeatManagementDisplay rounds={rounds} />
             </div>
-          <RoundHeatManagementDisplay rounds={rounds} />
         </div>
       ))}
 
