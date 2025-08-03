@@ -9,20 +9,25 @@ export async function PUT(req: Request) {
   const rounds = (await req.json()) as RoundManagement[];
   const client: PoolClient = await getDbPool().connect();
 
+  const idMap: { tempId: number; realId: number }[] = [];
+
   try {
     // We will still use a transaction for data integrity
     await client.query('BEGIN');
 
     for (const r of rounds) {
-      let roundId = r.round_id;
+      const tempId = r.round_id!;
+      let roundId: number;
+      // let roundId = r.round_id;
 
       // --- VVV THIS IS THE NEW LOGIC VVV ---
-      if (roundId === null || roundId === undefined) {
+      // if (roundId === null || roundId === undefined) {
+      if (tempId <= 0) {
         // --- 1. HANDLE NEW ROUNDS (INSERT) ---
         // The round_id is null, so this is a new round that needs to be inserted.
         const insertRoundQuery = `
-          INSERT INTO ss_round_details (event_id, division_id, round_num, round_name, num_heats, round_sequence)
-          VALUES ($1, $2, $3, $4, $5, $6)
+          INSERT INTO ss_round_details (event_id, division_id, round_num, round_name, num_heats, round_sequence, num_athletes)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING round_id;
         `;
         const result = await client.query(insertRoundQuery, [
@@ -31,18 +36,22 @@ export async function PUT(req: Request) {
           r.round_num,
           r.round_name,
           r.num_heats,
-          r.round_sequence
+          r.round_sequence,
+          r.num_athletes,
         ]);
         
         // Get the new, real round_id that the database just generated
         roundId = result.rows[0].round_id;
-        
+
+        idMap.push({ tempId, realId: roundId });
+      
       } else {
+        roundId = tempId;
         // --- 2. HANDLE EXISTING ROUNDS (UPDATE) ---
         // The round_id exists, so we update the existing record.
         const updateRoundQuery = `
           UPDATE ss_round_details
-          SET round_name = $1, num_heats = $2, round_sequence = $3, round_num = $4
+          SET round_name = $1, num_heats = $2, round_sequence = $3, round_num = $4, num_athletes = $8
           WHERE round_id = $5 AND event_id = $6 AND division_id = $7;
         `;
         await client.query(updateRoundQuery, [
@@ -53,6 +62,7 @@ export async function PUT(req: Request) {
           roundId,
           r.event_id,
           r.division_id,
+          r.num_athletes,
         ]);
       }
       // --- ^^^ END OF NEW LOGIC ^^^ ---
@@ -85,7 +95,7 @@ export async function PUT(req: Request) {
     }
 
     await client.query('COMMIT');
-    return NextResponse.json({ success: true, message: 'Rounds and heats updated successfully.' }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Rounds and heats updated successfully.', idMap }, { status: 200 });
 
   } catch (error) {
     await client.query('ROLLBACK');
