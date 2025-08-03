@@ -119,15 +119,15 @@ export default function HeatResultsPage() {
         <div className="bg-base-100 p-6 md:p-10 rounded-2xl shadow-xl">
           <div className="border-b border-base-300 pb-6 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-              <div className="flex-grow">
+              {/* <div className="flex-grow">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight leading-tight">
-                  {/* {event.name} */}
+                  {event.name}
                 </h1>
                 <p className="mt-2 text-lg sm:text-xl text-base-content opacity-80 flex items-center">
                   <MapPinIcon className="h-5 w-5 mr-2 opacity-70" />
-                  {/* {event.location} */}
+                  {event.location}
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
 
