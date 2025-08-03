@@ -1,8 +1,11 @@
-'use client';
+"use client";
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import BlankHeader from "@/components/blankHeader";
+import { MapPinIcon } from "@heroicons/react/24/outline";
+import {Info} from 'lucide-react';
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import AthleteList from '@/components/AthleteList';
 
 type RoundHeatData = {
   eventId: number;
@@ -19,41 +22,28 @@ type HeatData = {
   bestScore: number | null;
   seeding: number;
   bib_num: number;
+  heat_num: number;
 };
 
-export default function Page() {
-  // 🔑 grab your route params here
-  const { eventId, divisionId, roundId, roundHeatId } = useParams() as {
-    eventId: string;
-    divisionId: string;
-    roundId: string;
-    roundHeatId: string;
-  };
-
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? '';
+export default function HeatResultsPage() {
+  const { eventId, divisionId, roundId } = useParams() as Record<string, string>;
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
 
   const [roundHeatData, setRoundHeatData] = useState<RoundHeatData | null>(null);
-  const [heatDataArrNotNull, setHeatDataArrNotNull] = useState<HeatData[]>([]);
-  const [heatDataArrNull, setHeatDataArrNull] = useState<HeatData[]>([]);
+  const [results, setResults] = useState<HeatData[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setError(null);
-
     try {
-      // 1) details
+      // fetch round details
       const res1 = await fetch(
         `${base}/api/public-leaderboard-preset-data-jdn1hd1728g621ifkg4plh5mo?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`
       );
-      if (!res1.ok) throw new Error('Failed to fetch round heat data');
-      const details = (await res1.json()) as {
-        event_id: number;
-        division_id: number;
-        round_id: number;
-        round_heat_id: number;
-        round_name: string;
-      }[];
-      if (details.length > 0) {
+      if (!res1.ok) throw new Error("Failed to fetch round heat data");
+
+      const details = (await res1.json()) as any[];
+      if (details.length) {
         const d = details[0];
         setRoundHeatData({
           eventId: d.event_id,
@@ -64,105 +54,130 @@ export default function Page() {
         });
       }
 
-      // 2) not null results
-      const notNullResults = await fetch(
-        `${base}/api/public-round-data-notnull-dd21h8u1289u91288og5?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`,
-      );
-      if (!notNullResults.ok) throw new Error('Failed to fetch heat data');
-      const notNullRows = (await notNullResults.json()) as {
-        athlete_id: number;
-        first_name: string;
-        last_name: string;
-        best: number;
-        seeding: number;
-        bib_num: number;
-      }[];
-      setHeatDataArrNotNull(
-        notNullRows.map((r) => ({
-          athleteId: r.athlete_id,
-          firstName: r.first_name,
-          lastName: r.last_name,
-          bestScore: r.best,
-          seeding: r.seeding,
-          bib_num: r.bib_num,
-        }))
-      );
+      // fetch non-null and null results
+      const [respNotNull, respNull] = await Promise.all([
+        fetch(
+          `${base}/api/public-round-data-notnull-dd21h8u1289u91288og5?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`
+        ),
+        fetch(
+          `${base}/api/public-round-data-null-dd21h8u1289u91288og5?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`
+        ),
+      ]);
+      if (!respNotNull.ok || !respNull.ok) throw new Error("Failed to fetch heat data");
 
-      // 3) null results
-      const nullResults = await fetch(
-        `${base}/api/public-round-data-null-dd21h8u1289u91288og5?eventId=${eventId}&divisionId=${divisionId}&roundId=${roundId}`,
-      );
-      if (!nullResults.ok) throw new Error('Failed to fetch heat data');
-      const nullRows = (await nullResults.json()) as {
-        athlete_id: number;
-        first_name: string;
-        last_name: string;
-        best: number | null;
-        seeding: number;
-        bib_num: number;
-      }[];
-       setHeatDataArrNull(
-        nullRows.map((r) => ({
-          athleteId: r.athlete_id,
-          firstName: r.first_name,
-          lastName: r.last_name,
-          bestScore: r.best ?? 0,
-          seeding: r.seeding,
-          bib_num: r.bib_num,
-        }))
-      );
+      const notNullRows = (await respNotNull.json()) as any[];
+      const nullRows = (await respNull.json()) as any[];
 
+      // Combine and map into your typed shape
+      const played: HeatData[] = notNullRows.map((r) => ({
+        athleteId: r.athlete_id,
+        firstName: r.first_name,
+        lastName: r.last_name,
+        bestScore: r.best,
+        seeding: r.seeding,
+        bib_num: r.bib_num,
+        heat_num: r.heat_num,
+      }));
+      const notPlayed: HeatData[] = nullRows.map((r) => ({
+        athleteId: r.athlete_id,
+        firstName: r.first_name,
+        lastName: r.last_name,
+        bestScore: null,
+        seeding: r.seeding,
+        bib_num: r.bib_num,
+        heat_num: r.heat_num,
+      }));
+
+      setResults([...played, ...notPlayed]);
     } catch (err: any) {
       console.error(err);
       setError(err.message);
+      toast.error(err.message);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, [base, eventId, divisionId, roundId, roundHeatId]);
+  }, [eventId, divisionId, roundId]);
+
+  // group results by heat_num
+  const resultsByHeat = useMemo(() => {
+    return results.reduce<Record<number, HeatData[]>>((acc, r) => {
+      if (!acc[r.heat_num]) acc[r.heat_num] = [];
+      acc[r.heat_num].push(r);
+      return acc;
+    }, {});
+  }, [results]);
 
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
-    <div>
-      <h1>Heat Results</h1>
-      <button
-        onClick={fetchData}
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-      >
-        Refresh
-      </button>
+    <div className="bg-base-200 min-h-screen">
+      <BlankHeader />
 
-      {roundHeatData ? (
-        <div>
-          <h2 className="text-xl font-semibold">{roundHeatData.roundName}</h2>
-          
-          {/* People that have already scored */}
-          <div className="list-disc ml-5">
-            <h1 className='text-4xl font-bold'>NOT NULL VALUES</h1>
-            {heatDataArrNotNull.map((athlete) => (
-              <div key={athlete.athleteId}>
-                {athlete.firstName} {athlete.lastName} - Score: {athlete.bestScore} (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="bg-base-100 p-6 md:p-10 rounded-2xl shadow-xl">
+          <div className="border-b border-base-300 pb-6 mb-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div className="flex-grow">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight leading-tight">
+                  {/* {event.name} */}
+                </h1>
+                <p className="mt-2 text-lg sm:text-xl text-base-content opacity-80 flex items-center">
+                  <MapPinIcon className="h-5 w-5 mr-2 opacity-70" />
+                  {/* {event.location} */}
+                </p>
+              </div>
+            </div>
+          </div>
+
+
+          {roundHeatData && (
+            <div className="flex">
+              <h2 className="text-3xl font-bold mb-6">
+                ROUND: {roundHeatData.roundName} 
+              </h2>          
+              <button
+                onClick={fetchData}
+                className="btn bg-blue-600 text-white rounded ml-auto hover:bg-blue-700"
+                >
+                Refresh
+            </button>
+
+            </div>
+          )}
+
+          {/* Pair tables side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[50%] overflow-auto">
+            {Object.entries(resultsByHeat).map(([heatNum, athletes]) => (
+              <div key={heatNum} className="mt-[5%]">
+                <h3 className="text-2xl font-bold text-center mb-[4%]">HEAT {heatNum}</h3>
+                <table className="min-w-full border-collapse mb-4">
+                  <thead>
+                    <tr>
+                      <th className="border px-3 py-2 text-center">RANK</th>
+                      <th className="border px-3 py-2 text-center">BIB</th>
+                      <th className="border px-3 py-2 text-center">ATHLETE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {athletes.map((athlete, index) => (
+                      <tr key={athlete.athleteId} className={`${athlete.bestScore ? '' : 'italic'}`}>
+                        <td className="border px-3 py-2 align-top text-center">{athlete.bestScore ? index + 1 : '-'}</td>
+                        <td className="border px-3 py-2 align-top text-center">{athlete.bib_num}</td>
+                        <td className="border px-3 py-2 align-top text-center">{athlete.firstName} {athlete.lastName}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ))}
           </div>
-          
-          
-          {/* People that have not scored yet */}
-          <div className="list-disc ml-5">
-            <h1 className='text-4xl font-bold'>NULL VALUES</h1>
-            {heatDataArrNull.map((athlete) => (
-              <div key={athlete.athleteId}>
-                {athlete.firstName} {athlete.lastName} - (Seed: {athlete.seeding}) BIB: {athlete.bib_num}
-              </div>
-            ))}
-          </div>
+          <div className="italic">Unranked athletes have yet to compete.</div>
+          <div className="mt-[2%]">The results here displayed are subjected to change. </div>
         </div>
-      ) : (
-        <div>Loading…</div>
-      )}
+      </div>
     </div>
   );
 }
-
