@@ -289,12 +289,12 @@ export default function JudgingPanelClient({
     <div>
 
       {/* Panel Header */}
-      <div className="bg-gray-100 border-b-1 border-solid">
+      {/* <div className="bg-gray-100 border-b-1 border-solid">
         <div></div>
         <div className="flex items-center justify-end bg-white border border-gray-300">
           {eventName}
         </div>
-      </div>
+      </div> */}
 
       <Toaster />
       
@@ -475,15 +475,7 @@ export default function JudgingPanelClient({
 
             {/* Right side arrows */}
             <div
-              className="flex flex-col items-center justify-center gap-[5%] mr-[2%] w-[20%]
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-md
-                  md:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl"
+              className="flex flex-col items-center justify-center gap-[5%] mr-[2%] w-[20%]"
             >
               <button
                 className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
@@ -505,45 +497,35 @@ export default function JudgingPanelClient({
             onClick={handleScoreSubmit}
             disabled={eventIsFinished}
             className="bg-orange-600 text-black w-[50%] h-[10%] font-bold border-solid border-black border-1 active:bg-orange-700
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-md
-                  md:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl
-                  s256:btn-xs
-                  s384:btn-sm
-                  s576:btn-md
-                  md:btn-lg
-                  lg:btn-xl
-                  xl:btn-2xl"
+                  s256:text-xl
+                  s384:text-xl
+                  s576:text-xl
+                  md:text-4xl
+                  lg:text-5xl
+                  xl:text-6xl
+                  2xl:text-6xl
+                  3xl:text-4xl"
           >
             {eventIsFinished ? "Event Finished" : "SUBMIT"}
           </button>
 
           {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-0 w-full mt-4 h-[60%]
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl">
+          <div className="grid grid-cols-3 gap-0 w-full mt-4 h-[60%]">
             {keys.map((key) => (
               <button
                 key={key}
                 onClick={() => !eventIsFinished && handleClearButtonClick(key)}
-                className={`btn rounded-[0] border-solid border-black h-full text-lg
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl ${
+                className={`btn rounded-[0] border-solid border-black h-full
+                  s256:text-2xl
+                  s288:text-2xl
+                  s384:text-2xl
+                  s448:text-3xl
+                  s576:text-3xl
+                  md:text-4xl
+                  lg:text-5xl
+                  xl:text-7xl
+                  2xl:text-7xl
+                  3xl:text-7xl ${
                     key === "CLEAR"
                       ? "col-span-2 bg-yellow-400"
                       : "bg-yellow-300"
