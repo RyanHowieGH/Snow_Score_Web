@@ -1,5 +1,5 @@
 import { fetchJudgingPanelDataByEventId, fetchJudgingPanelPasscode } from '@/lib/data';
-import JudgingPanelClient from '@/components/JudgingPanelClient';
+import JudgingPanelClient from '@/components/judge-panel/JudgingPanelClient';
 
 type JudgingPanelPageProps = {
   params: {

@@ -2,14 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  ChevronUp,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
-import { eventNames } from "process";
+import { enqueueScoreSubmission, flushScoreQueue } from "@/components/judge-panel/cachingQueue";
+
 
 type JudgingPanelClientProps = {
   judgingPanelPasscode: number;
@@ -63,27 +59,31 @@ export default function JudgingPanelClient({
   ] as const;
 
   const [athletes, setAthletes] = useState<AthleteRun[]>([]);
-  // const [selectedAthlete, setSelectedAthlete] = useState<number>();
   const [score, setScore] = useState("");
   const [runNum, setRunNum] = useState<number | null>(null);
-  const [selected, setSelected] = useState<{
-    bib: number;
-    run_num: number;
-    athlete_id: number;
-  } | null>(null);
+  const [selected, setSelected] = useState<{ bib: number;  run_num: number; athlete_id: number} | null>(null);
   const [eventIsFinished, setEventIsFinished] = useState(false);
-  const [submittedScores, setSubmittedScores] = useState<
-    Record<string, number>
-  >({});
+  const [submittedScores, setSubmittedScores] = useState<Record<string, number>>({});
   const [bestScores, setBestScores] = useState<BestScore[]>([]);
   const [submissionFlag, setSubmissionFlag] = useState<boolean>(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const processed = await flushScoreQueue();
+      if (processed > 0) {
+        setSubmissionFlag((prev) => !prev);
+      }
+    // Look for cached scores at every 5 seconds
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   useEffect(() => {
     if (!eventId) return;
 
-    fetch(
-      `/api/athletes-and-score-1y781dy7821867d12gf3lp00?personnel_id=${personnelId}&round_heat_id=${roundHeatId}`
-    )
+    fetch(`/api/athletes-and-score-1y781dy7821867d12gf3lp00?personnel_id=${personnelId}&round_heat_id=${roundHeatId}`)
       .then(async (res) => {
         const ct = res.headers.get("content-type");
         if (ct && ct.includes("application/json")) {
@@ -94,13 +94,12 @@ export default function JudgingPanelClient({
       .then((data) => {
         console.log("API athletes data:", data);
         setAthletes(data.athletes);
-        // setEventIsFinished(data.event.status === "COMPLETE");
       })
       .catch((err) => {
         console.error("Failed to load athletes data and scores", err);
         setAthletes([]);
       });
-  }, []);
+  }, [eventId, personnelId, roundHeatId]);
 
   useEffect(() => {
     if (!roundHeatId) return;
@@ -108,7 +107,9 @@ export default function JudgingPanelClient({
       `/api/best-run-score-per-judge-dh12cm214v98b71ss?round_heat_id=${roundHeatId}&personnel_id=${personnelId}`
     )
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: BestScore[]) => setBestScores(data))
+      .then((data: BestScore[]) => {
+        setBestScores(data);
+      })
       .catch((err) => {
         console.error("Failed to load best scores", err);
         setBestScores([]);
@@ -206,42 +207,6 @@ export default function JudgingPanelClient({
       return;
     }
 
-    console.log("SUBMITTING:", {
-      roundHeatId,
-      runNum,
-      personnelId,
-      score,
-    });
-
-    const response = await fetch("/api/scores-dj18dh12gpdi1yd89178tsadji1289", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        round_heat_id: roundHeatId,
-        run_num: selected?.run_num,
-        personnel_id: personnelId,
-        score: parseFloat(score),
-        athlete_id: selected?.athlete_id,
-      }),
-    });
-    console.log(
-      `SELECTED RUN_NUM: ${selected?.run_num}, SCORE: ${score}, PERSONNEL_ID: ${personnelId}, ATHLETE_ID: ${selected?.athlete_id}, ROUND_HEAT_ID: ${roundHeatId}`
-    );
-
-    const data = await response.json();
-    console.log("Score submission response:", data);
-
-    if (response.ok) {
-      toast.success("Score submitted successfully", {
-        position: "bottom-center",
-      });
-      setSubmittedScores((prev) => ({
-        ...prev,
-        [`${selected?.athlete_id}-${runNum}`]: parseFloat(score),
-      }));
-      setSubmissionFlag(!submissionFlag);
-      setScore("");
-    }
     if (eventIsFinished) {
       alert("Event is finished, cannot submit scores.");
       return;
@@ -250,21 +215,91 @@ export default function JudgingPanelClient({
       alert("Please select an athlete and enter a score.");
       return;
     }
+
+    const scorePayload = {
+      round_heat_id: roundHeatId,
+      run_num: runNum,
+      personnel_id: personnelId,
+      score: parseFloat(score),
+      athlete_id: selected?.athlete_id as number,
+      bib: selected?.bib as number,
+    };
+
+    // To cache if offline
+    if (!navigator.onLine) {
+      enqueueScoreSubmission(scorePayload);
+      toast.success("Score stored offline. It will be submitted when back online", {
+        position: "bottom-center",
+      });
+      setSubmittedScores((prev) => ({
+        ...prev,
+        [`${selected?.athlete_id}-${runNum}`]: parseFloat(score),
+      }));
+      setScore("");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "/api/scores-dj18dh12gpdi1yd89178tsadji1289",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(scorePayload),
+        }
+      );
+      console.log(
+        `SCORE SUBMISSION: score of ${score} to the run ${selected?.run_num} for the athlete (BIB) ${selected?.bib}`
+      );
+
+      if (response.ok) {
+        toast.success("Score submitted successfully", {
+          position: "bottom-center",
+        });
+        setSubmittedScores((prev) => ({
+          ...prev,
+          [`${selected?.athlete_id}-${runNum}`]: parseFloat(score),
+        }));
+        setSubmissionFlag(!submissionFlag);
+        setScore("");
+        return;
+      }
+
+
+      if(!response.ok){
+        console.warn("Offline internet status >> Queueing score submission.");
+        enqueueScoreSubmission(scorePayload);
+        toast("Score will be submitted when back online", {
+          position: "bottom-center",
+          icon: "🛜",
+        });
+        setSubmittedScores((prev) => ({
+          ...prev,
+          [`${selected?.athlete_id}-${runNum}`]: parseFloat(score),
+        }));
+        setScore("");
+      }
+
+    } catch (err) {
+      console.error("Failed to submit score.");
+    }
   };
 
   return (
     <div>
-      <div className="bg-gray-100 border-b-1 border-solid">
+
+      {/* Panel Header */}
+      {/* <div className="bg-gray-100 border-b-1 border-solid">
         <div></div>
         <div className="flex items-center justify-end bg-white border border-gray-300">
           {eventName}
-          ONLINE/OFFLINE
         </div>
-      </div>
+      </div> */}
+
       <Toaster />
+      
       <div className="flex w-full h-screen">
-        {/* Athlete List
-        make the top row sticky to vertical scrolling*/}
+        {/* Athlete List */}
         <div className="w-[30%] p-4 space-y-4 pt-[2%] pb-[2%] ">
           <div className="w-full h-full border border-black overflow-x-auto">
             <div className=" top-0 z-10 sticky inline-grid grid-flow-col auto-cols-[minmax(7rem,1fr)] gap-0 mb-0 text-center text-2xl font-bold border-b-1 border-solid border-black">
@@ -440,15 +475,7 @@ export default function JudgingPanelClient({
 
             {/* Right side arrows */}
             <div
-              className="flex flex-col items-center justify-center gap-[5%] mr-[2%] w-[20%]
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-md
-                  md:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl"
+              className="flex flex-col items-center justify-center gap-[5%] mr-[2%] w-[20%]"
             >
               <button
                 className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
@@ -470,45 +497,35 @@ export default function JudgingPanelClient({
             onClick={handleScoreSubmit}
             disabled={eventIsFinished}
             className="bg-orange-600 text-black w-[50%] h-[10%] font-bold border-solid border-black border-1 active:bg-orange-700
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-md
-                  md:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl
-                  s256:btn-xs
-                  s384:btn-sm
-                  s576:btn-md
-                  md:btn-lg
-                  lg:btn-xl
-                  xl:btn-2xl"
+                  s256:text-xl
+                  s384:text-xl
+                  s576:text-xl
+                  md:text-4xl
+                  lg:text-5xl
+                  xl:text-6xl
+                  2xl:text-6xl
+                  3xl:text-4xl"
           >
             {eventIsFinished ? "Event Finished" : "SUBMIT"}
           </button>
 
           {/* Number Pad */}
-          <div className="grid grid-cols-3 gap-0 w-full mt-4 h-[60%]
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl">
+          <div className="grid grid-cols-3 gap-0 w-full mt-4 h-[60%]">
             {keys.map((key) => (
               <button
                 key={key}
                 onClick={() => !eventIsFinished && handleClearButtonClick(key)}
-                className={`btn rounded-[0] border-solid border-black h-full text-lg
-                  s256:text-xs
-                  s384:text-sm
-                  s576:text-lg
-                  lg:text-xl
-                  xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl ${
+                className={`btn rounded-[0] border-solid border-black h-full
+                  s256:text-2xl
+                  s288:text-2xl
+                  s384:text-2xl
+                  s448:text-3xl
+                  s576:text-3xl
+                  md:text-4xl
+                  lg:text-5xl
+                  xl:text-7xl
+                  2xl:text-7xl
+                  3xl:text-7xl ${
                     key === "CLEAR"
                       ? "col-span-2 bg-yellow-400"
                       : "bg-yellow-300"
