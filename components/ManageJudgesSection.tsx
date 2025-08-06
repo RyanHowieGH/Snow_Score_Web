@@ -191,7 +191,7 @@ export default function ManageJudgingPanelsDisplay({
         <AddJudgeToHeatModal
           open={!!modalInfo}
           onClose={() => setModalInfo(null)}
-          heatId={parseInt(modalInfo.heatId)}
+          heatId={modalInfo.heatId}
           onJudgeAdded={refreshPanels}
         />
       )}
