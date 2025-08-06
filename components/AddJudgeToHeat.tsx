@@ -8,7 +8,7 @@ import { Info } from "lucide-react";
 interface AddJudgeToHeatModalProps {
   open: boolean;
   onClose: () => void;
-  heatId: number;
+  heatId: string;
   onJudgeAdded: () => void;
 }
 
@@ -28,7 +28,7 @@ export default function AddJudgeToHeatModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          heat_id: Number(heatId),
+          heat_id:heatId,
           name,
           header,
         }),
