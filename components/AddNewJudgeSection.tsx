@@ -1,5 +1,5 @@
 'use client';
-import { useState, FormEvent, ChangeEvent, useMemo } from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import Modal from "./PopUpModal";
 import { Judge } from '@/lib/definitions';
 import { Info, X } from 'lucide-react';
@@ -10,9 +10,6 @@ interface AddNewJudgeSectionProps {
   onAddJudgeToEvent: (judge: Judge) => void,
 }
 
-const VALID_NAME_REGEX = /^[\p{L}\s'-]*$/u; // Names usually don't have numbers
-const VALID_HEADER_REGEX = /^[\p{L}\p{N}\s'-]*$/u; // Headers can have numbers (e.g., Judge 1)
-
 export default function AddNewJudgeSection({
   event_id,
   onAddJudgeToEvent
@@ -22,132 +19,131 @@ export default function AddNewJudgeSection({
     const [newJudgeHeader, setNewJudgeHeader] = useState<string>("");
     const [newJudgeName, setNewJudgeName] = useState<string>("");
 
-    const [headerError, setHeaderError] = useState<string>('');
-    const [nameError, setNameError] = useState<string>('');
-
-    // Memoize the validity check to avoid re-calculating on every render
-    const isFormValid = useMemo(() => {
-        // 1. Check individual field validity
-        const isHeaderFormatValid = VALID_HEADER_REGEX.test(newJudgeHeader);
-        const isNameFormatValid = VALID_NAME_REGEX.test(newJudgeName);
-
-        // 2. Check business rule: Header is required
-        const isHeaderFilled = newJudgeHeader.trim() !== '';
-
-        // 3. The form is valid if all formats are correct AND the required header field is filled.
-        return isHeaderFormatValid && isNameFormatValid && isHeaderFilled;
-    }, [newJudgeHeader, newJudgeName]);
-
+    const REGEX_RULE_NAME = /[^\p{L}\s'-]+/gu;
+    const REGEX_RULE_HEADER = /[^\p{L}\p{N}\s'-]+/gu;
 
     const handleSubmitNewJudge = async (e: FormEvent<HTMLFormElement>) =>{
         e.preventDefault();
-        if (!isFormValid) {
-            toast.error("Please fix the errors before saving.");
-            return;
-        }
-
-        try {
+        try{
             const response = await fetch("/api/add-judge-to-event", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: newJudgeName.trim(), // Send trimmed values
-                    header: newJudgeHeader.trim(), // Send trimmed values
+                    name: newJudgeName.trim(),
+                    header: newJudgeHeader.trim(),
                     event_id,
                 }),
-            });
-
-            if (!response.ok) {
-                // Handle server-side validation errors
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Server rejected the request.");
-            }
-
-            const data = await response.json();
-            onAddJudgeToEvent(data.judge);
-            toast.success(`${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} was assigned to the event`);
-            
-            // Close and reset form
+                });
+                const data = await response.json();
+                onAddJudgeToEvent(data.judge);
+                console.log("A new judge was added to the event");
+                toast.success(`${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} was assigned to the event`);
+        } catch (error) {
+            console.error('Failed to add new judge', error);
+            toast.error(`Failed to assign ${(newJudgeName.trim() === "" || newJudgeName === null) ? newJudgeHeader : newJudgeName} to the event`);
+        }
+        finally{
             setCreateNewJudge(false);
             setNewJudgeHeader(""); 
             setNewJudgeName("");
-            setHeaderError('');
-            setNameError('');
-
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "An unknown error occurred.";
-            console.error('Failed to add new judge', error);
-            toast.error(`Failed to assign judge: ${message}`);
-        }
-    };
-    
-    // --- VVV NEW: Handlers with validation VVV ---
-    const handleHeaderChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setNewJudgeHeader(value);
-        if (!VALID_HEADER_REGEX.test(value)) {
-            setHeaderError("Header contains invalid characters.");
-        } else {
-            setHeaderError('');
-        }
-    };
-    
-    const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setNewJudgeName(value);
-        if (!VALID_NAME_REGEX.test(value)) {
-            setNameError("Name contains invalid characters.");
-        } else {
-            setNameError('');
         }
     };
 
-    return (
+    function handleHeaderChange(e: ChangeEvent<HTMLInputElement>) {
+        const regexStrippedHeader = e.target.value.replace(REGEX_RULE_HEADER, "");
+        setNewJudgeHeader(regexStrippedHeader);
+        }
+
+    function handleNameChange(e: ChangeEvent<HTMLInputElement>) {
+        const regexStrippedName = e.target.value.replace(REGEX_RULE_NAME, "");
+        setNewJudgeName(regexStrippedName);
+        }
+
+    return(
         <div>
-            <button className="btn btn-primary" onClick={() => setCreateNewJudge(true)}>
-                Add Judge
+            {/* ADD NEW JUDGE */}
+            <button 
+            className="btn btn-danger ml-[0] mt-[1%]" 
+            onClick={() =>  setCreateNewJudge(true)}>
+                Add judge
             </button>
 
-            <Modal open={openCreateNewJudge} onClose={() => setCreateNewJudge(false)}>
-                <form onSubmit={handleSubmitNewJudge}>
-                    {/* ... (Tooltip and Title) ... */}
-                    <div className='flex-col flex space-y-4'>
-                        {/* Header Input with Error Handling */}
-                        <label className="form-control w-full">
-                            <div className="label"><span className="label-text">Header*</span></div>
-                            <input
-                                type="text"
-                                value={newJudgeHeader}
-                                onChange={handleHeaderChange}
-                                className={`input input-bordered w-full ${headerError ? 'input-error' : ''}`}
-                                placeholder="e.g., Judge 1"
-                                required
-                            />
-                            {headerError && <div className="label"><span className="label-text-alt text-error">{headerError}</span></div>}
-                        </label>
 
-                        {/* Name Input with Error Handling */}
-                        <label className="form-control w-full">
-                            <div className="label"><span className="label-text">Name (Optional)</span></div>
-                            <input
-                                type="text"
-                                value={newJudgeName}
-                                onChange={handleNameChange}
-                                className={`input input-bordered w-full ${nameError ? 'input-error' : ''}`}
-                                placeholder="e.g., Jane Doe"
-                            />
-                            {nameError && <div className="label"><span className="label-text-alt text-error">{nameError}</span></div>}
-                        </label>
-                    </div>
+            {/* CREATE AND ADD NEW JUDGE */}
+                <Modal open={openCreateNewJudge} onClose={() => {
+                    setCreateNewJudge(false); 
+                    setNewJudgeHeader(""); 
+                    setNewJudgeName("")}}>
+                    <form onSubmit={(e) => handleSubmitNewJudge(e)}>
+                        <div>      
+                            {/*Tooltip*/}      
+                            <div className="relative ml-2 group inline-block">
 
-                    <div className="modal-action mt-6">
-                        <button type="button" className="btn" onClick={() => setCreateNewJudge(false)}>Cancel</button>
-                        <button type="submit" disabled={!isFormValid} className="btn btn-primary">
-                            Save Judge
+                            <Info className="h-5 w-5 text-gray-500 hover:text-gray-700 cursor-context-menu" />
+                            <div
+                                className={`
+                                invisible group-hover:visible 
+                                opacity-0 group-hover:opacity-100 
+                                transition-all duration-150
+                                absolute left-full top-1/2
+                                ml-2 w-[2000%]
+                                -translate-y-1/2
+                                bg-gray-800 text-white text-sm 
+                                rounded p-3 shadow
+                                `}
+                            >
+                                The new judge will be assigned to every division, round and heat in this event. The judging panels QR code for this judge will be displayed once the page is refreshed.
+                            </div>
+
+                            {/*New Judge form*/}
+                            </div>
+                            <h3 
+                            className='text-black font-bold text-xl text-center mb-5'>
+                                New Judge
+                            </h3>
+                            <div
+                            className='flex-col flex'>
+                                <div
+                                className='inline-flex'>
+                                    <span 
+                                    className=' text-black mt-1'>                                
+                                    Header:
+                                    </span>
+                                    <input
+                                    id="judge_header"
+                                    type="text"
+                                    value={newJudgeHeader}
+                                    onChange={handleHeaderChange}
+                                    className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
+                                    placeholder="Enter header"/>
+                                </div>
+
+                                <div
+                                className='inline-flex mt-2'>
+                                    <span 
+                                    className=' text-black mt-1 mx-1'>                                
+                                    Name:
+                                    </span>
+                                    <input
+                                    id="judge_name"
+                                    type="text"
+                                    value={newJudgeName}
+                                    onChange={handleNameChange}
+                                    className="border border-gray-300 rounded px-2 py-1 w-full text-black mx-3"
+                                    placeholder="Enter name"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                        type="submit"
+                        disabled={!newJudgeHeader.trim() && !newJudgeName.trim()}
+                        className="block mx-auto w-25 px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50 mt-5"
+                        >
+                        Save
                         </button>
-                    </div>
-                </form>
-            </Modal>
+                    </form>
+                </Modal>
         </div>
-    );
+    )
 }

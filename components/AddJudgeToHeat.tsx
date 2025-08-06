@@ -8,24 +8,18 @@ import { Info } from "lucide-react";
 interface AddJudgeToHeatModalProps {
   open: boolean;
   onClose: () => void;
-  roundId: string;
-  heatId: string;
-  divisionId: string;
-  eventId: number;
+  heatId: number;
   onJudgeAdded: () => void;
 }
 
 export default function AddJudgeToHeatModal({
   open,
   onClose,
-  roundId,
   heatId,
-  divisionId,
-  eventId,
   onJudgeAdded,
 }: AddJudgeToHeatModalProps) {
-  const [name, setName] = useState("");
-  const [header, setHeader] = useState("");
+  const [name, setName] = useState<string>("");
+  const [header, setHeader] = useState<string>("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,9 +28,6 @@ export default function AddJudgeToHeatModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          event_id: eventId,
-          division_id: Number(divisionId),
-          round_id: Number(roundId),
           heat_id: Number(heatId),
           name,
           header,
@@ -78,7 +69,7 @@ export default function AddJudgeToHeatModal({
                 `}
             >
                 The new judge will be assigned to only the selected division,
-                round and heat. The judging panel’s QR code for this judge will
+                round and heat. The judging panel's QR code for this judge will
                 be displayed once the page is refreshed.
             </div>
         </div>
