@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
-import type { RegisteredAthlete } from '@/lib/data';
+import type { RegisteredAthlete } from '@/lib/definitions';
 import {
     getEventAthletesAction,
     removeAthleteFromEventAction,

@@ -28,7 +28,7 @@ export default async function HeadJudge () {
 
     const events: SnowEvent[] = user?.roleId !== undefined
       ? await fetchEventsFilteredByHeadJudgeRoleId(user.appUserId)
-      : [];
+      : undefined;
 
     return(
         <div>
