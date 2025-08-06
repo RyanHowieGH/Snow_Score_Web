@@ -102,7 +102,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                     <div>
                         {renderedJudges?.map((judge) => (
                             <div
-                                key={judge.personnel_id}
+                                key={`${judge.personnel_id} - ${judge.header} - ${judge.name}`}
                                 className="flex items-center justify-between py-2 border-b border-black dark:border-white"
                             >
                                 <div className="text-lg font-bold text-left text-black dark:text-white">
@@ -115,7 +115,7 @@ async function deleteJudgeNullScores(eventId: number, personnelId: string) {
                     <div>
                         {renderedJudges?.map((judge) => (
                             <div
-                                key={judge.personnel_id}
+                                key={`${judge.personnel_id} - ${judge.header} - ${judge.name}`}
                                 className="flex items-center justify-between py-2 border-b border-black dark:border-white"
                             >
                                 <div className="text-lg font-bold text-left text-black dark:text-white">
