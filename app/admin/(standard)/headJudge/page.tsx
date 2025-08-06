@@ -2,7 +2,7 @@ import React, { use } from 'react';
 import { getAuthenticatedUserWithRole } from "@/lib/auth/user";
 import { notFound } from 'next/navigation';
 import EventList from '@/components/EventList'; // Ensure correct path
-import { fetchEventsFilteredByRoleId } from '@/lib/data';
+import { fetchEventsFilteredByHeadJudgeRoleId } from '@/lib/data';
 import type { SnowEvent } from '@/lib/definitions';
 import type { Metadata } from 'next';
 
@@ -27,7 +27,7 @@ export default async function HeadJudge () {
   ]
 
     const events: SnowEvent[] = user?.roleId !== undefined
-      ? await fetchEventsFilteredByRoleId(user.appUserId)
+      ? await fetchEventsFilteredByHeadJudgeRoleId(user.appUserId)
       : [];
 
     return(

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const events = await fetchEvents();
-  const publicEvents = events.filter(event => event.status === 'Active');
+  const publicEvents = events.filter(event => event.status === 'Active' || event.status === 'Complete');
 
   return (
     // RESPONSIVE: Set a background color for the whole page. The gradient will be on the hero.

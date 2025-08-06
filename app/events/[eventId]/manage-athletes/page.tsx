@@ -65,7 +65,7 @@ export default async function ManageAthletesPage({ params }: ManageAthletesPageP
             />
 
             <div className="mt-8 flex justify-end gap-3">
-                {event.status === 'Draft' && (
+                {event.status === 'Draft' || event.status === 'Inactive' && (
                     // This would call another server action to update event status
                     <button className="btn btn-success">Publish Event</button>
                 )}

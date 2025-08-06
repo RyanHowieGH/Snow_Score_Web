@@ -122,7 +122,7 @@ export async function updateEventAction(
         `;
         // Assuming status is also editable or has a default - add status to form if editable
         // For now, let's keep the existing status or set to 'Scheduled' if it implies active editing
-        const currentEventStatus = (await client.query('SELECT status FROM ss_events WHERE event_id = $1', [eventId])).rows[0]?.status || 'Scheduled';
+        const currentEventStatus = (await client.query('SELECT status FROM ss_events WHERE event_id = $1', [eventId])).rows[0]?.status;
 
         await client.query(updateEventQuery, [
             validatedCoreData.name,
