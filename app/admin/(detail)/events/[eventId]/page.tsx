@@ -272,18 +272,29 @@ export default async function AdminEventDetailPage({
       </div>
 
       {/* Optional: Publish button */}
-      {allowedRolesToManageTheEvent.includes(user.roleName) && (
-        <div className="mt-8 pt-6 border-t border-base-300 text-center">
-          <ToggleEventStatusButton 
-            eventId={eventId} 
-            currentStatus={event.status === "Active" ? "Active" : "Inactive"} 
-          />
-          <p className="text-xs text-base-content/60 mt-2">
-            {event.status === "Active"
-              ? "Set this event to inactive and hide it from public listings."
-              : "Make this event visible to the public and open for registrations (if applicable)."}
-          </p>
+      {allowedRolesToManageTheEvent.includes(user.roleName) && (          
+        <div>
+          {event.status != 'Complete' 
+          ?
+          <div className="mt-8 pt-6 border-t border-base-300 text-center">
+            <ToggleEventStatusButton 
+              eventId={eventId} 
+              currentStatus={event.status === "Active" ? "Active" : "Inactive"} 
+            />
+            <p className="text-xs text-base-content/60 mt-2">
+              {event.status === "Active"
+                ? "Set this event to inactive and hide it from public listings."
+                : "Make this event visible to the public and open for registrations (if applicable)."}
+            </p>
+          </div>
+          :
+          <div>
+            This event has been set as complete.
+          </div>
+          }
+
         </div>
+
       )}
     </div>
   );
