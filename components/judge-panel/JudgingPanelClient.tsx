@@ -316,8 +316,8 @@ export default function JudgingPanelClient({
                   md:text-lg
                   lg:text-xl
                   xl:text-2xl
-                  2xl:text-3xl
-                  3xl:text-4xl"
+                  2xl:text-2xl
+                  3xl:text-2xl"
                     key={run.run_num}
                   >
                     RUN {run.run_num}
