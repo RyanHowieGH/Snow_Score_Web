@@ -202,11 +202,11 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                     
                         {competitionData.map((division) => (
                             <div className='flex' key={division.division_id}>
-                                <div className='border-1 border-secondary w-[30%] rounded text-center p-[0.5%] mb-[1%] mr-[2%]'>{division.division_name}</div>
-                                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
+                                <div className='border-1 border-secondary min-w-[10%] rounded text-center p-[0.5%] mb-[1%] mr-[2%]'>{division.division_name}</div>
+                                <div className='flex w-[10%] gap-3'>
                                     {division.rounds.map((round) => (
                                     <div
-                                     className="btn btn-outline btn-secondary w-full"
+                                     className="btn btn-outline btn-secondary w-full max-w-[100%]"
                                     key={`${division.division_id}-${round.round_id}`}>
                                         <Link href={`/events/${event.event_id}/${division.division_id}/${round.round_id}`}>                                        
                                             {round.round_name}
@@ -216,7 +216,7 @@ export default async function PublicEventDetailPage({ params: paramsProp }: Publ
                                 </div>
                             </div>
                             ))}
-                    </Section>      
+                    </Section>
 
                     {/* Registered Athletes/Participants Section */}
                     <Section title="Participants">

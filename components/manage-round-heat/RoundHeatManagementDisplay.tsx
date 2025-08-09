@@ -83,8 +83,18 @@ export default function RoundHeatManagementDisplay(
     setEditingIndex(null);
   }
 
-  function addRound() {
+  async function addRound() {
     if (isAddingRound.current) return;
+    // If another round is being edited, save it before adding
+    if (editingIndex !== null) {
+      try {
+        await saveRound(editingIndex);
+      } catch {
+        // If saving fails, do not proceed with adding a new round
+        return;
+      }
+    }
+
     isAddingRound.current = true;
 
     try {
@@ -114,6 +124,58 @@ export default function RoundHeatManagementDisplay(
       toast.error("Failed to add a new round.");
     } finally {
       isAddingRound.current = false;
+    }
+  }
+
+  async function progressRound(roundId: number | null) {
+    try {
+      const res = await fetch(`/api/make-round-progress?source_round_id=${roundId}`);
+      if (!res.ok) throw new Error("Failed to make round progress");
+      toast.success("Round progressed");
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to progress round");
+    }
+  }
+
+  async function deleteRound(index: number) {
+    const round = roundArray[index];
+    try {
+        const res = await fetch(`/api/delete-round?round_id=${round.round_id}`, {
+          method: "DELETE"})
+        if (!res.ok) throw new Error("Failed to delete round");
+      
+
+      const updated = roundArray
+        .filter((_, i) => i !== index)
+        .map((r, i) => ({
+          ...r,
+          round_num: i + 1,
+          round_sequence: i + 1,
+        }));
+      setRoundArray(updated);
+      setEditingIndex(null);
+      setDirtyMap({});
+      setOriginalRounds({});
+
+      // Persist updated ordering
+      const payload = updated.map((r, i) => ({
+        ...r,
+        round_num: i + 1,
+        round_sequence: i + 1,
+      }));
+      if (payload.length > 0) {
+        const saveRes = await fetch("/api/add-update-rounds-and-heats", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!saveRes.ok) throw new Error("Failed to update round order");
+      }
+      toast.success("Round deleted");
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Error deleting round");
     }
   }
 
@@ -198,7 +260,7 @@ export default function RoundHeatManagementDisplay(
                   >
                     {isEditing ? "Cancel" : "Edit"}
                   </button>
-                  {isEditing && (
+                  {isEditing ? (
                     <button
                       className="btn btn-sm btn-success"
                       disabled={!isDirty}
@@ -206,6 +268,26 @@ export default function RoundHeatManagementDisplay(
                     >
                       Save
                     </button>
+                  ) : (
+                    <>
+                    {round.round_num == 1 ? 
+                    <></>
+                    :                      
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      disabled={round.round_num == 1}
+                      onClick={() => progressRound(round.round_id)}>
+                      Progress
+                    </button>
+                    }
+
+                      <button
+                        className="btn btn-sm btn-error"
+                        onClick={() => deleteRound(roundIndex)}
+                      >
+                        Delete
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
