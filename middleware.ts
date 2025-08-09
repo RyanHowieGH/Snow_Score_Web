@@ -23,7 +23,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/public-round-data-null-dd21h8u1289u91288og5(.*)',
   '/api/public-round-data-notnull-dd21h8u1289u91288og5(.*)',
   '/api/public-leaderboard-preset-data-jdn1hd1728g621ifkg4plh5mo(.*)',
-  
+  '/api/get-public-event-data-dj29g4u8gjdd128jhd(.*)',
 ]);
 
 // Ensure this is the correct URL PATH for your admin page
