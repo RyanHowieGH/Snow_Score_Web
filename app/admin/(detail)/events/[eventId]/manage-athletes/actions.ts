@@ -278,11 +278,43 @@ export async function deleteRegistrationAction(
   }
 }
 
+// --- Action to update multiple athletes' bib numbers in an event ---
+export async function updateBibNumbersAction(
+  eventId: number,
+  updates: { athleteId: number; divisionId: number; bibNum: string | null }[],
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  const client = await getDbPool().connect();
+  try {
+    await authorizeAction();
+
+    await client.query('BEGIN');
+    for (const { athleteId, divisionId, bibNum } of updates) {
+      await client.query(
+        `UPDATE ss_event_registrations
+         SET bib_num = $1
+         WHERE event_id = $2 AND athlete_id = $3 AND division_id = $4`,
+        [bibNum, eventId, athleteId, divisionId],
+      );
+    }
+    await client.query('COMMIT');
+    revalidatePath(`/admin/events/${eventId}/manage-athletes`);
+    return { success: true, message: 'Bib numbers updated.' };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    const message = error instanceof Error ? error.message : 'Failed to update bib numbers.';
+    console.error('updateBibNumbersAction error:', error);
+    return { success: false, error: message };
+  } finally {
+    client.release();
+
+  }
+}
+
 // --- Action to get the current event roster ---
-export async function getEventRoster(eventId: number): Promise<{ 
-    success: boolean; 
-    data?: RegisteredAthleteWithDivision[]; 
-    error?: string 
+export async function getEventRoster(eventId: number): Promise<{
+    success: boolean;
+    data?: RegisteredAthleteWithDivision[];
+    error?: string
 }> {
     try {
         await authorizeAction();
