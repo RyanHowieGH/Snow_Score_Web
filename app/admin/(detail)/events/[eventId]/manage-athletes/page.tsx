@@ -7,7 +7,8 @@ import React, { useState, ChangeEvent, useTransition, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Papa, { ParseResult } from 'papaparse';
 // --- VVV Import the new action VVV ---
-import { validateCsvHeadersAction, checkAthletesAgainstDb, addAndRegisterAthletes, getEventDivisions, deleteRegistrationAction, getEventRoster } from './actions';
+import { validateCsvHeadersAction, checkAthletesAgainstDb, addAndRegisterAthletes, getEventDivisions, deleteRegistrationAction, getEventRoster, updateBibNumbersAction } from './actions';
+
 import Link from 'next/link';
 import { TrashIcon, InformationCircleIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import type { Division, CheckedAthleteClient, AthleteToRegister, RegistrationResultDetail, RegisteredAthleteWithDivision } from '@/lib/definitions';
@@ -31,6 +32,7 @@ export default function ManageAthletesPage() {
     const [eventId, setEventId] = useState<number | null>(null);
 
     const [currentRoster, setCurrentRoster] = useState<RegisteredAthleteWithDivision[]>([]);
+    const [bibChanges, setBibChanges] = useState<Record<string, string | null>>({});
     const [file, setFile] = useState<File | null>(null);
     const [checkedAthletes, setCheckedAthletes] = useState<CheckedAthleteClient[]>([]);
     const [eventDivisions, setEventDivisions] = useState<Division[]>([]);
@@ -42,7 +44,8 @@ export default function ManageAthletesPage() {
     const [isRosterLoading, startRosterTransition] = useTransition();
     const [isChecking, startCheckTransition] = useTransition();
     const [isRegistering, startRegisterTransition] = useTransition();
-    const isLoading = isRosterLoading || isChecking || isRegistering;
+    const [isUpdatingBib, startBibTransition] = useTransition();
+    const isLoading = isRosterLoading || isChecking || isRegistering || isUpdatingBib;
 
     useEffect(() => {
         const id = parseInt(eventIdParam, 10);
@@ -120,6 +123,44 @@ export default function ManageAthletesPage() {
                 setPageSuccess(response.message);
                 setCurrentRoster(prev => prev.filter(a => !(a.athlete_id === athleteId && a.division_id === divisionId)));
             } else { setPageError(response.message); }
+        });
+    };
+
+    const handleBibChange = (athleteId: number, divisionId: number, value: string) => {
+        setCurrentRoster(prev => prev.map(a => (
+            a.athlete_id === athleteId && a.division_id === divisionId
+                ? { ...a, bib_num: value }
+                : a
+        )));
+        const key = `${athleteId}-${divisionId}`;
+        setBibChanges(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleSaveAllBibs = () => {
+        if (eventId === null || Object.keys(bibChanges).length === 0) return;
+        setPageError(null); setPageSuccess(null);
+        startBibTransition(async () => {
+            const updates = Object.entries(bibChanges).map(([key, bibNum]) => {
+                const [athleteIdStr, divisionIdStr] = key.split('-');
+                return {
+                    athleteId: parseInt(athleteIdStr, 10),
+                    divisionId: parseInt(divisionIdStr, 10),
+                    bibNum: bibNum === '' ? null : bibNum,
+                };
+            });
+            const response = await updateBibNumbersAction(eventId, updates);
+            if (response.success) {
+                setPageSuccess(response.message || 'BIB numbers updated.');
+
+                const rosterRes = await getEventRoster(eventId);
+                if (rosterRes.success && rosterRes.data) {
+                    setCurrentRoster(rosterRes.data);
+                }
+                setBibChanges({});
+            } else {
+                setPageError('Failed to update bib numbers.');
+
+            }
         });
     };
     
@@ -307,21 +348,44 @@ export default function ManageAthletesPage() {
                     {isRosterLoading ? (
                         <div className="text-center py-4"><span className="loading loading-spinner"></span><p className="text-xs">Loading...</p></div>
                     ) : currentRoster.length > 0 ? (
-                        <div className="overflow-x-auto max-h-96">
-                            <table className="table table-sm table-pin-rows">
-                                <thead className='bg-base-200'><tr><th>Bib #</th><th>Name</th><th>Division</th><th>Actions</th></tr></thead>
-                                <tbody>
-                                    {currentRoster.map(athlete => (
-                                        <tr key={`${athlete.athlete_id}-${athlete.division_id}`}>
-                                            <td>{athlete.bib_num || 'N/A'}</td>
-                                            <td>{athlete.first_name} {athlete.last_name}</td>
-                                            <td>{athlete.division_name}</td>
-                                            <td><button className="btn btn-xs btn-ghost text-error" onClick={() => handleDeleteRegistration(athlete.athlete_id, athlete.division_id)} disabled={isLoading}><TrashIcon className="h-4 w-4" /></button></td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                        <>
+                            <div className="overflow-x-auto max-h-96">
+                                <table className="table table-sm table-pin-rows">
+                                    <thead className='bg-base-200'><tr><th>BIB #</th><th>Name</th><th>Division</th><th>Actions</th></tr></thead>
+                                    <tbody>
+                                        {currentRoster.map(athlete => (
+                                            <tr key={`${athlete.athlete_id}-${athlete.division_id}`}>
+                                                <td>
+
+                                                    <input
+                                                        type="number"
+                                                        min = '0'
+                                                        max = '100000'
+                                                        value={athlete.bib_num ?? ''}
+                                                        onChange={(e) => handleBibChange(athlete.athlete_id, athlete.division_id, e.target.value)}
+                                                        className="input input-xs w-20"
+                                                        disabled={isLoading}
+                                                    />
+                                                </td>
+                                                <td>{athlete.first_name} {athlete.last_name}</td>
+                                                <td>{athlete.division_name}</td>
+                                                <td><button className="btn btn-xs btn-ghost text-error" onClick={() => handleDeleteRegistration(athlete.athlete_id, athlete.division_id)} disabled={isLoading}><TrashIcon className="h-4 w-4" /></button></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleSaveAllBibs}
+                                    disabled={Object.keys(bibChanges).length === 0 || isLoading}
+                                >
+                                    {isUpdatingBib ? <span className="loading loading-spinner"></span> : 'Update BIB Numbers'}
+                                </button>
+                            </div>
+                        </>
+
                     ) : (
                         <p className="text-sm italic text-base-content/70 py-4">No athletes registered for this event.</p>
                     )}
