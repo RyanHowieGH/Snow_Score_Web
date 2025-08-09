@@ -24,6 +24,10 @@ type HeatData = {
   bib_num: number;
   heat_num: number;
 };
+type EventData = { 
+  name: string | null;
+  error?: string
+};
 
 export default function HeatResultsPage() {
   const { eventId, divisionId, roundId } = useParams() as Record<string, string>;
@@ -32,6 +36,7 @@ export default function HeatResultsPage() {
   const [roundHeatData, setRoundHeatData] = useState<RoundHeatData | null>(null);
   const [results, setResults] = useState<HeatData[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [eventName, setEventName] = useState<string | null>("");
 
   const fetchData = async () => {
     setError(null);
@@ -53,6 +58,16 @@ export default function HeatResultsPage() {
           roundName: d.round_name,
         });
       }
+
+      const res2 = await fetch(
+        `${base}/api/get-public-event-data-dj29g4u8gjdd128jhd?event_id=${eventId}`
+      )
+      if (!res2.ok) throw new Error("Failed to fetch round heat data");
+
+      const data: EventData = await res2.json();
+      setEventName(data.name ?? "");
+      
+
 
       // fetch non-null and null results
       const [respNotNull, respNull] = await Promise.all([
@@ -119,15 +134,11 @@ export default function HeatResultsPage() {
         <div className="bg-base-100 p-6 md:p-10 rounded-2xl shadow-xl">
           <div className="border-b border-base-300 pb-6 mb-8">
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-              {/* <div className="flex-grow">
+              <div className="flex-grow">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight leading-tight">
-                  {event.name}
+                  {eventName}
                 </h1>
-                <p className="mt-2 text-lg sm:text-xl text-base-content opacity-80 flex items-center">
-                  <MapPinIcon className="h-5 w-5 mr-2 opacity-70" />
-                  {event.location}
-                </p>
-              </div> */}
+              </div>
             </div>
           </div>
 
