@@ -180,8 +180,10 @@ export async function addAndRegisterAthletes(
             let athleteId = athlete.dbAthleteId;
 
             try {
+                // --- VVV THIS IS THE UPDATED LOGIC BLOCK VVV ---
+
                 if (athlete.isOverwrite && athleteId) {
-                    // UPDATE statement now includes the new points fields
+                    // Scenario 1: User chose to OVERWRITE a conflict. Update the entire athlete profile.
                     await client.query(
                         `UPDATE ss_athletes SET 
                             last_name = $1, first_name = $2, dob = $3, gender = $4, nationality = $5, stance = $6, fis_num = $7,
@@ -195,7 +197,7 @@ export async function addAndRegisterAthletes(
                         ]
                     );
                 } else if (athlete.status === 'new' && !athleteId) {
-                    // INSERT statement now includes the new points fields
+                    // Scenario 2: This is a brand new athlete. INSERT the full profile.
                     const insertAthleteResult = await client.query(
                         `INSERT INTO ss_athletes (
                             last_name, first_name, dob, gender, nationality, stance, fis_num,
@@ -208,6 +210,17 @@ export async function addAndRegisterAthletes(
                         ]
                     );
                     athleteId = insertAthleteResult.rows[0].athlete_id;
+                } else if (athlete.status === 'matched' && athleteId) {
+                    // Scenario 3 (NEW): The athlete was matched. Update ONLY their points fields.
+                    await client.query(
+                        `UPDATE ss_athletes SET 
+                            fis_hp_points = $1, fis_ss_points = $2, fis_ba_points = $3, wspl_points = $4 
+                         WHERE athlete_id = $5;`,
+                        [
+                            athlete.fis_hp_points, athlete.fis_ss_points, athlete.fis_ba_points, athlete.wspl_points,
+                            athleteId
+                        ]
+                    );
                 }
 
                 if (!athleteId || !athlete.division_id) {
