@@ -285,17 +285,100 @@ export default function JudgingPanelClient({
     }
   };
 
+  const getRunsByRunNum = (run: number) => {
+    return athletes
+      .map((athlete) => ({
+        athlete,
+        run: athlete.runs.find((r) => r.run_num === run),
+      }))
+      .filter((item): item is { athlete: AthleteRun; run: AthleteRun["runs"][number] } =>
+        Boolean(item.run)
+      )
+      .sort((a, b) => a.run.seeding - b.run.seeding);
+  };
+
+
+  // Arrow movents
+
+  const handleArrowUp = () => {
+    if (!selected) return;
+    const runs = getRunsByRunNum(selected.run_num);
+    const index = runs.findIndex(
+      ({ athlete }) => athlete.athlete_id === selected.athlete_id
+    );
+    if (index === -1) return;
+    const newIndex = index - 1 < 0 ? runs.length - 1 : index - 1;
+    const { athlete, run } = runs[newIndex];
+    setSelected({ bib: athlete.bib, run_num: run.run_num, athlete_id: athlete.athlete_id });
+    setRunNum(run.run_num);
+  };
+
+  const handleArrowDown = () => {
+    if (!selected) return;
+    const runs = getRunsByRunNum(selected.run_num);
+    const index = runs.findIndex(
+      ({ athlete }) => athlete.athlete_id === selected.athlete_id
+    );
+    if (index === -1) return;
+    const newIndex = (index + 1) % runs.length;
+    const { athlete, run } = runs[newIndex];
+    setSelected({ bib: athlete.bib, run_num: run.run_num, athlete_id: athlete.athlete_id });
+    setRunNum(run.run_num);
+  };
+
+  const handleArrowRight = () => {
+    if (!selected) return;
+    const athlete = athletes.find((a) => a.athlete_id === selected.athlete_id);
+    if (!athlete) return;
+    const sortedRuns = [...athlete.runs].sort((a, b) => a.run_num - b.run_num);
+    const currentIndex = sortedRuns.findIndex((r) => r.run_num === selected.run_num);
+    if (currentIndex === -1) return;
+
+    if (currentIndex < sortedRuns.length - 1) {
+      const nextRun = sortedRuns[currentIndex + 1];
+      setSelected({ bib: athlete.bib, run_num: nextRun.run_num, athlete_id: athlete.athlete_id });
+      setRunNum(nextRun.run_num);
+      return;
+    }
+
+    const allRunNums = athletes.flatMap((a) => a.runs.map((r) => r.run_num));
+    const firstRunNum = allRunNums.length > 0 ? Math.min(...allRunNums) : 1;
+    const order = getRunsByRunNum(firstRunNum);
+    const idx = order.findIndex(({ athlete: a }) => a.athlete_id === athlete.athlete_id);
+    if (idx === -1) return;
+    const { athlete: nextAthlete, run: firstRun } = order[(idx + 1) % order.length];
+    setSelected({ bib: nextAthlete.bib, run_num: firstRun.run_num, athlete_id: nextAthlete.athlete_id });
+    setRunNum(firstRun.run_num);
+  };
+
+  const handleArrowLeft = () => {
+    if (!selected) return;
+    const athlete = athletes.find((a) => a.athlete_id === selected.athlete_id);
+    if (!athlete) return;
+    const sortedRuns = [...athlete.runs].sort((a, b) => a.run_num - b.run_num);
+    const currentIndex = sortedRuns.findIndex((r) => r.run_num === selected.run_num);
+    if (currentIndex === -1) return;
+
+    if (currentIndex > 0) {
+      const prevRun = sortedRuns[currentIndex - 1];
+      setSelected({ bib: athlete.bib, run_num: prevRun.run_num, athlete_id: athlete.athlete_id });
+      setRunNum(prevRun.run_num);
+      return;
+    }
+
+    const allRunNums = athletes.flatMap((a) => a.runs.map((r) => r.run_num));
+    const firstRunNum = allRunNums.length > 0 ? Math.min(...allRunNums) : 1;
+    const order = getRunsByRunNum(firstRunNum);
+    const idx = order.findIndex(({ athlete: a }) => a.athlete_id === athlete.athlete_id);
+    if (idx === -1) return;
+    const { athlete: prevAthlete } = order[(idx - 1 + order.length) % order.length];
+    const lastRun = [...prevAthlete.runs].sort((a, b) => a.run_num - b.run_num).slice(-1)[0];
+    setSelected({ bib: prevAthlete.bib, run_num: lastRun.run_num, athlete_id: prevAthlete.athlete_id });
+    setRunNum(lastRun.run_num);
+  };
+
   return (
     <div>
-
-      {/* Panel Header */}
-      {/* <div className="bg-gray-100 border-b-1 border-solid">
-        <div></div>
-        <div className="flex items-center justify-end bg-white border border-gray-300">
-          {eventName}
-        </div>
-      </div> */}
-
       <Toaster />
       
       <div className="flex w-full h-screen">
@@ -409,13 +492,15 @@ export default function JudgingPanelClient({
             <div className="flex flex-col items-center justify-center gap-[5%] ml-[2%] w-[20%]">
               <button
                 className="p-[2%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
-                aria-label="Previous Bib"
+                aria-label="Previous BIB"
+                onClick={handleArrowUp}
               >
                 <ChevronUp className="h-[100%] w-[100%]" />
               </button>
               <button
                 className="p-[2%] border border-black rounded bg-white active:bg-gray-200 w-[70%]"
-                aria-label="Next Bib"
+                aria-label="Next BIB"
+                onClick={handleArrowDown}
               >
                 <ChevronDown className="h-[100%] w-[100%]" />
               </button>
@@ -479,13 +564,15 @@ export default function JudgingPanelClient({
             >
               <button
                 className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%] mt-[-7%]"
-                aria-label="Right side competitor"
+                aria-label="Previous run"
+                onClick={handleArrowRight}
               >
                 <ChevronRight className="w-[100%] h-[100%]" />
               </button>
               <button
                 className="p-[3%] border border-black rounded bg-white active:bg-gray-200 w-[70%]"
-                aria-label="Left side competitor"
+                aria-label="Next run"
+                onClick={handleArrowLeft}
               >
                 <ChevronLeft className="w-[100%] h-[100%]" />
               </button>
