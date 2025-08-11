@@ -721,7 +721,8 @@ export async function fetchEventResultsForArticle(eventId: number): Promise<Arti
                     a.last_name,
                     a.nationality,
                     hr.best as final_score,
-                    ROW_NUMBER() OVER(PARTITION BY er.division_id ORDER BY hr.best DESC) as rank
+                    -- The change is in the ORDER BY clause below
+                    ROW_NUMBER() OVER(PARTITION BY er.division_id ORDER BY hr.best DESC NULLS LAST) as rank
                 FROM ss_heat_results hr
                 JOIN ss_event_registrations er ON hr.event_id = er.event_id AND hr.athlete_id = er.athlete_id
                 JOIN ss_athletes a ON er.athlete_id = a.athlete_id
@@ -738,12 +739,12 @@ export async function fetchEventResultsForArticle(eventId: number): Promise<Arti
         
         // Query to get the top 3 Canadian athletes overall
         const topCanadiansQuery = `
-            SELECT first_name, last_name, nationality, best as final_score,
-                   ROW_NUMBER() OVER(ORDER BY best DESC) as rank
+            SELECT first_name, last_name, nationality, best as final_score
             FROM ss_heat_results hr
             JOIN ss_athletes a ON hr.athlete_id = a.athlete_id
             WHERE hr.event_id = $1 AND a.nationality = 'CAN'
-            ORDER BY final_score DESC
+            -- The change is in the ORDER BY clause below
+            ORDER BY final_score DESC NULLS LAST
             LIMIT 3;
         `;
 
@@ -755,6 +756,7 @@ export async function fetchEventResultsForArticle(eventId: number): Promise<Arti
         return {
             ...eventDetails,
             results: resultsResult.rows,
+            // We don't need to rank top Canadians here as we just need the list
             top_canadians: topCanadiansResult.rows,
         };
 
