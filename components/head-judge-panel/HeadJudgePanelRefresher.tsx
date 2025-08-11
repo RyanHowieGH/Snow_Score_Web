@@ -22,7 +22,7 @@ export default function HeadJudgePanelCoreLive ({ eventId, roundHeatIds, tableHe
 
   // --- Data refresh ---
   const [refreshPageFlag, setRefreshPageFlag] = useState<boolean>(true);
-  const [liveSwitch, setLiveSwitch] = useState<boolean>(false);
+  const [liveSwitch, setLiveSwitch] = useState<boolean>(true);
 
 
   const handleOnLiveToggle = () => {
