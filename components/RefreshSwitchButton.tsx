@@ -8,7 +8,7 @@ type refreshSwitchButton = {
 }
 
 export default function RefreshSwitchButton ({onLiveToggle}: refreshSwitchButton) {
-    const [liveSwitch, setLiveSwitch] = useState<boolean>(false);
+    const [liveSwitch, setLiveSwitch] = useState<boolean>(true);
 
     const handleLiveSwitch = () => {
         setLiveSwitch(prev => !prev);
