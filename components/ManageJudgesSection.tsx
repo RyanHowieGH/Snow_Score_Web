@@ -148,14 +148,14 @@ export default function ManageJudgingPanelsDisplay({
                           <h4 className="text-xl font-bold">
                             HEAT: {heatNumber}
                           </h4>
-                          <button
+                          {/* <button
                             className="btn bg-green-500 text-white w-[10%] ml-[0] mb-[1%]"
                             onClick={() =>
                               setModalInfo({ divisionId, roundId, heatId })
                             }
                           >
                             Add judge
-                          </button>
+                          </button> */}
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                           {Object.values(personnels).map((personnel, index) => (
