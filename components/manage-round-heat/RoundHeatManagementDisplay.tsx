@@ -222,19 +222,25 @@ export default function RoundHeatManagementDisplay(
   return (
     <div>
       <div className="space-y-6">
-        {roundArray.map((round, roundIndex) => {
-          const isEditing = editingIndex === roundIndex;
-          const isDirty = !!dirtyMap[roundIndex];
-          const nextRoundNum = round.round_num - 1;
-          let progressionText = "";
-          if (nextRoundNum === 0) progressionText = "Final round";
-          else {
-            const next = roundArray.find(
-              (r) => r.round_num === nextRoundNum
+        {[...roundArray]
+          .sort((a, b) => b.round_num - a.round_num)
+          .map((round) => {
+            const roundIndex = roundArray.findIndex(
+              (r) => r.round_id === round.round_id
             );
-            if (next)
-              progressionText = `This round progresses to the ${next.round_name} round.`;
-          }
+            const isEditing = editingIndex === roundIndex;
+            const isDirty = !!dirtyMap[roundIndex];
+            const nextRoundNum = round.round_num - 1;
+            let progressionText = "";
+            if (nextRoundNum === 0) progressionText = "Final round";
+            else {
+              const next = roundArray.find(
+                (r) => r.round_num === nextRoundNum
+              );
+              if (next)
+                progressionText = `This round progresses to the ${next.round_name} round.`;
+            }
+
 
           return (
             <div
